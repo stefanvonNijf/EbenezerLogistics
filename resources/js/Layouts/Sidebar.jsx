@@ -6,7 +6,7 @@ import { IoLogOutOutline } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
 import { RiBriefcase4Fill } from "react-icons/ri";
 
-export default function Sidebar({ roles, handleLogout }) {
+export default function Sidebar({ handleLogout }) {
     const [isOpen, setIsOpen] = useState(false);
     const sidebarRef = useRef(null);
 
