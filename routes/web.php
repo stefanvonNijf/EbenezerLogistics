@@ -6,6 +6,7 @@ use App\Http\Controllers\ToolController;
 use App\Http\Controllers\ToolbagController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\PrintFormController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,9 @@ Route::middleware('auth')->group(function () {
 
 
     Route::resource('cars', CarController::class);
+
+    Route::get('/print-forms', [PrintFormController::class, 'index'])->name('print-forms.index');
+    Route::get('/print-forms/ppe/{employee}', [PrintFormController::class, 'ppe'])->name('print-forms.ppe');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {

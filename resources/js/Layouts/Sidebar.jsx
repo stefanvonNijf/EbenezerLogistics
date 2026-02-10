@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { FaWarehouse } from "react-icons/fa";
 import { FaCar, FaPeopleGroup, FaUsersGear } from "react-icons/fa6";
-import { IoLogOutOutline } from "react-icons/io5";
+import { IoLogOutOutline, IoPrintOutline } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
 import { RiBriefcase4Fill } from "react-icons/ri";
 
@@ -67,6 +67,12 @@ export default function Sidebar({ role, handleLogout }) {
                     <Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">
                         <FaCar className="text-2xl" />
                         Cars
+                    </Link>
+                    <hr className="border-white border-t-[2px]" />
+
+                    <Link onClick={closeSidebar} href={route('print-forms.index')} className="flex items-center gap-2 hover:text-gray-300">
+                        <IoPrintOutline className="text-2xl" />
+                        Print Forms
                     </Link>
                     <hr className="border-white border-t-[2px]" />
 

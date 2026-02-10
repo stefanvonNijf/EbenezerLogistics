@@ -129,5 +129,64 @@
     </table>
 </div>
 
+<div style="page-break-before: always;"></div>
+
+<h1>PPE Issue Form</h1>
+
+<table>
+    <tr>
+        <td class="label">Employee's name:</td>
+        <td>{{ $employee->name }}</td>
+    </tr>
+    <tr>
+        <td class="label">Date of admission:</td>
+        <td>{{ \Carbon\Carbon::parse($checkin->checkin_date)->format('d-m-Y') }}</td>
+    </tr>
+    <tr>
+        <td class="label">Professional Category:</td>
+        <td>{{ ucfirst($employee->role) }}</td>
+    </tr>
+</table>
+
+<h2>ISSUED PPE</h2>
+
+<table style="border: 1px solid #ddd;">
+    <thead>
+        <tr>
+            <th style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 8px; text-align: left;">DESCRIPTION</th>
+            <th style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 8px; text-align: center; width: 80px;">QUANT.</th>
+            <th style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 8px; text-align: center; width: 80px;">SIZE</th>
+            <th style="background-color: #f5f5f5; border: 1px solid #ddd; padding: 8px; text-align: left;">NOTES</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(['GOGGLES', 'GLOVES', 'RAIN JACKET', 'INNER JACKET (Lining)', 'RAIN PANTS', 'OVERALLS', 'BOOTS', 'HELMET'] as $item)
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">{{ $item }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">1</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;"></td>
+                <td style="border: 1px solid #ddd; padding: 8px;"></td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
+<p style="font-size: 12px;">
+    By signing below, the employee confirms receipt of the above PPE items in good condition.
+</p>
+
+<div class="signature">
+    <table>
+        <tr>
+            <td>Signature {{ $employee->name }}:</td>
+            <td class="signature-line">__________________________</td>
+        </tr>
+        <tr>
+            <td>Signature person in charge:</td>
+            <td class="signature-line">__________________________</td>
+        </tr>
+    </table>
+</div>
+
 </body>
 </html>

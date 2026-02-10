@@ -138,6 +138,10 @@
     </tbody>
 </table>
 
+@if(!empty($notes))
+    <p><strong>Notes:</strong> {{ $notes }}</p>
+@endif
+
 <p style="font-size: 12px;">
     By signing below, the employee confirms receipt of the above PPE items in good condition.
 </p>
