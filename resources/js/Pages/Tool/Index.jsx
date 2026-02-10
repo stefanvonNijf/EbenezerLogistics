@@ -7,22 +7,15 @@ import ActionButtons from '@/Components/ActionButtons.jsx';
 export default function ToolIndex() {
     const { tools } = usePage().props;
 
-    const [categoryFilter, setCategoryFilter] = useState('all');
     const [search, setSearch] = useState('');
 
-    const categories = ['all', 'screwdrivers', 'pliers', 'sets', 'other'];
-
     const filteredData = tools.filter(tool => {
-        const matchesCategory =
-            categoryFilter === 'all' ||
-            (tool.category?.name ?? '').toLowerCase() === categoryFilter.toLowerCase();
-
-        const matchesSearch =
-            (tool.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
-            (tool.type ?? '').toLowerCase().includes(search.toLowerCase()) ||
-            (tool.brand ?? '').toLowerCase().includes(search.toLowerCase());
-
-        return matchesCategory && matchesSearch;
+        const s = search.toLowerCase();
+        return (
+            (tool.name ?? '').toLowerCase().includes(s) ||
+            (tool.type ?? '').toLowerCase().includes(s) ||
+            (tool.brand ?? '').toLowerCase().includes(s)
+        );
     });
 
     const columns = [
@@ -62,25 +55,8 @@ export default function ToolIndex() {
                         </Link>
                     </div>
 
-                    {/* FILTERS */}
+                    {/* SEARCH */}
                     <div className="flex flex-wrap items-center gap-3 mb-6">
-
-                        {categories.map(cat => (
-                            <button
-                                key={cat}
-                                onClick={() => setCategoryFilter(cat)}
-                                className={`
-                                    px-4 py-2 rounded-lg text-sm font-medium border
-                                    transition-all duration-150
-                                    ${categoryFilter === cat
-                                    ? "bg-gray-300 border-[#014489]"
-                                    : "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-200"}
-                                `}
-                            >
-                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                            </button>
-                        ))}
-
                         <input
                             type="text"
                             placeholder="Search on keyword..."

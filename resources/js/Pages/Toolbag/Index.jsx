@@ -8,11 +8,7 @@ export default function ToolbagIndex() {
     const [selectedToolbag, setSelectedToolbag] = useState(null);
     const [assignEmployee, setAssignEmployee] = useState("");
 
-    const [roleFilter, setRoleFilter] = useState("all");
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [completeFilter, setCompleteFilter] = useState("all");
     const [search, setSearch] = useState("");
-
 
     const normalize = (str) =>
         (str ?? "")
@@ -23,21 +19,7 @@ export default function ToolbagIndex() {
     const normalizedSearch = normalize(search);
 
     const filteredData = toolbags.filter((toolbag) => {
-        const status = toolbag.employee_id ? "in use" : "available";
-        const completeness = toolbag.complete ? "complete" : "incomplete";
-
-        const matchRole =
-            roleFilter === "all" || toolbag.type === roleFilter;
-
-        const matchStatus =
-            statusFilter === "all" || status === statusFilter;
-
-        const matchComplete =
-            completeFilter === "all" || completeness === completeFilter;
-
-        const matchSearch = normalize(toolbag.name).includes(normalizedSearch);
-
-        return matchRole && matchStatus && matchComplete && matchSearch;
+        return normalize(toolbag.name).includes(normalizedSearch);
     });
 
     const columns = [
@@ -92,61 +74,8 @@ export default function ToolbagIndex() {
                         </Link>
                     </div>
 
-                    {/* FILTERS SECTION */}
-                    <div className="flex flex-wrap items-center gap-4 mb-6">
-
-                        {/* ROLE FILTER */}
-                        <div className="flex gap-2 border-4">
-                            {["all", "electrician", "ironworker"].map((role) => (
-                                <button
-                                    key={role}
-                                    onClick={() => setRoleFilter(role)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 ${
-                                        roleFilter === role
-                                            ? "bg-gray-300 border-[#014489]"
-                                            : "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-200"
-                                    }`}
-                                >
-                                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* STATUS FILTER */}
-                        <div className="flex gap-2 border-4">
-                            {["all", "available", "in use"].map((status) => (
-                                <button
-                                    key={status}
-                                    onClick={() => setStatusFilter(status)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 ${
-                                        statusFilter === status
-                                            ? "bg-gray-300 border-[#014489]"
-                                            : "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-200"
-                                    }`}
-                                >
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* COMPLETENESS FILTER */}
-                        <div className="flex gap-2 border-4">
-                            {["all", "complete", "incomplete"].map((comp) => (
-                                <button
-                                    key={comp}
-                                    onClick={() => setCompleteFilter(comp)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all duration-150 ${
-                                        completeFilter === comp
-                                            ? "bg-gray-300 border-[#014489]"
-                                            : "bg-gray-200 text-gray-700 border-gray-300 hover:bg-gray-200"
-                                    }`}
-                                >
-                                    {comp.charAt(0).toUpperCase() + comp.slice(1)}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* SEARCH */}
+                    {/* SEARCH */}
+                    <div className="flex flex-wrap items-center gap-3 mb-6">
                         <input
                             type="text"
                             placeholder="Search on keyword..."
