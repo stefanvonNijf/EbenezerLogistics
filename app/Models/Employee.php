@@ -9,7 +9,7 @@ class Employee extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'functie'];
+    protected $fillable = ['name', 'role'];
 
     public function toolbag()
     {
@@ -19,5 +19,10 @@ class Employee extends Model
     public function car()
     {
         return $this->hasOne(Car::class);
+    }
+
+    public function checkins()
+    {
+        return $this->hasMany(Checkin::class);
     }
 }

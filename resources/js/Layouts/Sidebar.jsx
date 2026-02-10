@@ -30,41 +30,35 @@ export default function Sidebar({ handleLogout }) {
 
     const menuItems = (
         <>
-            <Link onClick={closeSidebar} href={route('dashboard')} className="flex items-center gap-2 hover:text-gray-300">
+            <Link onClick={closeSidebar} href={route('tools.index')} className="flex items-center gap-2 hover:text-gray-300">
                 <FaWarehouse className="text-2xl" />
                 Storage
             </Link>
             <hr className="border-white border-t-[2px]" />
 
-            <Link onClick={closeSidebar} href={route('dashboard')} className="flex items-center gap-2 hover:text-gray-300">
-                <IoIosSwap className="text-2xl" />
-                Check-ins
-            </Link>
-            <hr className="border-white border-t-[2px]" />
-
-                <>
-                    <Link onClick={closeSidebar} href={route('dashboard')} className="flex items-center gap-2 hover:text-gray-300">
+                    <Link onClick={closeSidebar} href={route('toolbags.index')} className="flex items-center gap-2 hover:text-gray-300">
                         <RiBriefcase4Fill className="text-2xl" />
                         Toolbags
                     </Link>
                     <hr className="border-white border-t-[2px]" />
-                </>
 
-                <>
-                    <Link onClick={closeSidebar} href={route('dashboard')} className="flex items-center gap-2 hover:text-gray-300">
+                    <Link onClick={closeSidebar} href={route('checkins.index')} className="flex items-center gap-2 hover:text-gray-300">
+                        <IoIosSwap className="text-2xl" />
+                        Check-ins
+                    </Link>
+                    <hr className="border-white border-t-[2px]" />
+
+                    <Link onClick={closeSidebar} href={route('employees.index')} className="flex items-center gap-2 hover:text-gray-300">
                         <FaPeopleGroup className="text-2xl" />
                         Employee's
                     </Link>
                     <hr className="border-white border-t-[2px]" />
-                </>
 
-                <>
-                    <Link onClick={closeSidebar} href={route('dashboard')} className="flex items-center gap-2 hover:text-gray-300">
+                    <Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">
                         <FaCar className="text-2xl" />
                         Cars
                     </Link>
                     <hr className="border-white border-t-[2px]" />
-                </>
 
             <button
                 onClick={() => {

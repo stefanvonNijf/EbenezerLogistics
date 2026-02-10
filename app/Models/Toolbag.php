@@ -9,8 +9,12 @@ class Toolbag extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'notes', 'employee_id'];
-
+    protected $fillable = [
+        'name',
+        'notes',
+        'type',
+        'employee_id',
+    ];
     public function employee()
     {
         return $this->belongsTo(Employee::class);

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class EmployeeController extends Controller
 {
@@ -12,7 +14,9 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        //
+        $employees = Employee::all();
+
+        return Inertia::render('Employee/Index', ['employees' => $employees]);
     }
 
     /**
@@ -20,7 +24,7 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Employee/Create');
     }
 
     /**
@@ -28,7 +32,14 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'role' => 'required|string',
+            'remark' => 'nullable|string',
+        ]);
+
+        Employee::created($validated);
+        return redirect()->route('employees.index');
     }
 
     /**
@@ -42,17 +53,27 @@ class EmployeeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Employee $employee)
     {
-        //
+        return Inertia::render('Employee/Edit', [
+            'employee' => $employee
+        ]);
     }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Employee $employee)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'role' => 'required|string',
+            'remark' => 'nullable|string',
+        ]);
+
+        $employee->update($validated);
+        return redirect()->route('employees.index');
     }
 
     /**

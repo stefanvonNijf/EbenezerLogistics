@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('notes')->nullable();
+            $table->enum('type', ['ironworker', 'electrician']);
+            $table->boolean('complete')->default(true);
             $table->foreignId('employee_id')
                 ->nullable()
                 ->unique()

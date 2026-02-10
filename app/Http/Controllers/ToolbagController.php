@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
+use App\Models\Tool;
+use App\Models\Toolbag;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class ToolbagController extends Controller
 {
@@ -12,7 +16,10 @@ class ToolbagController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Toolbag/Index', [
+            'toolbags' => Toolbag::with('employee')->get(),
+            'employees' => Employee::orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -20,7 +27,7 @@ class ToolbagController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('Toolbag/Create');
     }
 
     /**
@@ -42,18 +49,58 @@ class ToolbagController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Toolbag $toolbag)
     {
-        //
+        $allowedRoles = ['shared', $toolbag->type];
+
+        $tools = Tool::whereIn('roletype', $allowedRoles)->get();
+
+        return Inertia::render('Toolbag/Edit', [
+            'toolbag' => $toolbag->load('tools'),
+            'tools' => $tools,
+        ]);
     }
+
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Toolbag $toolbag)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'notes' => 'nullable|string',
+            'type' => 'required|in:electrician,ironworker',
+            'employee_id' => 'nullable|exists:employees,id',
+            'tools' => 'array',
+            'tools.*' => 'exists:tools,id',
+        ]);
+
+        $toolbag->tools()->sync($validated['tools'] ?? []);
+
+        // Determine required tools (shared + role-specific)
+        $requiredTools = Tool::whereIn('roletype', ['shared', $validated['type']])->get();
+        $selectedToolIds = collect($validated['tools'] ?? []);
+
+
+        // Check if complete
+        $isComplete = $requiredTools->pluck('id')->every(
+            fn($id) => $selectedToolIds->contains($id)
+        );
+
+        // Update toolbag
+        $toolbag->update([
+            'name' => $validated['name'],
+            'notes' => $validated['notes'],
+            'type' => $validated['type'],
+            'employee_id' => $validated['employee_id'],
+            'complete' => $isComplete,
+        ]);
+
+        return redirect()->route('toolbags.index')
+            ->with('success', 'Toolbag updated.');
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -62,4 +109,18 @@ class ToolbagController extends Controller
     {
         //
     }
+
+    public function assign(Request $request, Toolbag $toolbag)
+    {
+        $request->validate([
+            'employee_id' => 'nullable|exists:employees,id',
+        ]);
+
+        $toolbag->update([
+            'employee_id' => $request->employee_id
+        ]);
+
+        return back()->with('success', 'Toolbag updated');
+    }
+
 }

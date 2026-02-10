@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stocks', function (Blueprint $table) {
+        Schema::create('checkins', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tool_id')
-                ->constrained('tools')
-                ->onDelete('cascade');
-            $table->integer('amount')->default(0);
+            $table->date('checkin_date');
+            $table->date('checkout_date')->nullable();
+            $table->text('notes')->nullable();
+            $table->foreignId('employee_id')->constrained('employees');
+            $table->foreignId('toolbag_id')->constrained('toolbags');
             $table->timestamps();
         });
     }
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('stocks');
+        Schema::dropIfExists('checkins');
     }
 };
