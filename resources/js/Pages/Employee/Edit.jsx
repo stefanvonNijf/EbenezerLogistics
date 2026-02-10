@@ -6,6 +6,7 @@ export default function Edit({ employee }) {
 
     const { data, setData, put, processing, errors } = useForm({
         name: employee.name ?? "",
+        employee_number: employee.employee_number ?? "",
         role: employee.role ?? "",
         remark: employee.remark ?? "",
     });
@@ -40,6 +41,20 @@ export default function Edit({ employee }) {
                             onChange={(e) => setData("name", e.target.value)}
                         />
                         {errors.name && <div className="text-red-600 text-sm">{errors.name}</div>}
+                    </div>
+
+                    {/* EMPLOYEE NUMBER */}
+                    <div>
+                        <label className="block font-medium">Employee Nr</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.employee_number}
+                            onChange={(e) => setData("employee_number", e.target.value)}
+                        />
+                        {errors.employee_number && (
+                            <div className="text-red-600 text-sm">{errors.employee_number}</div>
+                        )}
                     </div>
 
                     {/* ROLE */}

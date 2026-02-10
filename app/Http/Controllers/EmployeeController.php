@@ -34,11 +34,12 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
+            'employee_number' => 'nullable|string|unique:employees,employee_number',
             'role' => 'required|string',
             'remark' => 'nullable|string',
         ]);
 
-        Employee::created($validated);
+        Employee::create($validated);
         return redirect()->route('employees.index');
     }
 
@@ -68,6 +69,7 @@ class EmployeeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string',
+            'employee_number' => 'nullable|string|unique:employees,employee_number,' . $employee->id,
             'role' => 'required|string',
             'remark' => 'nullable|string',
         ]);

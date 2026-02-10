@@ -25,6 +25,7 @@ export default function EmployeeIndex() {
 
         const matchesSearch =
             normalize(employee.name).includes(normalizedSearch) ||
+            normalize(employee.employee_number).includes(normalizedSearch) ||
             normalize(employee.role).includes(normalizedSearch);
 
         return matchesCategory && matchesSearch;
@@ -42,6 +43,7 @@ export default function EmployeeIndex() {
                 </Link>
             )
         },
+        { header: 'Employee Nr', render: (row) => row.employee_number || '-' },
         { header: 'Role', accessor: 'role' },
     ];
 
