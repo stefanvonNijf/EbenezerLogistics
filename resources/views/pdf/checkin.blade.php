@@ -119,7 +119,11 @@
 <div class="signature">
     <table>
         <tr>
-            <td>Employee Signature:</td>
+            <td>Signature {{ $employee->name }}: </td>
+            <td class="signature-line">__________________________</td>
+        </tr>
+        <tr>
+            <td>Signature person in charge:</td>
             <td class="signature-line">__________________________</td>
         </tr>
     </table>
