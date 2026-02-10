@@ -74,7 +74,9 @@
         <td class="label">Brand</td>
         <td class="label">Tool</td>
         <td class="label">Type</td>
-        <td class="label">Present</td>
+        <td class="label">Replacement Cost</td>
+        <td class="label" style="text-align:center;">Check-in</td>
+        <td class="label" style="text-align:center;">Check-out</td>
     </tr>
     </thead>
     <tbody>
@@ -92,6 +94,10 @@
             <td>{{ $tool->brand ?? '-' }}</td>
             <td>{{ $tool->name }}</td>
             <td>{{ $tool->type ?? '-' }}</td>
+            <td>&euro; {{ $tool->replacement_cost ? number_format($tool->replacement_cost, 2) : '-' }}</td>
+            <td style="text-align:center;">
+                <input type="checkbox">
+            </td>
             <td style="text-align:center;">
                 <input type="checkbox">
             </td>

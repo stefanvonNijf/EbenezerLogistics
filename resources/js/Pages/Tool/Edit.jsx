@@ -10,6 +10,7 @@ export default function Edit({ tool, categories }) {
         type: tool.type || "",
         category_id: tool.category_id || "",
         amount_in_stock: tool.amount_in_stock || 0,
+        replacement_cost: tool.replacement_cost ?? "",
         roletype: tool.roletype || "shared",
         image: null,
     });
@@ -128,6 +129,22 @@ export default function Edit({ tool, categories }) {
                             <div className="text-red-600 text-sm">{errors.amount_in_stock}</div>
                         )}
                     </div>
+                    {/* REPLACEMENT COST */}
+                    <div>
+                        <label className="block font-medium">Replacement Cost</label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.replacement_cost}
+                            onChange={(e) => setData("replacement_cost", e.target.value)}
+                        />
+                        {errors.replacement_cost && (
+                            <div className="text-red-600 text-sm">{errors.replacement_cost}</div>
+                        )}
+                    </div>
+
                     {/* IMAGE */}
                     <div>
                         <label className="block font-medium">Replace image</label>

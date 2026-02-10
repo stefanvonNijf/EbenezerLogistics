@@ -16,6 +16,7 @@ class Tool extends Model
         'category_id',
         'roletype',
         'amount_in_stock',
+        'replacement_cost',
         'image_path',
     ];
 

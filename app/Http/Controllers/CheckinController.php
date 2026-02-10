@@ -124,7 +124,12 @@ class CheckinController extends Controller
 
     public function checkout(Checkin $checkin)
     {
-        
+        $checkin->update([
+            'checkout_date' => now()->toDateString(),
+        ]);
+
+        return redirect()->route('checkins.index')
+            ->with('success', 'Checkout completed.');
     }
 
 }
