@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Link, Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
@@ -13,6 +13,8 @@ export default function Edit({ toolbag, tools }) {
         tools: (toolbag.tools ?? []).map(t => t.id)
     });
 
+    const [confirmTool, setConfirmTool] = useState(null);
+
     const toggleTool = (toolId) => {
         if (data.tools.includes(toolId)) {
             setData("tools", data.tools.filter(id => id !== toolId));
@@ -21,10 +23,15 @@ export default function Edit({ toolbag, tools }) {
         }
     };
 
-    const addFromStock = (toolId) => {
-        if (!data.tools.includes(toolId)) {
-            setData("tools", [...data.tools, toolId]);
+    const addFromStock = (tool) => {
+        setConfirmTool(tool);
+    };
+
+    const confirmAddFromStock = () => {
+        if (confirmTool && !data.tools.includes(confirmTool.id)) {
+            setData("tools", [...data.tools, confirmTool.id]);
         }
+        setConfirmTool(null);
     };
 
     const submit = (e) => {
@@ -90,7 +97,7 @@ export default function Edit({ toolbag, tools }) {
                                                 <button
                                                     type="button"
                                                     disabled={tool.amount_in_stock < 1}
-                                                    onClick={() => addFromStock(tool.id)}
+                                                    onClick={() => addFromStock(tool)}
                                                     className="text-sm text-blue-600 hover:underline disabled:text-gray-400"
                                                 >
                                                     Add from stock ({tool.amount_in_stock})
@@ -113,6 +120,39 @@ export default function Edit({ toolbag, tools }) {
                 </div>
 
             </div>
+
+            {confirmTool && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-2">Add from stock?</h3>
+                        <p className="text-gray-700 mb-1">
+                            <span className="font-medium">{confirmTool.name}</span>
+                            {confirmTool.brand && (
+                                <span className="text-gray-500"> — {confirmTool.brand}</span>
+                            )}
+                        </p>
+                        <p className="text-sm text-gray-500 mb-4">
+                            Current stock: {confirmTool.amount_in_stock}
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setConfirmTool(null)}
+                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmAddFromStock}
+                                className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800"
+                            >
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

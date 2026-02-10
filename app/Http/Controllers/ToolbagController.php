@@ -76,7 +76,18 @@ class ToolbagController extends Controller
             'tools.*' => 'exists:tools,id',
         ]);
 
-        $toolbag->tools()->sync($validated['tools'] ?? []);
+        $currentToolIds = $toolbag->tools->pluck('id')->toArray();
+        $newToolIds = $validated['tools'] ?? [];
+
+        $addedToolIds = array_diff($newToolIds, $currentToolIds);
+
+        if (!empty($addedToolIds)) {
+            Tool::whereIn('id', $addedToolIds)
+                ->where('amount_in_stock', '>', 0)
+                ->decrement('amount_in_stock');
+        }
+
+        $toolbag->tools()->sync($newToolIds);
 
         // Determine required tools (shared + role-specific)
         $requiredTools = Tool::whereIn('roletype', ['shared', $validated['type']])->get();
