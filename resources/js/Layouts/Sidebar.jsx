@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { FaWarehouse } from "react-icons/fa";
-import { FaCar, FaPeopleGroup } from "react-icons/fa6";
+import { FaCar, FaPeopleGroup, FaUsersGear } from "react-icons/fa6";
 import { IoLogOutOutline } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
 import { RiBriefcase4Fill } from "react-icons/ri";
 
-export default function Sidebar({ handleLogout }) {
+export default function Sidebar({ role, handleLogout }) {
     const [isOpen, setIsOpen] = useState(false);
     const sidebarRef = useRef(null);
 
@@ -48,11 +48,21 @@ export default function Sidebar({ handleLogout }) {
                     </Link>
                     <hr className="border-white border-t-[2px]" />
 
-                    <Link onClick={closeSidebar} href={route('employees.index')} className="flex items-center gap-2 hover:text-gray-300">
-                        <FaPeopleGroup className="text-2xl" />
-                        Employee's
-                    </Link>
-                    <hr className="border-white border-t-[2px]" />
+                    {role === 'admin' && (
+                        <>
+                            <Link onClick={closeSidebar} href={route('employees.index')} className="flex items-center gap-2 hover:text-gray-300">
+                                <FaPeopleGroup className="text-2xl" />
+                                Employee's
+                            </Link>
+                            <hr className="border-white border-t-[2px]" />
+
+                            <Link onClick={closeSidebar} href={route('users.index')} className="flex items-center gap-2 hover:text-gray-300">
+                                <FaUsersGear className="text-2xl" />
+                                Users
+                            </Link>
+                            <hr className="border-white border-t-[2px]" />
+                        </>
+                    )}
 
                     <Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">
                         <FaCar className="text-2xl" />

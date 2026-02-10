@@ -7,11 +7,11 @@ export default function AuthenticatedLayout({ header, children }) {
         router.post(route('logout'));
     };
 
-    const { roles } = usePage().props.auth;
+    const { user } = usePage().props.auth;
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <Sidebar roles={roles} handleLogout={handleLogout} />
+            <Sidebar role={user?.role} handleLogout={handleLogout} />
 
             <div className="fixed top-0 left-0 w-full h-28 bg-blue-200 z-50 flex justify-center items-center">
                 <ApplicationLogo

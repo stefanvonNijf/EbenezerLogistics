@@ -6,6 +6,7 @@ use App\Http\Controllers\ToolController;
 use App\Http\Controllers\ToolbagController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -45,8 +46,11 @@ Route::middleware('auth')->group(function () {
 
 
     Route::resource('cars', CarController::class);
+});
 
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('employees', EmployeeController::class);
+    Route::resource('users', UserManagementController::class);
 });
 
 require __DIR__.'/auth.php';
