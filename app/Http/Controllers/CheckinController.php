@@ -119,7 +119,7 @@ class CheckinController extends Controller
             'tools'    => $checkin->toolbag->tools,
         ])
             ->name("checkin-{$checkin->employee->name}.pdf")
-            ->download();
+            ->inline();
     }
 
     public function checkout(Checkin $checkin)

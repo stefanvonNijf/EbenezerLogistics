@@ -67,6 +67,8 @@ export default function CheckinIndex() {
             render: (row) => (
                 <a
                     href={route('checkins.pdf', row.id)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
                 >
                     Export Pdf
