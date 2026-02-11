@@ -10,12 +10,19 @@ export default function ToolIndex() {
 
     const [search, setSearch] = useState('');
 
+    const normalize = (str) =>
+        (str ?? "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase();
+
+    const normalizedSearch = normalize(search);
+
     const filteredData = tools.filter(tool => {
-        const s = search.toLowerCase();
         return (
-            (tool.name ?? '').toLowerCase().includes(s) ||
-            (tool.type ?? '').toLowerCase().includes(s) ||
-            (tool.brand ?? '').toLowerCase().includes(s)
+            normalize(tool.name).includes(normalizedSearch) ||
+            normalize(tool.type).includes(normalizedSearch) ||
+            normalize(tool.brand).includes(normalizedSearch)
         );
     });
 

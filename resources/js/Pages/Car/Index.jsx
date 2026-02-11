@@ -16,9 +16,11 @@ export default function CarIndex() {
     const normalizedSearch = normalize(search);
 
     const filteredData = cars.filter(car => {
+        const statusText = car.employee_id ? "In use" : "Available";
         return (
             normalize(car.brand).includes(normalizedSearch) ||
-            normalize(car.license_plate).includes(normalizedSearch)
+            normalize(car.license_plate).includes(normalizedSearch) ||
+            normalize(statusText).includes(normalizedSearch)
         );
     });
 

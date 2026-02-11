@@ -18,14 +18,12 @@ export default function CheckinIndex() {
     const normalizedSearch = normalize(search);
 
     const filteredData = checkins.filter((row) => {
-        const employeeName = normalize(row.employee?.name);
-        const toolbagName = normalize(row.toolbag?.name);
-        const notes = normalize(row.notes);
-
         return (
-            employeeName.includes(normalizedSearch) ||
-            toolbagName.includes(normalizedSearch) ||
-            notes.includes(normalizedSearch)
+            normalize(row.employee?.name).includes(normalizedSearch) ||
+            normalize(row.toolbag?.name).includes(normalizedSearch) ||
+            normalize(row.notes).includes(normalizedSearch) ||
+            normalize(row.checkin_date).includes(normalizedSearch) ||
+            normalize(row.checkout_date).includes(normalizedSearch)
         );
     });
 

@@ -22,7 +22,12 @@ export default function ToolbagIndex() {
     const normalizedSearch = normalize(search);
 
     const filteredData = toolbags.filter((toolbag) => {
-        return normalize(toolbag.name).includes(normalizedSearch);
+        const statusText = toolbag.employee ? toolbag.employee.name : "Available";
+        return (
+            normalize(toolbag.name).includes(normalizedSearch) ||
+            normalize(toolbag.type).includes(normalizedSearch) ||
+            normalize(statusText).includes(normalizedSearch)
+        );
     });
 
     const handleDelete = () => {
