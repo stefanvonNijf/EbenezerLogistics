@@ -30,7 +30,7 @@ export default function ToolActionButtons({ row, canDelete = false }) {
             <Link
                 href={route("tools.edit", row.id)}
                 className="text-yellow-600 hover:text-yellow-800"
-                title="Bewerken"
+                title="Edit"
             >
                 <HiPencilSquare className="text-3xl" />
             </Link>
@@ -40,7 +40,7 @@ export default function ToolActionButtons({ row, canDelete = false }) {
                 <button
                     onClick={() => handleDelete(row.id)}
                     className="text-red-600 hover:text-red-800"
-                    title="Verwijderen"
+                    title="Delete"
                 >
                     <HiTrash className="text-3xl" />
                 </button>
@@ -50,7 +50,7 @@ export default function ToolActionButtons({ row, canDelete = false }) {
             <button
                 onClick={() => handleDecrement(row.id)}
                 className="text-gray-600 hover:text-gray-800"
-                title="Voorraad verminderen"
+                title="Decrease stock -1"
             >
                 <HiMinusCircle className="text-3xl" />
             </button>
@@ -59,7 +59,7 @@ export default function ToolActionButtons({ row, canDelete = false }) {
             <button
                 onClick={() => handleIncrement(row.id)}
                 className="text-green-600 hover:text-green-800"
-                title="Voorraad verhogen"
+                title="Increase stock +1"
             >
                 <HiPlusCircle className="text-3xl" />
             </button>
