@@ -66,6 +66,8 @@ class CheckinController extends Controller
             'toolbag_id'   => $request->toolbag_id,
         ]);
 
+        $toolbag->update(['employee_id' => $request->employee_id]);
+
         return redirect()
             ->route('checkins.index')
             ->with('success', 'Checkin succesvol aangemaakt.');
@@ -127,6 +129,8 @@ class CheckinController extends Controller
         $checkin->update([
             'checkout_date' => now()->toDateString(),
         ]);
+
+        $checkin->toolbag->update(['employee_id' => null]);
 
         return redirect()->route('checkins.index')
             ->with('success', 'Checkout completed.');
