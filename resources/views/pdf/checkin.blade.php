@@ -5,9 +5,14 @@
     <title>Check-in {{ $employee->name }}</title>
 
     <style>
+        @page {
+            margin: 15mm 12mm 15mm 12mm;
+        }
+
         body {
             font-family: sans-serif;
-            font-size: 14px;
+            font-size: 12px;
+            margin: 0;
         }
 
         h1, h2 {
@@ -20,14 +25,20 @@
             margin-bottom: 20px;
         }
 
-        td {
-            padding: 8px;
+        td, th {
+            padding: 6px;
             border-bottom: 1px solid #ddd;
         }
 
         .label {
             font-weight: bold;
             width: 30%;
+        }
+
+        .tools-table td,
+        .tools-table th {
+            font-size: 11px;
+            padding: 4px 2px;
         }
 
         .signature {
@@ -67,16 +78,16 @@
 
 <h2>Tools in this toolbag</h2>
 
-<table>
+<table class="tools-table">
     <thead>
     <tr>
-        <td class="label">Image</td>
-        <td class="label">Brand</td>
-        <td class="label">Tool</td>
-        <td class="label">Type</td>
-        <td class="label">Replacement Cost</td>
-        <td class="label" style="text-align:center;">Check-in</td>
-        <td class="label" style="text-align:center;">Check-out</td>
+        <td class="label" style="width: 100px;">Image</td>
+        <td class="label" style="width: fit-content">Brand</td>
+        <td class="label" style="width: fit-content">Tool</td>
+        <td class="label" style="width: fit-content">Type</td>
+        <td class="label" style="width: 12%;">Repl. Cost</td>
+        <td class="label" style="text-align:center; width: 30px;">Check -In</td>
+        <td class="label" style="text-align:center; width: 30px;">-Out</td>
     </tr>
     </thead>
     <tbody>
@@ -86,7 +97,7 @@
                 @if($tool->image_path)
                     <img src="{{ public_path('storage/' . $tool->image_path) }}"
                          alt="{{ $tool->name }}"
-                         style="width: 150px; height: auto;">
+                         style="width: 100px; height: auto;">
                 @else
                     -
                 @endif
