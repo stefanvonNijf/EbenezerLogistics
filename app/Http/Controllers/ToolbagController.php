@@ -27,7 +27,9 @@ class ToolbagController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Toolbag/Create');
+        return Inertia::render('Toolbag/Create', [
+            'tools' => Tool::all(),
+        ]);
     }
 
     /**
@@ -35,7 +37,41 @@ class ToolbagController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'notes' => 'nullable|string',
+            'type' => 'required|in:electrician,ironworker',
+            'tools' => 'array',
+            'tools.*' => 'exists:tools,id',
+        ]);
+
+        $toolbag = Toolbag::create([
+            'name' => $validated['name'],
+            'notes' => $validated['notes'],
+            'type' => $validated['type'],
+        ]);
+
+        $newToolIds = $validated['tools'] ?? [];
+
+        if (!empty($newToolIds)) {
+            $toolbag->tools()->attach($newToolIds);
+
+            Tool::whereIn('id', $newToolIds)
+                ->where('amount_in_stock', '>', 0)
+                ->decrement('amount_in_stock');
+        }
+
+        $requiredTools = Tool::whereIn('roletype', ['shared', $validated['type']])->get();
+        $selectedToolIds = collect($newToolIds);
+
+        $isComplete = $requiredTools->pluck('id')->every(
+            fn($id) => $selectedToolIds->contains($id)
+        );
+
+        $toolbag->update(['complete' => $isComplete]);
+
+        return redirect()->route('toolbags.index')
+            ->with('success', 'Toolbag created.');
     }
 
     /**

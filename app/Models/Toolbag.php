@@ -13,6 +13,7 @@ class Toolbag extends Model
         'name',
         'notes',
         'type',
+        'complete',
         'employee_id',
     ];
     public function employee()
