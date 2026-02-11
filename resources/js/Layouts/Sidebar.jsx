@@ -64,11 +64,11 @@ export default function Sidebar({ role, handleLogout }) {
                         </>
                     )}
 
-                    <Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">
-                        <FaCar className="text-2xl" />
-                        Cars
-                    </Link>
-                    <hr className="border-white border-t-[2px]" />
+                    {/*<Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">*/}
+                    {/*    <FaCar className="text-2xl" />*/}
+                    {/*    Cars*/}
+                    {/*</Link>*/}
+                    {/*<hr className="border-white border-t-[2px]" />*/}
 
                     <Link onClick={closeSidebar} href={route('print-forms.index')} className="flex items-center gap-2 hover:text-gray-300">
                         <IoPrintOutline className="text-2xl" />

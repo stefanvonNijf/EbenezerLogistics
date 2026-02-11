@@ -45,7 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkins/{checkin}/checkout', [CheckinController::class, 'checkout'])
         ->name('checkins.checkout');
 
-    Route::resource('cars', CarController::class)->except(['destroy']);
+//    Route::resource('cars', CarController::class)->except(['destroy']);
 
     Route::get('/print-forms', [PrintFormController::class, 'index'])->name('print-forms.index');
     Route::get('/print-forms/ppe/{employee}', [PrintFormController::class, 'ppe'])->name('print-forms.ppe');
