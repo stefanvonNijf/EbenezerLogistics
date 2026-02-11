@@ -13,6 +13,14 @@ export default function Sidebar({ role, handleLogout }) {
     const toggleSidebar = () => setIsOpen(prev => !prev);
     const closeSidebar = () => setIsOpen(false);
 
+    const isActive = (routePattern) => route().current(routePattern);
+    const linkClass = (routePattern) =>
+        `flex items-center gap-2 rounded px-2 py-1 -mx-2 transition-colors ${
+            isActive(routePattern)
+                ? 'bg-white/20 text-white font-semibold'
+                : 'hover:text-gray-300'
+        }`;
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (
@@ -30,33 +38,33 @@ export default function Sidebar({ role, handleLogout }) {
 
     const menuItems = (
         <>
-            <Link onClick={closeSidebar} href={route('tools.index')} className="flex items-center gap-2 hover:text-gray-300">
+            <Link onClick={closeSidebar} href={route('tools.index')} className={linkClass('tools.*')}>
                 <FaWarehouse className="text-2xl" />
                 Storage
             </Link>
             <hr className="border-white border-t-[2px]" />
 
-                    <Link onClick={closeSidebar} href={route('toolbags.index')} className="flex items-center gap-2 hover:text-gray-300">
+                    <Link onClick={closeSidebar} href={route('toolbags.index')} className={linkClass('toolbags.*')}>
                         <RiBriefcase4Fill className="text-2xl" />
                         Toolbags
                     </Link>
                     <hr className="border-white border-t-[2px]" />
 
-                    <Link onClick={closeSidebar} href={route('checkins.index')} className="flex items-center gap-2 hover:text-gray-300">
+                    <Link onClick={closeSidebar} href={route('checkins.index')} className={linkClass('checkins.*')}>
                         <IoIosSwap className="text-2xl" />
-                        Check-ins
+                        Check-ins/outs
                     </Link>
                     <hr className="border-white border-t-[2px]" />
 
                     {role === 'admin' && (
                         <>
-                            <Link onClick={closeSidebar} href={route('employees.index')} className="flex items-center gap-2 hover:text-gray-300">
+                            <Link onClick={closeSidebar} href={route('employees.index')} className={linkClass('employees.*')}>
                                 <FaPeopleGroup className="text-2xl" />
                                 Employee's
                             </Link>
                             <hr className="border-white border-t-[2px]" />
 
-                            <Link onClick={closeSidebar} href={route('users.index')} className="flex items-center gap-2 hover:text-gray-300">
+                            <Link onClick={closeSidebar} href={route('users.index')} className={linkClass('users.*')}>
                                 <FaUsersGear className="text-2xl" />
                                 Users
                             </Link>
@@ -70,7 +78,7 @@ export default function Sidebar({ role, handleLogout }) {
                     {/*</Link>*/}
                     {/*<hr className="border-white border-t-[2px]" />*/}
 
-                    <Link onClick={closeSidebar} href={route('print-forms.index')} className="flex items-center gap-2 hover:text-gray-300">
+                    <Link onClick={closeSidebar} href={route('print-forms.index')} className={linkClass('print-forms.*')}>
                         <IoPrintOutline className="text-2xl" />
                         Print Forms
                     </Link>
