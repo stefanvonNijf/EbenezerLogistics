@@ -12,6 +12,7 @@ export default function ToolbagIndex() {
     const [deleting, setDeleting] = useState(null);
 
     const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
 
     const normalize = (str) =>
         (str ?? "")
@@ -21,12 +22,28 @@ export default function ToolbagIndex() {
 
     const normalizedSearch = normalize(search);
 
+    const getStatusKey = (toolbag) => {
+        if (toolbag.employee) return "in_use";
+        return toolbag.complete ? "complete" : "incomplete";
+    };
+
+    const getStatus = (toolbag) => {
+        if (toolbag.employee) return toolbag.employee.name;
+        return toolbag.complete ? "Complete" : "Incomplete";
+    };
+
+    const counts = {
+        complete: toolbags.filter(t => !t.employee && t.complete).length,
+        incomplete: toolbags.filter(t => !t.employee && !t.complete).length,
+        in_use: toolbags.filter(t => t.employee).length,
+    };
+
     const filteredData = toolbags.filter((toolbag) => {
-        const statusText = toolbag.employee ? toolbag.employee.name : "Available";
+        if (statusFilter !== "all" && getStatusKey(toolbag) !== statusFilter) return false;
         return (
             normalize(toolbag.name).includes(normalizedSearch) ||
             normalize(toolbag.type).includes(normalizedSearch) ||
-            normalize(statusText).includes(normalizedSearch)
+            normalize(getStatus(toolbag)).includes(normalizedSearch)
         );
     });
 
@@ -54,10 +71,15 @@ export default function ToolbagIndex() {
         },
         {
             header: "Status",
-            render: (row) =>
-                row.employee
-                    ? row.employee.name
-                    : "Available"
+            render: (row) => {
+                const status = getStatus(row);
+                if (row.employee) return status;
+                return (
+                    <span className={row.complete ? "text-green-600" : "text-red-600"}>
+                        {status}
+                    </span>
+                );
+            }
         },
         ...(canDelete ? [{
             header: 'Actions',
@@ -79,7 +101,7 @@ export default function ToolbagIndex() {
             header={
                 <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                     <div className="flex items-start justify-between py-6">
-                        <h1 className="text-xl font-bold">Toolbags</h1>
+                        <h1 className="text-xl font-bold">Toolbags ({toolbags.length})</h1>
                     </div>
                 </div>
             }
@@ -99,7 +121,7 @@ export default function ToolbagIndex() {
                         </Link>
                     </div>
 
-                    {/* SEARCH */}
+                    {/* SEARCH & FILTERS */}
                     <div className="flex flex-wrap items-center gap-3 mb-6">
                         <input
                             type="text"
@@ -108,6 +130,16 @@ export default function ToolbagIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border rounded px-3 py-2 pr-8"
+                        >
+                            <option value="all">All ({toolbags.length})</option>
+                            <option value="complete">Complete ({counts.complete})</option>
+                            <option value="incomplete">Incomplete ({counts.incomplete})</option>
+                            <option value="in_use">In use ({counts.in_use})</option>
+                        </select>
                     </div>
 
                     {/* TABLE */}
