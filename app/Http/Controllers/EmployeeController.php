@@ -36,7 +36,6 @@ class EmployeeController extends Controller
             'name' => 'required|string',
             'employee_number' => 'nullable|string|unique:employees,employee_number',
             'role' => 'required|string',
-            'remark' => 'nullable|string',
         ]);
 
         Employee::create($validated);

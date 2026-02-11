@@ -12,7 +12,7 @@ export default function Create({ categories }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("tools.store"));
+        post(route("employees.store")); // ← GECORRIGEERD van "tools.store"
     };
 
     return (
@@ -62,9 +62,11 @@ export default function Create({ categories }) {
                             value={data.role}
                             onChange={(e) => setData("role", e.target.value)}
                         >
+                            <option value="">Select a role</option> {/* ← TOEGEVOEGD: lege default optie */}
                             <option value="electrician">Electrician</option>
                             <option value="ironworker">Ironworker</option>
                         </select>
+                        {errors.role && <div className="text-red-600 text-sm">{errors.role}</div>}
                     </div>
 
                     {/* ACTION BUTTONS */}
