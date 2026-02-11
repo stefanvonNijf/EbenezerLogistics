@@ -109,13 +109,21 @@ export default function Edit({ toolbag, tools }) {
                             </div>
                         </div>
 
-                        {/* SAVE BUTTON */}
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800"
-                        >
-                            Save changes
-                        </button>
+                        {/* BUTTONS */}
+                        <div className="flex gap-3">
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800"
+                            >
+                                Save changes
+                            </button>
+                            <Link
+                                href={route("toolbags.index")}
+                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                            >
+                                Cancel
+                            </Link>
+                        </div>
                     </form>
                 </div>
 
