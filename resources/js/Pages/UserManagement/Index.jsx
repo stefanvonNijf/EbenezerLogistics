@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { usePage, Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table from '@/Components/Table.jsx';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 
 export default function UserIndex() {
     const { users, auth } = usePage().props;
     const canDelete = auth.user?.role === 'admin';
 
     const [search, setSearch] = useState('');
+    const [deleting, setDeleting] = useState(null);
+
     const normalize = (str) =>
         (str ?? "")
             .normalize("NFD")
@@ -24,10 +27,10 @@ export default function UserIndex() {
         );
     });
 
-    const handleDelete = (user) => {
-        if (confirm(`Are you sure you want to delete "${user.name}"?`)) {
-            router.delete(route('users.destroy', user.id));
-        }
+    const handleDelete = () => {
+        router.delete(route('users.destroy', deleting.id), {
+            onSuccess: () => setDeleting(null),
+        });
     };
 
     const columns = [
@@ -48,7 +51,7 @@ export default function UserIndex() {
             header: 'Actions',
             render: (row) => (
                 <button
-                    onClick={() => handleDelete(row)}
+                    onClick={() => setDeleting(row)}
                     className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                 >
                     Delete
@@ -100,6 +103,12 @@ export default function UserIndex() {
 
             </div>
 
+            <ConfirmDeleteModal
+                show={!!deleting}
+                onClose={() => setDeleting(null)}
+                onConfirm={handleDelete}
+                name={deleting?.name}
+            />
         </AuthenticatedLayout>
     );
 }

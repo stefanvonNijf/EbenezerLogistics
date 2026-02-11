@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     HiPencilSquare,
     HiTrash,
@@ -6,13 +6,15 @@ import {
     HiMinusCircle
 } from "react-icons/hi2";
 import { Link, router } from '@inertiajs/react';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 
 export default function ToolActionButtons({ row, canDelete = false }) {
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-    const handleDelete = (id) => {
-        if (confirm("Are you sure you want to delete this tool?")) {
-            router.delete(route("tools.destroy", id));
-        }
+    const handleDelete = () => {
+        router.delete(route("tools.destroy", row.id), {
+            onSuccess: () => setShowDeleteModal(false),
+        });
     };
 
     const handleIncrement = (id) => {
@@ -38,13 +40,20 @@ export default function ToolActionButtons({ row, canDelete = false }) {
             {/* DELETE */}
             {canDelete && (
                 <button
-                    onClick={() => handleDelete(row.id)}
+                    onClick={() => setShowDeleteModal(true)}
                     className="text-red-600 hover:text-red-800"
                     title="Delete"
                 >
                     <HiTrash className="text-3xl" />
                 </button>
             )}
+
+            <ConfirmDeleteModal
+                show={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                onConfirm={handleDelete}
+                name={row.name}
+            />
 
             {/* STOCK MINUS */}
             <button

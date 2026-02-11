@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { usePage, Head, Link } from '@inertiajs/react';
+import { usePage, Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table from '@/Components/Table.jsx';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 
 export default function EmployeeIndex() {
-    const { employees } = usePage().props;
+    const { employees, auth } = usePage().props;
+    const canDelete = auth.user?.role === 'admin';
 
     const [search, setSearch] = useState('');
+    const [deleting, setDeleting] = useState(null);
+
     const normalize = (str) =>
         (str ?? "")
             .normalize("NFD")
@@ -23,6 +27,12 @@ export default function EmployeeIndex() {
         );
     });
 
+    const handleDelete = () => {
+        router.delete(route('employees.destroy', deleting.id), {
+            onSuccess: () => setDeleting(null),
+        });
+    };
+
     const columns = [
         {
             header: 'Name',
@@ -37,6 +47,17 @@ export default function EmployeeIndex() {
         },
         { header: 'Employee Nr', render: (row) => row.employee_number || '-' },
         { header: 'Role', accessor: 'role' },
+        ...(canDelete ? [{
+            header: 'Actions',
+            render: (row) => (
+                <button
+                    onClick={() => setDeleting(row)}
+                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                    Delete
+                </button>
+            )
+        }] : []),
     ];
 
     return (
@@ -84,6 +105,12 @@ export default function EmployeeIndex() {
 
             </div>
 
+            <ConfirmDeleteModal
+                show={!!deleting}
+                onClose={() => setDeleting(null)}
+                onConfirm={handleDelete}
+                name={deleting?.name}
+            />
         </AuthenticatedLayout>
     );
 }

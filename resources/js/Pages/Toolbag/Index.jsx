@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { usePage, Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table from '@/Components/Table.jsx';
+import ConfirmDeleteModal from '@/Components/ConfirmDeleteModal';
 
 export default function ToolbagIndex() {
-    const { toolbags, employees } = usePage().props;
+    const { toolbags, employees, auth } = usePage().props;
+    const canDelete = auth.user?.role === 'admin';
     const [selectedToolbag, setSelectedToolbag] = useState(null);
     const [assignEmployee, setAssignEmployee] = useState("");
+    const [deleting, setDeleting] = useState(null);
 
     const [search, setSearch] = useState("");
 
@@ -21,6 +24,12 @@ export default function ToolbagIndex() {
     const filteredData = toolbags.filter((toolbag) => {
         return normalize(toolbag.name).includes(normalizedSearch);
     });
+
+    const handleDelete = () => {
+        router.delete(route('toolbags.destroy', deleting.id), {
+            onSuccess: () => setDeleting(null),
+        });
+    };
 
     const columns = [
         {
@@ -45,6 +54,17 @@ export default function ToolbagIndex() {
                     ? row.employee.name
                     : "Available"
         },
+        ...(canDelete ? [{
+            header: 'Actions',
+            render: (row) => (
+                <button
+                    onClick={() => setDeleting(row)}
+                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                    Delete
+                </button>
+            )
+        }] : []),
     ];
 
 
@@ -92,6 +112,12 @@ export default function ToolbagIndex() {
 
                 </div>
             </div>
+            <ConfirmDeleteModal
+                show={!!deleting}
+                onClose={() => setDeleting(null)}
+                onConfirm={handleDelete}
+                name={deleting?.name}
+            />
         </AuthenticatedLayout>
     );
 }
