@@ -120,7 +120,7 @@ class ToolController extends Controller
 
         return redirect()
             ->route('tools.index')
-            ->with('success', 'Tool succesvol verwijderd.');
+            ->with('success', 'Tool deleted successfully.');
     }
 
     public function incrementStock(Tool $tool)

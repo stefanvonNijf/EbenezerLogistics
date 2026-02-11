@@ -5,7 +5,8 @@ import Table from '@/Components/Table.jsx';
 import ActionButtons from '@/Components/ActionButtons.jsx';
 
 export default function ToolIndex() {
-    const { tools } = usePage().props;
+    const { tools, auth } = usePage().props;
+    const canDelete = auth.user?.role === 'admin';
 
     const [search, setSearch] = useState('');
 
@@ -25,7 +26,7 @@ export default function ToolIndex() {
         { header: 'Stock', accessor: 'amount_in_stock' },
         {
             header: 'Actions',
-            render: (row) => <ActionButtons row={row} />
+            render: (row) => <ActionButtons row={row} canDelete={canDelete} />
         }
     ];
 

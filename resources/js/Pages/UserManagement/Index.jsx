@@ -4,7 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table from '@/Components/Table.jsx';
 
 export default function UserIndex() {
-    const { users } = usePage().props;
+    const { users, auth } = usePage().props;
+    const canDelete = auth.user?.role === 'admin';
 
     const [search, setSearch] = useState('');
     const normalize = (str) =>
@@ -43,7 +44,7 @@ export default function UserIndex() {
         },
         { header: 'Email', accessor: 'email' },
         { header: 'Role', accessor: 'role' },
-        {
+        ...(canDelete ? [{
             header: 'Actions',
             render: (row) => (
                 <button
@@ -53,7 +54,7 @@ export default function UserIndex() {
                     Delete
                 </button>
             )
-        },
+        }] : []),
     ];
 
     return (
