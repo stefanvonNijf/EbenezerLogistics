@@ -22,7 +22,8 @@ export default function ToolIndex() {
         return (
             normalize(tool.name).includes(normalizedSearch) ||
             normalize(tool.type).includes(normalizedSearch) ||
-            normalize(tool.brand).includes(normalizedSearch)
+            normalize(tool.brand).includes(normalizedSearch) ||
+            normalize(tool.category?.name).includes(normalizedSearch)
         );
     });
 
@@ -33,6 +34,7 @@ export default function ToolIndex() {
         { header: 'Brand', accessor: 'brand' },
         { header: 'Name', accessor: 'name' },
         { header: 'Type', accessor: 'type' },
+        { header: 'Category', render: (row) => row.category?.name || '-' },
         {
             header: 'Stock',
             render: (row) => (
