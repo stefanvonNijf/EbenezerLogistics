@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { FaWarehouse } from "react-icons/fa";
 import { FaCar, FaPeopleGroup, FaUsersGear } from "react-icons/fa6";
-import { IoLogOutOutline, IoPrintOutline } from "react-icons/io5";
+import { IoLogOutOutline, IoPrintOutline, IoSettingsSharp } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
 import { MdDashboard } from "react-icons/md";
 import { RiBriefcase4Fill } from "react-icons/ri";
@@ -72,7 +72,7 @@ export default function Sidebar({ role, handleLogout }) {
                         Check-ins/outs
                     </Link>
                     <hr className="border-white border-t-[2px]" />
-            
+
                     {role === 'admin' && (
                         <>
                             <Link onClick={closeSidebar} href={route('users.index')} className={linkClass('users.*')}>
@@ -94,6 +94,16 @@ export default function Sidebar({ role, handleLogout }) {
                         Print Forms
                     </Link>
                     <hr className="border-white border-t-[2px]" />
+
+                    {role === 'admin' && (
+                        <>
+                            <Link onClick={closeSidebar} href={route('settings.index')} className={linkClass('settings.*')}>
+                                <IoSettingsSharp className="text-2xl" />
+                                Settings
+                            </Link>
+                            <hr className="border-white border-t-[2px]" />
+                        </>
+                    )}
 
             <button
                 onClick={() => {

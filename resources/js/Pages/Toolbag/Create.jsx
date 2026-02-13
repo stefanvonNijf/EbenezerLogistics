@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { useForm, Link, Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
-export default function Create({ tools }) {
+export default function Create({ tools, roles }) {
 
     const { data, setData, post, errors } = useForm({
         name: "",
         notes: "",
-        type: "electrician",
+        type: "",
         tools: [],
     });
 
@@ -84,8 +84,10 @@ export default function Create({ tools }) {
                                 }}
                                 className="border rounded px-3 py-2 w-full mt-1"
                             >
-                                <option value="electrician">Electrician</option>
-                                <option value="ironworker">Ironworker</option>
+                                <option value="">Select a type</option>
+                                {roles.map(role => (
+                                    <option key={role.id} value={role.name}>{role.name}</option>
+                                ))}
                             </select>
                             {errors.type && <p className="text-red-600 text-sm mt-1">{errors.type}</p>}
                         </div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Edit({ employee }) {
+export default function Edit({ employee, roles }) {
 
     const { data, setData, put, processing, errors } = useForm({
         name: employee.name ?? "",
@@ -65,8 +65,10 @@ export default function Edit({ employee }) {
                             value={data.role}
                             onChange={(e) => setData("role", e.target.value)}
                         >
-                            <option value="electrician">Electrician</option>
-                            <option value="ironworker">Ironworker</option>
+                            <option value="">Select a role</option>
+                            {roles.map(role => (
+                                <option key={role.id} value={role.name}>{role.name}</option>
+                            ))}
                         </select>
                     </div>
 

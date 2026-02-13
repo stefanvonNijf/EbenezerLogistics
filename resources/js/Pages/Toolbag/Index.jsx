@@ -67,7 +67,7 @@ export default function ToolbagIndex() {
         },
         {
             header: "Type",
-            render: (row) => row.type === "electrician" ? "Electrician" : "Ironworker"
+            render: (row) => row.type
         },
         {
             header: "Status",

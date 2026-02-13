@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use App\Models\Tool;
 use Inertia\Inertia;
@@ -28,10 +29,9 @@ class ToolController extends Controller
      */
     public function create()
     {
-        $categories = Category::all();
-
         return inertia('Tool/Create', [
-            'categories' => $categories
+            'categories' => Category::orderBy('name')->get(),
+            'roles' => Role::orderBy('name')->get(),
         ]);
     }
 
@@ -75,10 +75,10 @@ class ToolController extends Controller
      */
     public function edit(Tool $tool)
     {
-        $categories = Category::all();
         return inertia('Tool/Edit', [
             'tool' => $tool,
-            'categories' => $categories
+            'categories' => Category::orderBy('name')->get(),
+            'roles' => Role::orderBy('name')->get(),
         ]);
     }
 

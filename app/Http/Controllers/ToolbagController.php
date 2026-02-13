@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\Tool;
 use App\Models\Toolbag;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class ToolbagController extends Controller
     {
         return Inertia::render('Toolbag/Create', [
             'tools' => Tool::all(),
+            'roles' => Role::orderBy('name')->get(),
         ]);
     }
 
@@ -40,7 +42,7 @@ class ToolbagController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'notes' => 'nullable|string',
-            'type' => 'required|in:electrician,ironworker',
+            'type' => 'required|string',
             'tools' => 'array',
             'tools.*' => 'exists:tools,id',
         ]);
@@ -94,6 +96,7 @@ class ToolbagController extends Controller
         return Inertia::render('Toolbag/Edit', [
             'toolbag' => $toolbag->load('tools'),
             'tools' => $tools,
+            'roles' => Role::orderBy('name')->get(),
         ]);
     }
 
@@ -106,7 +109,7 @@ class ToolbagController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'notes' => 'nullable|string',
-            'type' => 'required|in:electrician,ironworker',
+            'type' => 'required|string',
             'employee_id' => 'nullable|exists:employees,id',
             'tools' => 'array',
             'tools.*' => 'exists:tools,id',

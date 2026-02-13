@@ -7,6 +7,7 @@ use App\Http\Controllers\ToolbagController;
 use App\Http\Controllers\CarController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PrintFormController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -70,6 +71,15 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/employees/{employee}/plan-checkout', [EmployeeController::class, 'planCheckout'])
         ->name('employees.planCheckout');
     Route::resource('users', UserManagementController::class);
+
+    // Settings (categories & roles)
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/categories', [SettingsController::class, 'storeCategory'])->name('settings.categories.store');
+    Route::put('/settings/categories/{category}', [SettingsController::class, 'updateCategory'])->name('settings.categories.update');
+    Route::delete('/settings/categories/{category}', [SettingsController::class, 'destroyCategory'])->name('settings.categories.destroy');
+    Route::post('/settings/roles', [SettingsController::class, 'storeRole'])->name('settings.roles.store');
+    Route::put('/settings/roles/{role}', [SettingsController::class, 'updateRole'])->name('settings.roles.update');
+    Route::delete('/settings/roles/{role}', [SettingsController::class, 'destroyRole'])->name('settings.roles.destroy');
 
     Route::delete('/tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
     Route::delete('/toolbags/{toolbag}', [ToolbagController::class, 'destroy'])->name('toolbags.destroy');

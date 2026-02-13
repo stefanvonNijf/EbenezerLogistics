@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Create({ categories }) {
+export default function Create({ roles }) {
 
     const { data, setData, post, processing, errors } = useForm({
         name: "",
@@ -62,9 +62,10 @@ export default function Create({ categories }) {
                             value={data.role}
                             onChange={(e) => setData("role", e.target.value)}
                         >
-                            <option value="">Select a role</option> {/* ← TOEGEVOEGD: lege default optie */}
-                            <option value="electrician">Electrician</option>
-                            <option value="ironworker">Ironworker</option>
+                            <option value="">Select a role</option>
+                            {roles.map(role => (
+                                <option key={role.id} value={role.name}>{role.name}</option>
+                            ))}
                         </select>
                         {errors.role && <div className="text-red-600 text-sm">{errors.role}</div>}
                     </div>

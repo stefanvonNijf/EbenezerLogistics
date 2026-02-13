@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Checkin;
 use App\Models\Employee;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -25,7 +26,9 @@ class EmployeeController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Employee/Create');
+        return Inertia::render('Employee/Create', [
+            'roles' => Role::orderBy('name')->get(),
+        ]);
     }
 
     /**
@@ -57,7 +60,8 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         return Inertia::render('Employee/Edit', [
-            'employee' => $employee
+            'employee' => $employee,
+            'roles' => Role::orderBy('name')->get(),
         ]);
     }
 
