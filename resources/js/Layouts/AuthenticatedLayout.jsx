@@ -2,7 +2,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo';
 import Sidebar from "@/Layouts/Sidebar.jsx";
 import { router, usePage } from '@inertiajs/react';
 
-export default function AuthenticatedLayout({ header, children }) {
+export default function AuthenticatedLayout({ children }) {
     const handleLogout = () => {
         router.post(route('logout'));
     };
@@ -24,12 +24,7 @@ export default function AuthenticatedLayout({ header, children }) {
             <div className="h-28 lg:w-1/12" />
 
             {/* Content */}
-            <div className="pt-40 lg:pl-[8.333%] pr-4 w-full min-h-screen box-border">
-                {header && (
-                    <div className="mb-6 text-2xl font-sans">
-                        {header}
-                    </div>
-                )}
+            <div className="pt-40 lg:pl-[8.333%] pr-4 w-full h-screen box-border overflow-hidden">
                 {children}
             </div>
         </div>

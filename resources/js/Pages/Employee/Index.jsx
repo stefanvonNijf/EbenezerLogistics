@@ -81,7 +81,7 @@ export default function EmployeeIndex() {
             )
         },
         { header: 'Employee Nr', render: (row) => row.employee_number || '-' },
-        { header: 'Role', accessor: 'role' },
+        { header: 'Function', accessor: 'role' },
         {
             header: 'Status',
             render: (row) => <StatusBadge status={row.latest_checkin?.status} />
@@ -96,7 +96,7 @@ export default function EmployeeIndex() {
                         {isAdmin && (!status || status === 'checked_out') && (
                             <button
                                 onClick={() => setPlanModal(row)}
-                                className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                                className="w-28 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm text-center"
                             >
                                 Plan checkin
                             </button>
@@ -106,7 +106,7 @@ export default function EmployeeIndex() {
                         {status === 'planned_checkin' && (
                             <Link
                                 href={route("checkins.create") + `?employee_id=${row.id}`}
-                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                                className="inline-block w-28 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm text-center"
                             >
                                 Check in
                             </Link>
@@ -116,7 +116,7 @@ export default function EmployeeIndex() {
                         {status === 'planned_checkout' && (
                             <button
                                 onClick={() => setCheckoutTarget(row)}
-                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                                className="w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
                             >
                                 Check out
                             </button>
@@ -126,7 +126,7 @@ export default function EmployeeIndex() {
                         {isAdmin && (
                             <button
                                 onClick={() => setDeleting(row)}
-                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                                className="w-28 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm text-center"
                             >
                                 Delete
                             </button>
@@ -138,32 +138,22 @@ export default function EmployeeIndex() {
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
-                    <div className="flex items-start justify-between py-6">
-                        <h1 className="text-xl font-bold">Employees</h1>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Employees" />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
 
                 <div className="max-w-full mx-auto">
 
-                    <div className="mb-6">
+                    <h1 className="text-xl font-bold mb-4">Employees</h1>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("employees.create")}
-                            className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 whitespace-nowrap"
+                            className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
                         >
                             Add new employee
                         </Link>
-                    </div>
-
-                    {/* SEARCH */}
-                    <div className="flex flex-wrap items-center gap-3 mb-6">
                         <input
                             type="text"
                             placeholder="Search on keyword..."
@@ -174,9 +164,7 @@ export default function EmployeeIndex() {
                     </div>
 
                     {/* TABLE */}
-                    <div className="overflow-x-auto">
-                        <Table columns={columns} data={filteredData} />
-                    </div>
+                    <Table columns={columns} data={filteredData} />
 
                 </div>
 

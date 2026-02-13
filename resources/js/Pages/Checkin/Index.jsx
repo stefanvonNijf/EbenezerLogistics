@@ -83,7 +83,7 @@ export default function CheckinIndex() {
                     href={route('checkins.pdf', row.id)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                    className="inline-block w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
                 >
                     Export Pdf
                 </a>
@@ -97,22 +97,22 @@ export default function CheckinIndex() {
                     return (
                         <Link
                             href={route("checkins.create") + `?employee_id=${row.employee_id}`}
-                            className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            className="inline-block w-28 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm text-center"
                         >
                             Check in
                         </Link>
                     );
                 }
                 if (row.checkout_date) {
-                    return <span className="text-gray-400">Done</span>;
+                    return <span className="inline-block w-28 py-1 text-gray-400 text-sm text-center">Done</span>;
                 }
                 return (
                     <button
                         type="button"
                         onClick={() => setCheckoutTarget(row)}
-                        className="px-2 py-1 bg-blue-400 text-white rounded hover:bg-blue-500"
+                        className="w-28 py-1 bg-blue-400 text-white rounded hover:bg-blue-500 text-sm text-center"
                     >
-                        CHECKOUT
+                        Checkout
                     </button>
                 );
             }
@@ -120,45 +120,32 @@ export default function CheckinIndex() {
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <h1 className="text-xl font-bold">Check-ins</h1>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Check-ins" />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
 
-                    {/* BUTTON */}
-                    <div className="mb-6">
+                    <h1 className="text-xl font-bold mb-4">Check-ins</h1>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("checkins.create")}
-                            className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 whitespace-nowrap"
+                            className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
                         >
                             Add new check-in
                         </Link>
-                    </div>
-
-                    {/* SEARCH */}
-                    <div className="mb-6">
                         <input
                             type="text"
                             placeholder="Search on keyword..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="border rounded px-3 py-2 w-full sm:w-64"
+                            className="border rounded px-3 py-2"
                         />
                     </div>
 
                     {/* TABLE */}
-                    <div className="overflow-x-auto">
-                        <Table columns={columns} data={filteredData} />
-                    </div>
+                    <Table columns={columns} data={filteredData} />
 
                 </div>
             </div>

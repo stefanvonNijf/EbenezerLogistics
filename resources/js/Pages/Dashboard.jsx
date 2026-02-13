@@ -10,17 +10,14 @@ export default function Dashboard() {
     const { plannedCheckins = [] } = usePage().props;
 
     return (
-        <AuthenticatedLayout
-            header={
-                <h2 className="text-xl font-semibold leading-tight text-gray-800">
-                    Dashboard
-                </h2>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Dashboard" />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                    <div className="mb-6">
+                        <h1 className="text-xl font-bold">Dashboard</h1>
+                    </div>
                     {plannedCheckins.length > 0 && (
                         <div className="mt-6">
                             <h3 className="text-lg font-semibold mb-4">Planned checkins / checkouts</h3>

@@ -97,32 +97,21 @@ export default function ToolbagIndex() {
 
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
-                    <div className="flex items-start justify-between py-6">
-                        <h1 className="text-xl font-bold">Toolbags ({toolbags.length})</h1>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Toolbags" />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
 
-                    {/* CREATE BUTTON */}
-                    <div className="mb-6">
+                    <h1 className="text-xl font-bold mb-4">Toolbags ({toolbags.length})</h1>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("toolbags.create")}
-                            className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 whitespace-nowrap"
+                            className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
                         >
                             Add new toolbag
                         </Link>
-                    </div>
-
-                    {/* SEARCH & FILTERS */}
-                    <div className="flex flex-wrap items-center gap-3 mb-6">
                         <input
                             type="text"
                             placeholder="Search on keyword..."

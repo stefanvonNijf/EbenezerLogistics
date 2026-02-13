@@ -47,7 +47,7 @@ export default function Sidebar({ role, handleLogout }) {
 
             <Link onClick={closeSidebar} href={route('tools.index')} className={linkClass('tools.*')}>
                 <FaWarehouse className="text-2xl" />
-                Storage
+                Inventory
             </Link>
             <hr className="border-white border-t-[2px]" />
 

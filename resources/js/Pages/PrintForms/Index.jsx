@@ -13,18 +13,13 @@ export default function PrintFormsIndex() {
         : "#";
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
-                    <div className="flex items-start justify-between py-6">
-                        <h1 className="text-xl font-bold">Print Forms</h1>
-                    </div>
-                </div>
-            }
-        >
+        <AuthenticatedLayout>
             <Head title="Print Forms" />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
+                <div className="mb-6">
+                    <h1 className="text-xl font-bold">Print Forms</h1>
+                </div>
                 <div className="max-w-3xl mx-auto space-y-8">
 
                     {/* PPE ISSUE FORM */}

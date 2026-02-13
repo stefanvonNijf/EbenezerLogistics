@@ -38,33 +38,22 @@ export default function ToolIndex() {
     ];
 
     return (
-        <AuthenticatedLayout
-            header={
-                <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
-                    <div className="flex items-start justify-between py-6">
-                        <h1 className="text-xl font-bold">Tools</h1>
-                    </div>
-                </div>
-            }
-        >
-            <Head title="Tools" />
+        <AuthenticatedLayout>
+            <Head title="Inventory" />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
 
                 <div className="max-w-full mx-auto">
 
-                    {/* ADD TOOL BUTTON — now left above filters */}
-                    <div className="mb-6">
+                    <h1 className="text-xl font-bold mb-4">Inventory</h1>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("tools.create")}
-                            className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 whitespace-nowrap"
+                            className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
                         >
                             Add new tool
                         </Link>
-                    </div>
-
-                    {/* SEARCH */}
-                    <div className="flex flex-wrap items-center gap-3 mb-6">
                         <input
                             type="text"
                             placeholder="Search on keyword..."
