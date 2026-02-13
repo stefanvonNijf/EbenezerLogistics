@@ -10,6 +10,7 @@ export default function Create({ categories }) {
         type: "",
         category_id: "",
         amount_in_stock: 0,
+        minimal_stock: "",
         replacement_cost: "",
         roletype: "shared",
         image_path: null,
@@ -112,6 +113,20 @@ export default function Create({ categories }) {
                             onChange={(e) => setData("amount_in_stock", e.target.value)}
                         />
                         {errors.amount_in_stock && <div className="text-red-600 text-sm">{errors.amount_in_stock}</div>}
+                    </div>
+
+                    {/* MINIMAL STOCK */}
+                    <div>
+                        <label className="block font-medium">Minimal Stock</label>
+                        <input
+                            type="number"
+                            min="0"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.minimal_stock}
+                            onChange={(e) => setData("minimal_stock", e.target.value)}
+                            placeholder="Leave empty for no minimum"
+                        />
+                        {errors.minimal_stock && <div className="text-red-600 text-sm">{errors.minimal_stock}</div>}
                     </div>
 
                     {/* REPLACEMENT COST */}

@@ -26,11 +26,24 @@ export default function ToolIndex() {
         );
     });
 
+    const isLowStock = (tool) =>
+        tool.minimal_stock != null && tool.amount_in_stock <= tool.minimal_stock;
+
     const columns = [
         { header: 'Brand', accessor: 'brand' },
         { header: 'Name', accessor: 'name' },
         { header: 'Type', accessor: 'type' },
-        { header: 'Stock', accessor: 'amount_in_stock' },
+        {
+            header: 'Stock',
+            render: (row) => (
+                <span className={`flex items-center gap-1 ${isLowStock(row) ? 'text-red-600 font-semibold' : ''}`}>
+                    {row.amount_in_stock}
+                    {isLowStock(row) && (
+                        <span title={`Below minimum (${row.minimal_stock})`} className="text-red-500">&#9888;</span>
+                    )}
+                </span>
+            )
+        },
         {
             header: 'Actions',
             render: (row) => <ActionButtons row={row} canDelete={canDelete} />

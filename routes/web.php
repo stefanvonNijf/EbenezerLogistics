@@ -22,8 +22,13 @@ Route::get('/dashboard', function () {
         ->latest()
         ->get();
 
+    $lowStockTools = \App\Models\Tool::whereNotNull('minimal_stock')
+        ->whereColumn('amount_in_stock', '<=', 'minimal_stock')
+        ->get();
+
     return Inertia::render('Dashboard', [
         'plannedCheckins' => $plannedCheckins,
+        'lowStockTools' => $lowStockTools,
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 

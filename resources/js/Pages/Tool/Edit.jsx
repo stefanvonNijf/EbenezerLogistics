@@ -10,6 +10,7 @@ export default function Edit({ tool, categories }) {
         type: tool.type || "",
         category_id: tool.category_id || "",
         amount_in_stock: tool.amount_in_stock || 0,
+        minimal_stock: tool.minimal_stock ?? "",
         replacement_cost: tool.replacement_cost ?? "",
         roletype: tool.roletype || "shared",
         image: null,
@@ -129,6 +130,22 @@ export default function Edit({ tool, categories }) {
                             <div className="text-red-600 text-sm">{errors.amount_in_stock}</div>
                         )}
                     </div>
+                    {/* MINIMAL STOCK */}
+                    <div>
+                        <label className="block font-medium">Minimal Stock</label>
+                        <input
+                            type="number"
+                            min="0"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.minimal_stock}
+                            onChange={(e) => setData("minimal_stock", e.target.value)}
+                            placeholder="Leave empty for no minimum"
+                        />
+                        {errors.minimal_stock && (
+                            <div className="text-red-600 text-sm">{errors.minimal_stock}</div>
+                        )}
+                    </div>
+
                     {/* REPLACEMENT COST */}
                     <div>
                         <label className="block font-medium">Replacement Cost</label>

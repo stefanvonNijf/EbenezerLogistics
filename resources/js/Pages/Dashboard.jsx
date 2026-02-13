@@ -7,7 +7,7 @@ const statusConfig = {
 };
 
 export default function Dashboard() {
-    const { plannedCheckins = [] } = usePage().props;
+    const { plannedCheckins = [], lowStockTools = [] } = usePage().props;
 
     return (
         <AuthenticatedLayout>
@@ -18,6 +18,31 @@ export default function Dashboard() {
                     <div className="mb-6">
                         <h1 className="text-xl font-bold">Dashboard</h1>
                     </div>
+                    {lowStockTools.length > 0 && (
+                        <div className="mb-6">
+                            <h3 className="text-lg font-semibold mb-4">Low stock alerts</h3>
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                {lowStockTools.map((tool) => (
+                                    <div
+                                        key={tool.id}
+                                        className="p-4 bg-white rounded-lg shadow border-l-4 border-red-400"
+                                    >
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-red-500 text-lg">&#9888;</span>
+                                            <span className="font-semibold text-gray-800">{tool.name}</span>
+                                        </div>
+                                        <p className="text-sm text-gray-600">
+                                            Stock: <span className="font-semibold text-red-600">{tool.amount_in_stock}</span> / Min: {tool.minimal_stock}
+                                        </p>
+                                        {tool.brand && (
+                                            <p className="text-sm text-gray-500 mt-1">{tool.brand}</p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {plannedCheckins.length > 0 && (
                         <div className="mt-6">
                             <h3 className="text-lg font-semibold mb-4">Planned checkins / checkouts</h3>

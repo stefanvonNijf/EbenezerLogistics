@@ -47,6 +47,7 @@ class ToolController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'roletype' => 'required|string',
             'amount_in_stock' => 'required|integer|min:0',
+            'minimal_stock' => 'nullable|integer|min:0',
             'replacement_cost' => 'nullable|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
@@ -93,6 +94,7 @@ class ToolController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'roletype' => 'required|string',
             'amount_in_stock' => 'required|integer|min:0',
+            'minimal_stock' => 'nullable|integer|min:0',
             'replacement_cost' => 'nullable|numeric|min:0',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
         ]);
