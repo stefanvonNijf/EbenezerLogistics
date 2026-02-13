@@ -110,11 +110,16 @@ export default function CheckinIndex() {
                 if (row.checkout_date) {
                     return <span className="inline-block w-28 py-1 text-gray-400 text-sm text-center">Done</span>;
                 }
+                const hasPlannedDate = !!row.planned_checkout_date;
                 return (
                     <button
                         type="button"
                         onClick={() => setCheckoutTarget(row)}
-                        className="w-28 py-1 bg-blue-400 text-white rounded hover:bg-blue-500 text-sm text-center"
+                        className={`w-28 py-1 text-white rounded text-sm text-center ${
+                            hasPlannedDate
+                                ? 'bg-red-600 hover:bg-red-700'
+                                : 'bg-blue-400 hover:bg-blue-500'
+                        }`}
                     >
                         Checkout
                     </button>

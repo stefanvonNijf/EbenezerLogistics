@@ -18,7 +18,10 @@ class CheckinController extends Controller
     public function index()
     {
         return Inertia::render('Checkin/Index', [
-            'checkins' => Checkin::with(['employee', 'toolbag'])->latest()->get(),
+            'checkins' => Checkin::with(['employee', 'toolbag'])
+                ->orderByRaw('planned_checkout_date IS NOT NULL AND status != ? DESC', ['checked_out'])
+                ->latest()
+                ->get(),
         ]);
     }
 
