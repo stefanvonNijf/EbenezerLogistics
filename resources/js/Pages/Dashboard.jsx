@@ -29,7 +29,7 @@ export default function Dashboard() {
                                     >
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="text-red-500 text-lg">&#9888;</span>
-                                            <span className="font-semibold text-gray-800">{tool.name}</span>
+                                            <span className="font-semibold text-gray-800">{tool.name} {tool.type}</span>
                                         </div>
                                         <p className="text-sm text-gray-600">
                                             Stock: <span className="font-semibold text-red-600">{tool.amount_in_stock}</span> / Min: {tool.minimal_stock}

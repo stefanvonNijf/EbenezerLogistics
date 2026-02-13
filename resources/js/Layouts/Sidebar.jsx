@@ -57,12 +57,6 @@ export default function Sidebar({ role, handleLogout }) {
                     </Link>
                     <hr className="border-white border-t-[2px]" />
 
-                    <Link onClick={closeSidebar} href={route('checkins.index')} className={linkClass('checkins.*')}>
-                        <IoIosSwap className="text-2xl" />
-                        Check-ins/outs
-                    </Link>
-                    <hr className="border-white border-t-[2px]" />
-
                     {role === 'admin' && (
                         <>
                             <Link onClick={closeSidebar} href={route('employees.index')} className={linkClass('employees.*')}>
@@ -70,7 +64,17 @@ export default function Sidebar({ role, handleLogout }) {
                                 Employee's
                             </Link>
                             <hr className="border-white border-t-[2px]" />
+                        </>
+                    )}
 
+                    <Link onClick={closeSidebar} href={route('checkins.index')} className={linkClass('checkins.*')}>
+                        <IoIosSwap className="text-2xl" />
+                        Check-ins/outs
+                    </Link>
+                    <hr className="border-white border-t-[2px]" />
+            
+                    {role === 'admin' && (
+                        <>
                             <Link onClick={closeSidebar} href={route('users.index')} className={linkClass('users.*')}>
                                 <FaUsersGear className="text-2xl" />
                                 Users
