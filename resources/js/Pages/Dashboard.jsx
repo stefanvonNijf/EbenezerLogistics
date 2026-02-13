@@ -63,8 +63,13 @@ export default function Dashboard() {
                                                 </span>
                                             </div>
                                             <p className="text-sm text-gray-600">
-                                                Date: {checkin.checkin_date}
+                                                Checkin date: {checkin.checkin_date}
                                             </p>
+                                            {checkin.planned_checkout_date && (
+                                                <p className="text-sm text-orange-600">
+                                                    Checkout date: {checkin.planned_checkout_date}
+                                                </p>
+                                            )}
                                             {checkin.notes && (
                                                 <p className="text-sm text-gray-500 mt-1 truncate" title={checkin.notes}>
                                                     {checkin.notes}

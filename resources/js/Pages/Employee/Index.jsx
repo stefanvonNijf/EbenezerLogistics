@@ -23,9 +23,10 @@ export default function EmployeeIndex() {
     const [search, setSearch] = useState('');
     const [deleting, setDeleting] = useState(null);
     const [planModal, setPlanModal] = useState(null);
-    const [checkoutTarget, setCheckoutTarget] = useState(null);
+    const [planCheckoutModal, setPlanCheckoutModal] = useState(null);
 
     const planForm = useForm({ checkin_date: '', notes: '' });
+    const planCheckoutForm = useForm({ planned_checkout_date: '', notes: '' });
 
     const normalize = (str) =>
         (str ?? "")
@@ -62,9 +63,13 @@ export default function EmployeeIndex() {
         });
     };
 
-    const handleCheckout = () => {
-        router.get(route('checkins.checkout', checkoutTarget.latest_checkin.id), {}, {
-            onSuccess: () => setCheckoutTarget(null),
+    const handlePlanCheckoutSubmit = (e) => {
+        e.preventDefault();
+        planCheckoutForm.post(route('employees.planCheckout', planCheckoutModal.id), {
+            onSuccess: () => {
+                setPlanCheckoutModal(null);
+                planCheckoutForm.reset();
+            },
         });
     };
 
@@ -84,7 +89,16 @@ export default function EmployeeIndex() {
         { header: 'Function', accessor: 'role' },
         {
             header: 'Status',
-            render: (row) => <StatusBadge status={row.latest_checkin?.status} />
+            render: (row) => (
+                <div>
+                    <StatusBadge status={row.latest_checkin?.status} />
+                    {row.latest_checkin?.planned_checkout_date && row.latest_checkin?.status === 'planned_checkout' && (
+                        <div className="text-xs text-orange-600 mt-1">
+                            Checkout: {row.latest_checkin.planned_checkout_date}
+                        </div>
+                    )}
+                </div>
+            )
         },
         {
             header: 'Actions',
@@ -112,13 +126,13 @@ export default function EmployeeIndex() {
                             </Link>
                         )}
 
-                        {/* Check out: when planned_checkout */}
-                        {status === 'planned_checkout' && (
+                        {/* Plan checkout: admin only, when checked in */}
+                        {isAdmin && status === 'planned_checkout' && !row.latest_checkin?.planned_checkout_date && (
                             <button
-                                onClick={() => setCheckoutTarget(row)}
-                                className="w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
+                                onClick={() => setPlanCheckoutModal(row)}
+                                className="w-28 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm text-center"
                             >
-                                Check out
+                                Plan checkout
                             </button>
                         )}
 
@@ -232,33 +246,60 @@ export default function EmployeeIndex() {
                 </div>
             )}
 
-            {/* CHECKOUT CONFIRMATION MODAL */}
-            {checkoutTarget && (
+            {/* PLAN CHECKOUT MODAL */}
+            {planCheckoutModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-2">Confirm checkout?</h3>
-                        <p className="text-gray-700 mb-4">
-                            <span className="font-medium">{checkoutTarget.name}</span>
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setCheckoutTarget(null)}
-                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCheckout}
-                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                            >
-                                Confirm
-                            </button>
-                        </div>
+                        <h3 className="text-lg font-semibold mb-4">
+                            Plan checkout for {planCheckoutModal.name}
+                        </h3>
+                        <form onSubmit={handlePlanCheckoutSubmit} className="space-y-4">
+                            <div>
+                                <label className="block font-medium text-sm mb-1">Checkout date</label>
+                                <input
+                                    type="date"
+                                    value={planCheckoutForm.data.planned_checkout_date}
+                                    onChange={(e) => planCheckoutForm.setData('planned_checkout_date', e.target.value)}
+                                    className="w-full border rounded px-3 py-2"
+                                    required
+                                />
+                                {planCheckoutForm.errors.planned_checkout_date && (
+                                    <div className="text-red-600 text-sm">{planCheckoutForm.errors.planned_checkout_date}</div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block font-medium text-sm mb-1">Notes</label>
+                                <textarea
+                                    value={planCheckoutForm.data.notes}
+                                    onChange={(e) => planCheckoutForm.setData('notes', e.target.value)}
+                                    className="w-full border rounded px-3 py-2"
+                                    rows={3}
+                                />
+                                {planCheckoutForm.errors.notes && (
+                                    <div className="text-red-600 text-sm">{planCheckoutForm.errors.notes}</div>
+                                )}
+                            </div>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { setPlanCheckoutModal(null); planCheckoutForm.reset(); }}
+                                    className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={planCheckoutForm.processing}
+                                    className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+                                >
+                                    Plan
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
+
         </AuthenticatedLayout>
     );
 }

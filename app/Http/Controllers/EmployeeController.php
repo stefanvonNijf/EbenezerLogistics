@@ -111,4 +111,31 @@ class EmployeeController extends Controller
             ->route('employees.index')
             ->with('success', 'Checkin planned successfully.');
     }
+
+    /**
+     * Plan a checkout for an employee (admin only).
+     */
+    public function planCheckout(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'planned_checkout_date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        $checkin = Checkin::where('employee_id', $employee->id)
+            ->where('status', 'planned_checkout')
+            ->latest()
+            ->first();
+
+        if ($checkin) {
+            $checkin->update([
+                'planned_checkout_date' => $validated['planned_checkout_date'],
+                'notes' => $validated['notes'] ?? $checkin->notes,
+            ]);
+        }
+
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Checkout planned successfully.');
+    }
 }

@@ -9,6 +9,7 @@ class Checkin extends Model
     protected $fillable = [
         'checkin_date',
         'checkout_date',
+        'planned_checkout_date',
         'notes',
         'status',
         'employee_id',

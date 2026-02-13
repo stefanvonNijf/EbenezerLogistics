@@ -50,7 +50,11 @@ export default function CheckinIndex() {
         },
         {
             header: "Check-out date",
-            render: (row) => row.checkout_date ?? "-"
+            render: (row) => {
+                if (row.checkout_date) return row.checkout_date;
+                if (row.planned_checkout_date) return <span className="text-orange-600">{row.planned_checkout_date} (planned)</span>;
+                return "-";
+            }
         },
         {
             header: "Status",

@@ -67,6 +67,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('employees', EmployeeController::class);
     Route::post('/employees/{employee}/plan-checkin', [EmployeeController::class, 'planCheckin'])
         ->name('employees.planCheckin');
+    Route::post('/employees/{employee}/plan-checkout', [EmployeeController::class, 'planCheckout'])
+        ->name('employees.planCheckout');
     Route::resource('users', UserManagementController::class);
 
     Route::delete('/tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
