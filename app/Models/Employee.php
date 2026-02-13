@@ -25,4 +25,9 @@ class Employee extends Model
     {
         return $this->hasMany(Checkin::class);
     }
+
+    public function latestCheckin()
+    {
+        return $this->hasOne(Checkin::class)->latestOfMany();
+    }
 }

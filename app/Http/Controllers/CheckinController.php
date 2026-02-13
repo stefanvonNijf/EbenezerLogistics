@@ -59,12 +59,27 @@ class CheckinController extends Controller
                 ->withInput();
         }
 
-        Checkin::create([
-            'checkin_date' => $request->checkin_date,
-            'notes'        => $request->notes,
-            'employee_id'  => $request->employee_id,
-            'toolbag_id'   => $request->toolbag_id,
-        ]);
+        // Check if employee has a planned_checkin record — update it instead of creating new
+        $planned = Checkin::where('employee_id', $request->employee_id)
+            ->where('status', 'planned_checkin')
+            ->first();
+
+        if ($planned) {
+            $planned->update([
+                'checkin_date' => $request->checkin_date,
+                'notes'        => $request->notes,
+                'toolbag_id'   => $request->toolbag_id,
+                'status'       => 'planned_checkout',
+            ]);
+        } else {
+            Checkin::create([
+                'checkin_date' => $request->checkin_date,
+                'notes'        => $request->notes,
+                'employee_id'  => $request->employee_id,
+                'toolbag_id'   => $request->toolbag_id,
+                'status'       => 'planned_checkout',
+            ]);
+        }
 
         $toolbag->update(['employee_id' => $request->employee_id]);
 
@@ -97,9 +112,49 @@ class CheckinController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Checkin $checkin)
     {
-        //
+        $request->validate([
+            'checkin_date' => 'required|date',
+            'notes' => 'nullable|string',
+            'employee_id' => 'required|exists:employees,id',
+            'toolbag_id' => 'required|exists:toolbags,id',
+        ]);
+
+        $employee = Employee::findOrFail($request->employee_id);
+        $toolbag = Toolbag::findOrFail($request->toolbag_id);
+
+        // Validate whether employee has a toolbag of the same type
+        if ($employee->role !== $toolbag->type) {
+            return back()
+                ->withErrors([
+                    'toolbag_id' => 'This toolbag is not allowed to check in with this employee.'
+                ])
+                ->withInput();
+        }
+
+        // Als de toolbag verandert, update de oude toolbag (verwijder employee_id)
+        if ($checkin->toolbag_id !== $request->toolbag_id) {
+            $oldToolbag = Toolbag::find($checkin->toolbag_id);
+            if ($oldToolbag) {
+                $oldToolbag->update(['employee_id' => null]);
+            }
+        }
+
+        // Update de checkin
+        $checkin->update([
+            'checkin_date' => $request->checkin_date,
+            'notes'        => $request->notes,
+            'employee_id'  => $request->employee_id,
+            'toolbag_id'   => $request->toolbag_id,
+        ]);
+
+        // Update de nieuwe toolbag met employee_id
+        $toolbag->update(['employee_id' => $request->employee_id]);
+
+        return redirect()
+            ->route('checkins.index')
+            ->with('success', 'Checkin succesvol bijgewerkt.');
     }
 
     /**
@@ -128,9 +183,12 @@ class CheckinController extends Controller
     {
         $checkin->update([
             'checkout_date' => now()->toDateString(),
+            'status' => 'checked_out',
         ]);
 
-        $checkin->toolbag->update(['employee_id' => null]);
+        if ($checkin->toolbag) {
+            $checkin->toolbag->update(['employee_id' => null]);
+        }
 
         return redirect()->route('checkins.index')
             ->with('success', 'Checkout completed.');

@@ -3,6 +3,12 @@ import { usePage, Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Table from "@/Components/Table.jsx";
 
+const statusConfig = {
+    planned_checkin:  { label: 'Planned checkin',  bg: 'bg-yellow-100 text-yellow-800' },
+    planned_checkout: { label: 'Checked in',       bg: 'bg-blue-100 text-blue-800' },
+    checked_out:      { label: 'Checked out',      bg: 'bg-green-100 text-green-800' },
+};
+
 export default function CheckinIndex() {
     const { checkins } = usePage().props;
 
@@ -18,12 +24,14 @@ export default function CheckinIndex() {
     const normalizedSearch = normalize(search);
 
     const filteredData = checkins.filter((row) => {
+        const statusLabel = statusConfig[row.status]?.label ?? '';
         return (
             normalize(row.employee?.name).includes(normalizedSearch) ||
             normalize(row.toolbag?.name).includes(normalizedSearch) ||
             normalize(row.notes).includes(normalizedSearch) ||
             normalize(row.checkin_date).includes(normalizedSearch) ||
-            normalize(row.checkout_date).includes(normalizedSearch)
+            normalize(row.checkout_date).includes(normalizedSearch) ||
+            normalize(statusLabel).includes(normalizedSearch)
         );
     });
 
@@ -43,6 +51,14 @@ export default function CheckinIndex() {
         {
             header: "Check-out date",
             render: (row) => row.checkout_date ?? "-"
+        },
+        {
+            header: "Status",
+            render: (row) => {
+                const config = statusConfig[row.status];
+                if (!config) return <span className="text-gray-400">-</span>;
+                return <span className={`px-2 py-1 rounded text-xs font-medium ${config.bg}`}>{config.label}</span>;
+            }
         },
         {
             header: "Notes",
@@ -75,18 +91,31 @@ export default function CheckinIndex() {
             )
         },
         {
-            header: "Checkout",
-            render: (row) => row.checkout_date ? (
-                <span className="text-gray-400">Done</span>
-            ) : (
-                <button
-                    type="button"
-                    onClick={() => setCheckoutTarget(row)}
-                    className="px-2 py-1 bg-blue-400 text-white rounded hover:bg-blue-500"
-                >
-                    CHECKOUT
-                </button>
-            )
+            header: "Action",
+            render: (row) => {
+                if (row.status === 'planned_checkin') {
+                    return (
+                        <Link
+                            href={route("checkins.create") + `?employee_id=${row.employee_id}`}
+                            className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                            Check in
+                        </Link>
+                    );
+                }
+                if (row.checkout_date) {
+                    return <span className="text-gray-400">Done</span>;
+                }
+                return (
+                    <button
+                        type="button"
+                        onClick={() => setCheckoutTarget(row)}
+                        className="px-2 py-1 bg-blue-400 text-white rounded hover:bg-blue-500"
+                    >
+                        CHECKOUT
+                    </button>
+                );
+            }
         },
     ];
 

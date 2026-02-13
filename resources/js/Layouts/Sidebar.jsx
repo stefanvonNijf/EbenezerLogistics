@@ -4,6 +4,7 @@ import { FaWarehouse } from "react-icons/fa";
 import { FaCar, FaPeopleGroup, FaUsersGear } from "react-icons/fa6";
 import { IoLogOutOutline, IoPrintOutline } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
+import { MdDashboard } from "react-icons/md";
 import { RiBriefcase4Fill } from "react-icons/ri";
 
 export default function Sidebar({ role, handleLogout }) {
@@ -38,6 +39,12 @@ export default function Sidebar({ role, handleLogout }) {
 
     const menuItems = (
         <>
+            <Link onClick={closeSidebar} href={route('dashboard')} className={linkClass('dashboard')}>
+                <MdDashboard className="text-2xl" />
+                Dashboard
+            </Link>
+            <hr className="border-white border-t-[2px]" />
+
             <Link onClick={closeSidebar} href={route('tools.index')} className={linkClass('tools.*')}>
                 <FaWarehouse className="text-2xl" />
                 Storage

@@ -5,8 +5,12 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 export default function Create() {
     const { employees, toolbags } = usePage().props;
 
+    // Pre-select employee from query param
+    const urlParams = new URLSearchParams(window.location.search);
+    const preselectedEmployee = urlParams.get('employee_id') || "";
+
     const { data, setData, post, processing, errors } = useForm({
-        employee_id: "",
+        employee_id: preselectedEmployee,
         toolbag_id: "",
         checkin_date: "",
         notes: ""

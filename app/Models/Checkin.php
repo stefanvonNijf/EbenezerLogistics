@@ -10,6 +10,7 @@ class Checkin extends Model
         'checkin_date',
         'checkout_date',
         'notes',
+        'status',
         'employee_id',
         'toolbag_id',
     ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Checkin;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = Employee::all();
+        $employees = Employee::with('latestCheckin')->get();
 
         return Inertia::render('Employee/Index', ['employees' => $employees]);
     }
@@ -87,5 +88,27 @@ class EmployeeController extends Controller
         return redirect()
             ->route('employees.index')
             ->with('success', 'Employee deleted successfully.');
+    }
+
+    /**
+     * Plan a checkin for an employee (admin only).
+     */
+    public function planCheckin(Request $request, Employee $employee)
+    {
+        $validated = $request->validate([
+            'checkin_date' => 'required|date',
+            'notes' => 'nullable|string',
+        ]);
+
+        Checkin::create([
+            'employee_id' => $employee->id,
+            'checkin_date' => $validated['checkin_date'],
+            'notes' => $validated['notes'] ?? null,
+            'status' => 'planned_checkin',
+        ]);
+
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Checkin planned successfully.');
     }
 }

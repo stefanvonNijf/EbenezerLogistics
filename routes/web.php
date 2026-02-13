@@ -17,7 +17,14 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $plannedCheckins = \App\Models\Checkin::with('employee')
+        ->whereIn('status', ['planned_checkin', 'planned_checkout'])
+        ->latest()
+        ->get();
+
+    return Inertia::render('Dashboard', [
+        'plannedCheckins' => $plannedCheckins,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -53,6 +60,8 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('employees', EmployeeController::class);
+    Route::post('/employees/{employee}/plan-checkin', [EmployeeController::class, 'planCheckin'])
+        ->name('employees.planCheckin');
     Route::resource('users', UserManagementController::class);
 
     Route::delete('/tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
