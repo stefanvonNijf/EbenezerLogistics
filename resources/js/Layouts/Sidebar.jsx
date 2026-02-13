@@ -7,7 +7,7 @@ import { IoIosSwap } from "react-icons/io";
 import { MdDashboard } from "react-icons/md";
 import { RiBriefcase4Fill } from "react-icons/ri";
 
-export default function Sidebar({ role, handleLogout }) {
+export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
     const [isOpen, setIsOpen] = useState(false);
     const sidebarRef = useRef(null);
 
@@ -40,7 +40,14 @@ export default function Sidebar({ role, handleLogout }) {
     const menuItems = (
         <>
             <Link onClick={closeSidebar} href={route('dashboard')} className={linkClass('dashboard')}>
-                <MdDashboard className="text-2xl" />
+                <div className="relative">
+                    <MdDashboard className="text-2xl" />
+                    {alertCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full">
+                            !
+                        </span>
+                    )}
+                </div>
                 Dashboard
             </Link>
             <hr className="border-white border-t-[2px]" />

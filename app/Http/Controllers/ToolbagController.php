@@ -18,7 +18,7 @@ class ToolbagController extends Controller
     public function index()
     {
         return Inertia::render('Toolbag/Index', [
-            'toolbags' => Toolbag::with('employee')->orderBy('name')->get(),
+            'toolbags' => Toolbag::with('employee')->orderByRaw('CAST(REGEXP_SUBSTR(name, "[0-9]+") AS UNSIGNED)')->get(),
             'employees' => Employee::orderBy('name')->get(),
         ]);
     }

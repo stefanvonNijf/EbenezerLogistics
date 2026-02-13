@@ -8,10 +8,11 @@ export default function AuthenticatedLayout({ children }) {
     };
 
     const { user } = usePage().props.auth;
+    const { dashboardAlertCount } = usePage().props;
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <Sidebar role={user?.role} handleLogout={handleLogout} />
+            <Sidebar role={user?.role} handleLogout={handleLogout} alertCount={dashboardAlertCount} />
 
             <div className="fixed top-0 left-0 w-full h-28 bg-blue-200 z-50 flex justify-center items-center">
                 <ApplicationLogo

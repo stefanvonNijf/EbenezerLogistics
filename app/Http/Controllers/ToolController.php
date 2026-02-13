@@ -18,6 +18,7 @@ class ToolController extends Controller
     public function index()
     {
         $tools = Tool::with('category')
+            ->orderByRaw('(minimal_stock IS NOT NULL AND amount_in_stock <= minimal_stock) DESC')
             ->orderBy('name', 'asc')
             ->get();
 
