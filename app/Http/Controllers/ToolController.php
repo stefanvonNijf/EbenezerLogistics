@@ -17,7 +17,7 @@ class ToolController extends Controller
     public function index()
     {
         $tools = Tool::with('category')
-            ->orderBy('name', 'desc')
+            ->orderBy('name', 'asc')
             ->get();
 
         return Inertia::render('Tool/Index', ['tools' => $tools]);

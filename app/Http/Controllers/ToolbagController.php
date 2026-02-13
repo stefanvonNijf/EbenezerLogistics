@@ -17,7 +17,7 @@ class ToolbagController extends Controller
     public function index()
     {
         return Inertia::render('Toolbag/Index', [
-            'toolbags' => Toolbag::with('employee')->get(),
+            'toolbags' => Toolbag::with('employee')->orderBy('name')->get(),
             'employees' => Employee::orderBy('name')->get(),
         ]);
     }

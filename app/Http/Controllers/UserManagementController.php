@@ -12,7 +12,7 @@ class UserManagementController extends Controller
 {
     public function index()
     {
-        $users = User::all();
+        $users = User::orderBy('name')->get();
 
         return Inertia::render('UserManagement/Index', ['users' => $users]);
     }

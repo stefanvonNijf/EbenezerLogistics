@@ -15,7 +15,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        $employees = Employee::with('latestCheckin')->get();
+        $employees = Employee::with('latestCheckin')->orderBy('name')->get();
 
         return Inertia::render('Employee/Index', ['employees' => $employees]);
     }
