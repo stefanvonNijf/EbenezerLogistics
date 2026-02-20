@@ -213,8 +213,21 @@ class CheckinController extends Controller
         $totalCost = $missingTools->sum('replacement_cost');
 
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
-        foreach ($recipients as $email) {
-            Mail::to($email)->send(new CheckoutCompletedMail($checkin, $totalCost));
+        if ($recipients) {
+            $tempPath = storage_path('app/checkout-' . $checkin->id . '.pdf');
+            Pdf::view('pdf.checkout', [
+                'checkin'      => $checkin,
+                'employee'     => $checkin->employee,
+                'missingTools' => $missingTools,
+                'totalCost'    => $totalCost,
+            ])->save($tempPath);
+
+            $pdfContent = file_get_contents($tempPath);
+            @unlink($tempPath);
+
+            foreach ($recipients as $email) {
+                Mail::to($email)->send(new CheckoutCompletedMail($checkin, $totalCost, $pdfContent));
+            }
         }
 
         return redirect()->route('checkins.index')
