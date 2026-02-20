@@ -12,8 +12,13 @@ class Checkin extends Model
         'planned_checkout_date',
         'notes',
         'status',
+        'contract_exported_at',
         'employee_id',
         'toolbag_id',
+    ];
+
+    protected $casts = [
+        'contract_exported_at' => 'datetime',
     ];
 
     public function employee()

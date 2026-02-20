@@ -74,25 +74,36 @@ export default function CheckinIndex() {
         },
         {
             header: "",
-            render: (row) => (
-                <Link href={route("checkins.edit", row.id)} className="text-blue-600 hover:underline">
-                    Edit
-                </Link>
-            )
+            render: (row) => {
+                if (row.contract_exported_at) return null;
+                return (
+                    <Link href={route("checkins.edit", row.id)} className="text-blue-600 hover:underline">
+                        Edit
+                    </Link>
+                );
+            }
         },
         {
-            header: "To print out",
-            render: (row) => (
-                <a
-                    href={route('checkins.pdf', row.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
-                >
-                    Export Pdf
-                </a>
-
-            )
+            header: "Contract",
+            render: (row) => {
+                if (row.contract_exported_at) {
+                    return (
+                        <span className="inline-block w-28 py-1 bg-gray-100 text-gray-500 rounded text-xs text-center border border-gray-300">
+                            Exported
+                        </span>
+                    );
+                }
+                return (
+                    <a
+                        href={route('checkins.pdf', row.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
+                    >
+                        Export PDF
+                    </a>
+                );
+            }
         },
         {
             header: "Action",

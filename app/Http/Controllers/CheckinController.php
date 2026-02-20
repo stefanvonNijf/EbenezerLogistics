@@ -106,6 +106,11 @@ class CheckinController extends Controller
      */
     public function edit(Checkin $checkin)
     {
+        if ($checkin->contract_exported_at) {
+            return redirect()->route('checkins.index')
+                ->with('error', 'This checkin has been exported as a contract and can no longer be edited.');
+        }
+
         return Inertia::render('Checkin/Edit', [
             'checkin' => $checkin->load('employee', 'toolbag'),
             'toolbags' => Toolbag::all(),
@@ -117,6 +122,11 @@ class CheckinController extends Controller
      */
     public function update(Request $request, Checkin $checkin)
     {
+        if ($checkin->contract_exported_at) {
+            return redirect()->route('checkins.index')
+                ->with('error', 'This checkin has been exported as a contract and can no longer be edited.');
+        }
+
         $request->validate([
             'checkin_date' => 'required|date',
             'notes' => 'nullable|string',
@@ -170,6 +180,12 @@ class CheckinController extends Controller
 
     public function pdf(Checkin $checkin)
     {
+        if ($checkin->contract_exported_at) {
+            return redirect()->route('checkins.index')
+                ->with('error', 'The contract for this checkin has already been exported and cannot be exported again.');
+        }
+
+        $checkin->update(['contract_exported_at' => now()]);
         $checkin->load('employee', 'toolbag.tools');
 
         return Pdf::view('pdf.checkin', [

@@ -25,7 +25,7 @@ export default function AuthenticatedLayout({ children }) {
             <div className="h-28 lg:w-1/12" />
 
             {/* Content */}
-            <div className="pt-40 lg:pl-[8.333%] pr-4 w-full h-screen box-border overflow-hidden">
+            <div className="pt-40 lg:pl-[8.333%] pr-4 w-full h-screen box-border overflow-y-auto">
                 {children}
             </div>
         </div>
