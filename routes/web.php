@@ -66,6 +66,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/print-forms', [PrintFormController::class, 'index'])->name('print-forms.index');
     Route::get('/print-forms/ppe/{employee}', [PrintFormController::class, 'ppe'])->name('print-forms.ppe');
+    Route::post('/print-forms/upload', [PrintFormController::class, 'upload'])->name('print-forms.upload');
+    Route::get('/print-forms/documents/{document}/download', [PrintFormController::class, 'download'])->name('print-forms.download');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -85,6 +87,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::put('/settings/roles/{role}', [SettingsController::class, 'updateRole'])->name('settings.roles.update');
     Route::delete('/settings/roles/{role}', [SettingsController::class, 'destroyRole'])->name('settings.roles.destroy');
 
+    Route::delete('/print-forms/documents/{document}', [PrintFormController::class, 'destroy'])->name('print-forms.destroy');
     Route::delete('/tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
     Route::delete('/toolbags/{toolbag}', [ToolbagController::class, 'destroy'])->name('toolbags.destroy');
     Route::delete('/checkins/{checkin}', [CheckinController::class, 'destroy'])->name('checkins.destroy');
