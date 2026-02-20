@@ -246,8 +246,8 @@ class CheckinController extends Controller
      */
     private function buildRecipients(array $typedEmails): array
     {
-        $company = config('mail.notification_email');
-        $all = array_filter(array_unique(array_merge($typedEmails, $company ? [$company] : [])));
+        $company = config('mail.notification_emails', []);
+        $all = array_filter(array_unique(array_merge($typedEmails, $company)));
         return array_values($all);
     }
 }

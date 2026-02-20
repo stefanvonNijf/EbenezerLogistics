@@ -16,7 +16,7 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
-    'notification_email' => env('COMPANY_NOTIFICATION_EMAIL'),
+    'notification_emails' => array_filter(array_map('trim', explode(',', env('COMPANY_NOTIFICATION_EMAIL', '')))),
 
     /*
     |--------------------------------------------------------------------------

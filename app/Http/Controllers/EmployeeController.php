@@ -113,9 +113,8 @@ class EmployeeController extends Controller
             'status' => 'planned_checkin',
         ]);
 
-        $companyEmail = config('mail.notification_email');
-        if ($companyEmail) {
-            Mail::to($companyEmail)->send(new CheckinPlannedMail($employee, $checkin));
+        foreach (config('mail.notification_emails', []) as $email) {
+            Mail::to($email)->send(new CheckinPlannedMail($employee, $checkin));
         }
 
         return redirect()
