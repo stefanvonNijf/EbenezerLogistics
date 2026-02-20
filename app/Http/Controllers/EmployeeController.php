@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CheckinPlannedMail;
 use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 
 class EmployeeController extends Controller
@@ -104,12 +106,17 @@ class EmployeeController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        Checkin::create([
+        $checkin = Checkin::create([
             'employee_id' => $employee->id,
             'checkin_date' => $validated['checkin_date'],
             'notes' => $validated['notes'] ?? null,
             'status' => 'planned_checkin',
         ]);
+
+        $companyEmail = config('mail.notification_email');
+        if ($companyEmail) {
+            Mail::to($companyEmail)->send(new CheckinPlannedMail($employee, $checkin));
+        }
 
         return redirect()
             ->route('employees.index')

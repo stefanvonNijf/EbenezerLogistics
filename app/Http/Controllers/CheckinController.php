@@ -3,18 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CheckinCreatedMail;
+use App\Mail\CheckoutCompletedMail;
 use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\Toolbag;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class CheckinController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return Inertia::render('Checkin/Index', [
@@ -25,85 +25,77 @@ class CheckinController extends Controller
         ]);
     }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return inertia('Checkin/Create', [
             'employees' => Employee::all(),
-            'toolbags' => Toolbag::whereNull('employee_id')->get(),
+            'toolbags'  => Toolbag::whereNull('employee_id')->get(),
         ]);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'checkin_date' => 'required|date',
-            'notes' => 'nullable|string',
-            'employee_id' => 'required|exists:employees,id',
-            'toolbag_id' => 'required|exists:toolbags,id',
+            'checkin_date'         => 'required|date',
+            'notes'                => 'nullable|string',
+            'employee_id'          => 'required|exists:employees,id',
+            'toolbag_id'           => 'required|exists:toolbags,id',
+            'notification_emails'  => 'nullable|array',
+            'notification_emails.*'=> 'email',
         ]);
 
         $employee = Employee::findOrFail($request->employee_id);
-        $toolbag = Toolbag::findOrFail($request->toolbag_id);
+        $toolbag  = Toolbag::findOrFail($request->toolbag_id);
 
-        // Validate whether employee has a toolbag of the same type
         if ($employee->role !== $toolbag->type) {
             return back()
-                ->withErrors([
-                    'toolbag_id' => 'This toolbag is not allowed to check in with this employee.'
-                ])
+                ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
                 ->withInput();
         }
 
-        // Check if employee has a planned_checkin record — update it instead of creating new
         $planned = Checkin::where('employee_id', $request->employee_id)
             ->where('status', 'planned_checkin')
             ->first();
 
         if ($planned) {
             $planned->update([
-                'checkin_date' => $request->checkin_date,
-                'notes'        => $request->notes,
-                'toolbag_id'   => $request->toolbag_id,
-                'status'       => 'planned_checkout',
+                'checkin_date'        => $request->checkin_date,
+                'notes'               => $request->notes,
+                'toolbag_id'          => $request->toolbag_id,
+                'status'              => 'planned_checkout',
+                'notification_emails' => $request->notification_emails ?? [],
             ]);
+            $checkin = $planned;
         } else {
-            Checkin::create([
-                'checkin_date' => $request->checkin_date,
-                'notes'        => $request->notes,
-                'employee_id'  => $request->employee_id,
-                'toolbag_id'   => $request->toolbag_id,
-                'status'       => 'planned_checkout',
+            $checkin = Checkin::create([
+                'checkin_date'        => $request->checkin_date,
+                'notes'               => $request->notes,
+                'employee_id'         => $request->employee_id,
+                'toolbag_id'          => $request->toolbag_id,
+                'status'              => 'planned_checkout',
+                'notification_emails' => $request->notification_emails ?? [],
             ]);
         }
 
         $toolbag->update(['employee_id' => $request->employee_id]);
+
+        // Send checkin notification emails
+        $checkin->load('employee', 'toolbag.tools');
+        $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
+        foreach ($recipients as $email) {
+            Mail::to($email)->send(new CheckinCreatedMail($checkin));
+        }
 
         return redirect()
             ->route('checkins.index')
             ->with('success', 'Checkin succesvol aangemaakt.');
     }
 
-
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Checkin $checkin)
     {
         if ($checkin->contract_exported_at) {
@@ -112,14 +104,11 @@ class CheckinController extends Controller
         }
 
         return Inertia::render('Checkin/Edit', [
-            'checkin' => $checkin->load('employee', 'toolbag'),
+            'checkin'  => $checkin->load('employee', 'toolbag'),
             'toolbags' => Toolbag::all(),
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Checkin $checkin)
     {
         if ($checkin->contract_exported_at) {
@@ -129,24 +118,20 @@ class CheckinController extends Controller
 
         $request->validate([
             'checkin_date' => 'required|date',
-            'notes' => 'nullable|string',
-            'employee_id' => 'required|exists:employees,id',
-            'toolbag_id' => 'required|exists:toolbags,id',
+            'notes'        => 'nullable|string',
+            'employee_id'  => 'required|exists:employees,id',
+            'toolbag_id'   => 'required|exists:toolbags,id',
         ]);
 
         $employee = Employee::findOrFail($request->employee_id);
-        $toolbag = Toolbag::findOrFail($request->toolbag_id);
+        $toolbag  = Toolbag::findOrFail($request->toolbag_id);
 
-        // Validate whether employee has a toolbag of the same type
         if ($employee->role !== $toolbag->type) {
             return back()
-                ->withErrors([
-                    'toolbag_id' => 'This toolbag is not allowed to check in with this employee.'
-                ])
+                ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
                 ->withInput();
         }
 
-        // Als de toolbag verandert, update de oude toolbag (verwijder employee_id)
         if ($checkin->toolbag_id !== $request->toolbag_id) {
             $oldToolbag = Toolbag::find($checkin->toolbag_id);
             if ($oldToolbag) {
@@ -154,7 +139,6 @@ class CheckinController extends Controller
             }
         }
 
-        // Update de checkin
         $checkin->update([
             'checkin_date' => $request->checkin_date,
             'notes'        => $request->notes,
@@ -162,7 +146,6 @@ class CheckinController extends Controller
             'toolbag_id'   => $request->toolbag_id,
         ]);
 
-        // Update de nieuwe toolbag met employee_id
         $toolbag->update(['employee_id' => $request->employee_id]);
 
         return redirect()
@@ -170,9 +153,6 @@ class CheckinController extends Controller
             ->with('success', 'Checkin succesvol bijgewerkt.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         //
@@ -224,6 +204,19 @@ class CheckinController extends Controller
             $checkin->toolbag->update(['employee_id' => null]);
         }
 
+        // Send checkout notification emails
+        $checkin->load('employee', 'toolbag.tools');
+        $missingToolIds = $checkin->missing_tools ?? [];
+        $missingTools   = $checkin->toolbag->tools
+            ->filter(fn($t) => in_array($t->id, $missingToolIds))
+            ->values();
+        $totalCost = $missingTools->sum('replacement_cost');
+
+        $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
+        foreach ($recipients as $email) {
+            Mail::to($email)->send(new CheckoutCompletedMail($checkin, $totalCost));
+        }
+
         return redirect()->route('checkins.index')
             ->with('success', 'Checkout completed.');
     }
@@ -248,4 +241,13 @@ class CheckinController extends Controller
             ->inline();
     }
 
+    /**
+     * Combine typed-in emails with the fixed company notification email.
+     */
+    private function buildRecipients(array $typedEmails): array
+    {
+        $company = config('mail.notification_email');
+        $all = array_filter(array_unique(array_merge($typedEmails, $company ? [$company] : [])));
+        return array_values($all);
+    }
 }

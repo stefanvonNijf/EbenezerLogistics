@@ -16,6 +16,8 @@ return [
 
     'default' => env('MAIL_MAILER', 'log'),
 
+    'notification_email' => env('COMPANY_NOTIFICATION_EMAIL'),
+
     /*
     |--------------------------------------------------------------------------
     | Mailer Configurations
