@@ -13,12 +13,14 @@ class Checkin extends Model
         'notes',
         'status',
         'contract_exported_at',
+        'missing_tools',
         'employee_id',
         'toolbag_id',
     ];
 
     protected $casts = [
         'contract_exported_at' => 'datetime',
+        'missing_tools'        => 'array',
     ];
 
     public function employee()

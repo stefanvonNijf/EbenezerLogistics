@@ -198,11 +198,26 @@ class CheckinController extends Controller
             ->inline();
     }
 
-    public function checkout(Checkin $checkin)
+    public function checkoutShow(Checkin $checkin)
     {
+        $checkin->load('employee', 'toolbag.tools');
+
+        return Inertia::render('Checkin/Checkout', [
+            'checkin' => $checkin,
+        ]);
+    }
+
+    public function checkoutProcess(Request $request, Checkin $checkin)
+    {
+        $request->validate([
+            'missing_tool_ids'   => 'nullable|array',
+            'missing_tool_ids.*' => 'integer|exists:tools,id',
+        ]);
+
         $checkin->update([
             'checkout_date' => now()->toDateString(),
-            'status' => 'checked_out',
+            'status'        => 'checked_out',
+            'missing_tools' => $request->missing_tool_ids ?? [],
         ]);
 
         if ($checkin->toolbag) {
@@ -211,6 +226,26 @@ class CheckinController extends Controller
 
         return redirect()->route('checkins.index')
             ->with('success', 'Checkout completed.');
+    }
+
+    public function checkoutPdf(Checkin $checkin)
+    {
+        $checkin->load('employee', 'toolbag.tools');
+
+        $missingToolIds = $checkin->missing_tools ?? [];
+        $missingTools   = $checkin->toolbag->tools
+            ->filter(fn($t) => in_array($t->id, $missingToolIds))
+            ->values();
+        $totalCost = $missingTools->sum('replacement_cost');
+
+        return Pdf::view('pdf.checkout', [
+            'checkin'      => $checkin,
+            'employee'     => $checkin->employee,
+            'missingTools' => $missingTools,
+            'totalCost'    => $totalCost,
+        ])
+            ->name("checkout-{$checkin->employee->name}.pdf")
+            ->inline();
     }
 
 }

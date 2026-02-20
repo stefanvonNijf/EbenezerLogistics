@@ -13,7 +13,6 @@ export default function CheckinIndex() {
     const { checkins } = usePage().props;
 
     const [search, setSearch] = useState("");
-    const [checkoutTarget, setCheckoutTarget] = useState(null);
 
     const normalize = (str) =>
         (str ?? "")
@@ -123,17 +122,16 @@ export default function CheckinIndex() {
                 }
                 const hasPlannedDate = !!row.planned_checkout_date;
                 return (
-                    <button
-                        type="button"
-                        onClick={() => setCheckoutTarget(row)}
-                        className={`w-28 py-1 text-white rounded text-sm text-center ${
+                    <Link
+                        href={route("checkins.checkout", row.id)}
+                        className={`inline-block w-28 py-1 text-white rounded text-sm text-center ${
                             hasPlannedDate
                                 ? 'bg-red-600 hover:bg-red-700'
                                 : 'bg-blue-400 hover:bg-blue-500'
                         }`}
                     >
                         Checkout
-                    </button>
+                    </Link>
                 );
             }
         },
@@ -170,34 +168,6 @@ export default function CheckinIndex() {
                 </div>
             </div>
 
-            {checkoutTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
-                        <h3 className="text-lg font-semibold mb-2">Confirm checkout?</h3>
-                        <p className="text-gray-700 mb-1">
-                            <span className="font-medium">{checkoutTarget.employee?.name}</span>
-                        </p>
-                        <p className="text-sm text-gray-500 mb-4">
-                            Toolbag: {checkoutTarget.toolbag?.name}
-                        </p>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setCheckoutTarget(null)}
-                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <a
-                                href={route('checkins.checkout', checkoutTarget.id)}
-                                className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800"
-                            >
-                                Confirm
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            )}
         </AuthenticatedLayout>
     );
 }
