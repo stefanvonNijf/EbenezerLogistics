@@ -9,6 +9,9 @@ export default function Edit({ employee, roles }) {
         employee_number: employee.employee_number ?? "",
         role: employee.role ?? "",
         remark: employee.remark ?? "",
+        shoe_size: employee.shoe_size ?? "",
+        pants_size: employee.pants_size ?? "",
+        jacket_size: employee.jacket_size ?? "",
     });
 
     const handleSubmit = (e) => {
@@ -80,6 +83,39 @@ export default function Edit({ employee, roles }) {
                             rows="3"
                             value={data.remark}
                             onChange={(e) => setData("remark", e.target.value)}
+                        />
+                    </div>
+
+                    {/* SHOE SIZE */}
+                    <div>
+                        <label className="block font-medium">Shoe Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.shoe_size}
+                            onChange={(e) => setData("shoe_size", e.target.value)}
+                        />
+                    </div>
+
+                    {/* PANTS SIZE */}
+                    <div>
+                        <label className="block font-medium">Pants Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.pants_size}
+                            onChange={(e) => setData("pants_size", e.target.value)}
+                        />
+                    </div>
+
+                    {/* JACKET SIZE */}
+                    <div>
+                        <label className="block font-medium">Jacket Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.jacket_size}
+                            onChange={(e) => setData("jacket_size", e.target.value)}
                         />
                     </div>
 

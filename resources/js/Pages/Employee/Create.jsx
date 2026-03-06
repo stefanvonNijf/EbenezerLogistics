@@ -8,6 +8,9 @@ export default function Create({ roles }) {
         name: "",
         employee_number: "",
         role: "",
+        shoe_size: "",
+        pants_size: "",
+        jacket_size: "",
     });
 
     const handleSubmit = (e) => {
@@ -68,6 +71,39 @@ export default function Create({ roles }) {
                             ))}
                         </select>
                         {errors.role && <div className="text-red-600 text-sm">{errors.role}</div>}
+                    </div>
+
+                    {/* SHOE SIZE */}
+                    <div>
+                        <label className="block font-medium">Shoe Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.shoe_size}
+                            onChange={(e) => setData("shoe_size", e.target.value)}
+                        />
+                    </div>
+
+                    {/* PANTS SIZE */}
+                    <div>
+                        <label className="block font-medium">Pants Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.pants_size}
+                            onChange={(e) => setData("pants_size", e.target.value)}
+                        />
+                    </div>
+
+                    {/* JACKET SIZE */}
+                    <div>
+                        <label className="block font-medium">Jacket Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.jacket_size}
+                            onChange={(e) => setData("jacket_size", e.target.value)}
+                        />
                     </div>
 
                     {/* ACTION BUTTONS */}

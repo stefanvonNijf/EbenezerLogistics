@@ -42,6 +42,9 @@ class EmployeeController extends Controller
             'name' => 'required|string',
             'employee_number' => 'nullable|string|unique:employees,employee_number',
             'role' => 'required|string',
+            'shoe_size' => 'nullable|string',
+            'pants_size' => 'nullable|string',
+            'jacket_size' => 'nullable|string',
         ]);
 
         Employee::create($validated);
@@ -78,6 +81,9 @@ class EmployeeController extends Controller
             'employee_number' => 'nullable|string|unique:employees,employee_number,' . $employee->id,
             'role' => 'required|string',
             'remark' => 'nullable|string',
+            'shoe_size' => 'nullable|string',
+            'pants_size' => 'nullable|string',
+            'jacket_size' => 'nullable|string',
         ]);
 
         $employee->update($validated);
