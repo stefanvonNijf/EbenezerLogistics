@@ -1,4 +1,6 @@
 <x-mail::message>
+<img src="{{ asset('storage/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 80px; display: block; margin-bottom: 16px;">
+
 # Check-in completed — {{ $checkin->employee->name }}
 
 A check-in has been completed and a toolbag has been assigned.

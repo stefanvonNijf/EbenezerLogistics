@@ -1,4 +1,6 @@
 <x-mail::message>
+<img src="{{ asset('storage/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 80px; display: block; margin-bottom: 16px;">
+
 # Checkin planned — {{ $employee->name }}
 
 A checkin has been planned for the following employee.

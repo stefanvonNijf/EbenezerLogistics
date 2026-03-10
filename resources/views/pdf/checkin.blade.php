@@ -52,6 +52,10 @@
 </head>
 <body>
 
+<div style="margin-bottom: 20px;">
+    <img src="{{ public_path('storage/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 70px;">
+</div>
+
 <h1>Check-in {{ $employee->name }}</h1>
 
 <table>
@@ -141,6 +145,10 @@
 </div>
 
 <div style="page-break-before: always;"></div>
+
+<div style="margin-bottom: 20px;">
+    <img src="{{ public_path('storage/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 70px;">
+</div>
 
 <h1>PPE Issue Form</h1>
 
