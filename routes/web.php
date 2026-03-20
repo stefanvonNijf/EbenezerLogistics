@@ -40,8 +40,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::post('/tools/{tool}', [ToolController::class, 'update'])
-        ->name('tools.update');
     Route::resource('tools', ToolController::class)->except(['destroy']);
     Route::patch('tools/{tool}/increment-stock', [ToolController::class, 'incrementStock'])
         ->name('tools.incrementStock');
