@@ -5,7 +5,7 @@ export default function GuestLayout({ children }) {
         <>
             <div className="fixed top-0 left-0 w-full bg-gray-100 h-28 z-50 flex justify-center items-center px-4">
                 <img
-                    src="/storage/ebenezer-logo.png"
+                    src="/images/ebenezer-logo.png"
                     alt="Ebenezer"
                     className="h-20 object-contain max-w-full"
                 />
@@ -18,7 +18,7 @@ export default function GuestLayout({ children }) {
                     <div className="flex justify-center mb-6">
                         <ApplicationLogo
                             className="rounded-[10px]"
-                            src="/storage/ebenezer-logo-small.png"
+                            src="/images/ebenezer-logo-small.png"
                             alt="Ebenezer"
                             width={100}
                             height={100}

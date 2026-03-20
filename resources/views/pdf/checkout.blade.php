@@ -62,7 +62,7 @@
 <body>
 
 <div style="margin-bottom: 20px;">
-    <img src="{{ public_path('storage/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 70px;">
+    <img src="{{ public_path('images/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 70px;">
 </div>
 
 <h1>Checkout Report — {{ $employee->name }}</h1>

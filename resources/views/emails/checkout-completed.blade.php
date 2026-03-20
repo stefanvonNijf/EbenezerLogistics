@@ -1,5 +1,5 @@
 <x-mail::message>
-<img src="{{ asset('storage/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 80px; display: block; margin-bottom: 16px;">
+<img src="{{ asset('images/ebenezer-logo.png') }}" alt="Ebenezer Logistics" style="max-height: 80px; display: block; margin-bottom: 16px;">
 
 # Checkout completed — {{ $checkin->employee->name }}
 

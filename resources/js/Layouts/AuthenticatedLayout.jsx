@@ -16,7 +16,7 @@ export default function AuthenticatedLayout({ children }) {
 
             <div className="fixed top-0 left-0 w-full h-28 bg-blue-200 z-50 flex justify-center items-center">
                 <ApplicationLogo
-                    src="/storage/ebenezer-logo.png"
+                    src="/images/ebenezer-logo.png"
                     alt="Ebenezer logo"
                     className="h-20 object-contain"
                 />
