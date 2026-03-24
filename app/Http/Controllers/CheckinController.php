@@ -7,6 +7,7 @@ use App\Mail\CheckinCreatedMail;
 use App\Mail\CheckoutCompletedMail;
 use App\Models\Checkin;
 use App\Models\Employee;
+use App\Models\Tool;
 use App\Models\Toolbag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -201,15 +202,26 @@ class CheckinController extends Controller
         ]);
 
         if ($checkin->toolbag) {
-            $checkin->toolbag->update(['employee_id' => null]);
+            $toolbag = $checkin->toolbag;
+            $toolbag->update(['employee_id' => null]);
+
+            $missingToolIds = $request->missing_tool_ids ?? [];
+            if (!empty($missingToolIds)) {
+                $toolbag->tools()->detach($missingToolIds);
+            }
+
+            $requiredTools = Tool::whereIn('roletype', ['shared', $toolbag->type])->get();
+            $currentToolIds = $toolbag->tools()->pluck('tools.id');
+            $isComplete = $requiredTools->pluck('id')->every(
+                fn($id) => $currentToolIds->contains($id)
+            );
+            $toolbag->update(['complete' => $isComplete]);
         }
 
         // Send checkout notification emails
         $checkin->load('employee', 'toolbag.tools');
         $missingToolIds = $checkin->missing_tools ?? [];
-        $missingTools   = $checkin->toolbag->tools
-            ->filter(fn($t) => in_array($t->id, $missingToolIds))
-            ->values();
+        $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
         $totalCost = $missingTools->sum('replacement_cost');
 
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
@@ -239,9 +251,7 @@ class CheckinController extends Controller
         $checkin->load('employee', 'toolbag.tools');
 
         $missingToolIds = $checkin->missing_tools ?? [];
-        $missingTools   = $checkin->toolbag->tools
-            ->filter(fn($t) => in_array($t->id, $missingToolIds))
-            ->values();
+        $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
         $totalCost = $missingTools->sum('replacement_cost');
 
         return Pdf::view('pdf.checkout', [
