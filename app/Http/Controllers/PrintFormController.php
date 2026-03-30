@@ -71,7 +71,11 @@ class PrintFormController extends Controller
             'notes'                 => $request->query('notes', ''),
             'ppe'                   => [],
         ])
-            ->noSandbox()
+            ->withBrowsershot(function ($browsershot) {
+                $browsershot
+                    ->setChromePath('/usr/bin/chromium')
+                    ->noSandbox();
+            })
             ->name("ppe-issue-form-{$employee->name}.pdf")
             ->inline();
     }
