@@ -71,6 +71,7 @@ class PrintFormController extends Controller
             'notes'                 => $request->query('notes', ''),
             'ppe'                   => [],
         ])
+            ->noSandbox()
             ->name("ppe-issue-form-{$employee->name}.pdf")
             ->inline();
     }
