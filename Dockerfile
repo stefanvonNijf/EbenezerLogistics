@@ -40,9 +40,6 @@ RUN npm run build
 
 # Laravel bootstrap
 RUN php artisan storage:link || true
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
 
 # Permissies
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
