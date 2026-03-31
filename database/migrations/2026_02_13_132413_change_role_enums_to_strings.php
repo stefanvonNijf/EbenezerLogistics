@@ -2,27 +2,37 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
-        // Change employees.role from enum to string
-        DB::statement("ALTER TABLE employees MODIFY COLUMN `role` VARCHAR(255) NOT NULL");
+        Schema::table('employees', function (Blueprint $table) {
+            $table->string('role')->change();
+        });
 
-        // Change tools.roletype from enum to string
-        DB::statement("ALTER TABLE tools MODIFY COLUMN `roletype` VARCHAR(255) NOT NULL DEFAULT 'shared'");
+        Schema::table('tools', function (Blueprint $table) {
+            $table->string('roletype')->default('shared')->change();
+        });
 
-        // Change toolbags.type from enum to string
-        DB::statement("ALTER TABLE toolbags MODIFY COLUMN `type` VARCHAR(255) NOT NULL");
+        Schema::table('toolbags', function (Blueprint $table) {
+            $table->string('type')->change();
+        });
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE employees MODIFY COLUMN `role` ENUM('ironworker', 'electrician') NOT NULL");
-        DB::statement("ALTER TABLE tools MODIFY COLUMN `roletype` ENUM('shared', 'ironworker', 'electrician') NOT NULL DEFAULT 'shared'");
-        DB::statement("ALTER TABLE toolbags MODIFY COLUMN `type` ENUM('ironworker', 'electrician') NOT NULL");
+        Schema::table('employees', function (Blueprint $table) {
+            $table->enum('role', ['ironworker', 'electrician'])->change();
+        });
+
+        Schema::table('tools', function (Blueprint $table) {
+            $table->enum('roletype', ['shared', 'ironworker', 'electrician'])->default('shared')->change();
+        });
+
+        Schema::table('toolbags', function (Blueprint $table) {
+            $table->enum('type', ['ironworker', 'electrician'])->change();
+        });
     }
 };
