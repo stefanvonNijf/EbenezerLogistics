@@ -44,6 +44,9 @@ RUN php artisan storage:link || true
 # Permissies
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
+# Chrome needs a writable HOME directory
+ENV HOME=/tmp
+
 # Nginx + start config
 COPY docker/nginx.conf /etc/nginx/sites-enabled/default
 COPY docker/start.sh /start.sh
