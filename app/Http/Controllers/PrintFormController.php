@@ -65,6 +65,8 @@ class PrintFormController extends Controller
 
     public function ppe(Request $request, Employee $employee)
     {
+        putenv('HOME=/tmp');
+
         return Pdf::view('pdf.ppe-issue-form-print', [
             'employee'              => $employee,
             'admission_date'        => now()->toDateString(),
