@@ -1,12 +1,3 @@
+.git
 .env
-.env.*
-node_modules/
-vendor/
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
-.git/
-.gitignore
-docker/
-*.log
+node_modules
