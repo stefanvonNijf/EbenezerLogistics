@@ -73,7 +73,7 @@ class PrintFormController extends Controller
         ])
             ->withBrowsershot(function ($browsershot) {
                 $browsershot
-                    ->setChromePath('/usr/bin/chromium')
+                    ->setChromePath('/usr/bin/google-chrome')
                     ->noSandbox();
             })
             ->name("ppe-issue-form-{$employee->name}.pdf")
