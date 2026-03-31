@@ -7,6 +7,7 @@ use App\Models\PrintFormDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Spatie\Browsershot\Browsershot;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class PrintFormController extends Controller
@@ -71,10 +72,9 @@ class PrintFormController extends Controller
             'notes'                 => $request->query('notes', ''),
             'ppe'                   => [],
         ])
-            ->withBrowsershot(function ($browsershot) {
-                $browsershot
-                    ->setChromePath('/usr/bin/google-chrome')
-                    ->noSandbox();
+            ->withBrowsershot(function (Browsershot $browsershot) {
+                $browsershot->noSandbox()
+                    ->setChromePath('/usr/bin/google-chrome');
             })
             ->name("ppe-issue-form-{$employee->name}.pdf")
             ->inline();
