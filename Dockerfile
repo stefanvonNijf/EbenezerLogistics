@@ -44,8 +44,8 @@ RUN php artisan storage:link || true
 # Permissies
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
-# Chrome needs a writable HOME directory
-ENV HOME=/tmp
+# Change www-data home to /tmp so Chrome can write .local/crashpad dirs
+RUN usermod -d /tmp www-data
 
 # Nginx + start config
 COPY docker/nginx.conf /etc/nginx/sites-enabled/default
