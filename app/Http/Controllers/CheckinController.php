@@ -12,6 +12,7 @@ use App\Models\Toolbag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+use Spatie\Browsershot\Browsershot;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class CheckinController extends Controller
@@ -175,6 +176,10 @@ class CheckinController extends Controller
             'toolbag'  => $checkin->toolbag,
             'tools'    => $checkin->toolbag->tools,
         ])
+            ->withBrowsershot(function (Browsershot $browsershot) {
+                $browsershot->noSandbox()
+                    ->setChromePath('/usr/bin/google-chrome');
+            })
             ->name("checkin-{$checkin->employee->name}.pdf")
             ->inline();
     }
@@ -260,6 +265,10 @@ class CheckinController extends Controller
             'missingTools' => $missingTools,
             'totalCost'    => $totalCost,
         ])
+            ->withBrowsershot(function (Browsershot $browsershot) {
+                $browsershot->noSandbox()
+                    ->setChromePath('/usr/bin/google-chrome');
+            })
             ->name("checkout-{$checkin->employee->name}.pdf")
             ->inline();
     }
