@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\PrintFormDocument;
 use Illuminate\Http\Request;
@@ -14,9 +15,19 @@ class PrintFormController extends Controller
 {
     public function index()
     {
+        $activeCheckins = Checkin::with('employee')
+            ->whereIn('status', ['planned_checkin', 'planned_checkout'])
+            ->orderBy('checkin_date', 'desc')
+            ->get()
+            ->map(fn($c) => [
+                'id'    => $c->id,
+                'label' => ($c->employee->name ?? 'Unknown') . ' — ' . ($c->checkin_date ?? 'No date'),
+            ]);
+
         return Inertia::render('PrintForms/Index', [
-            'employees' => Employee::orderBy('name')->get(),
-            'documents' => PrintFormDocument::with('uploader')
+            'employees'      => Employee::orderBy('name')->get(),
+            'activeCheckins' => $activeCheckins,
+            'documents'      => PrintFormDocument::with('uploader')
                 ->latest()
                 ->get()
                 ->map(fn($doc) => [
@@ -65,6 +76,13 @@ class PrintFormController extends Controller
 
     public function ppe(Request $request, Employee $employee)
     {
+        if ($request->query('checkin_id')) {
+            $checkin = Checkin::find($request->query('checkin_id'));
+            if ($checkin) {
+                $checkin->update(['ppe_form_exported_at' => now()]);
+            }
+        }
+
         return Pdf::view('pdf.ppe-issue-form-print', [
             'employee'              => $employee,
             'admission_date'        => now()->toDateString(),

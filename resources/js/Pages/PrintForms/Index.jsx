@@ -3,16 +3,22 @@ import { Head, usePage, useForm, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 export default function PrintFormsIndex() {
-    const { employees, documents, auth } = usePage().props;
+    const { employees, activeCheckins, documents, auth } = usePage().props;
     const isAdmin = auth.user?.role === "admin";
 
     const [selectedEmployee, setSelectedEmployee] = useState("");
     const [notes, setNotes] = useState("");
+    const [addToCheckin, setAddToCheckin] = useState(false);
+    const [selectedCheckin, setSelectedCheckin] = useState("");
     const [deleteTarget, setDeleteTarget] = useState(null);
 
     const ppeUrl = selectedEmployee
         ? route("print-forms.ppe", selectedEmployee) +
-          (notes ? `?notes=${encodeURIComponent(notes)}` : "")
+          "?" +
+          new URLSearchParams({
+              ...(notes ? { notes } : {}),
+              ...(addToCheckin && selectedCheckin ? { checkin_id: selectedCheckin } : {}),
+          }).toString()
         : "#";
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -75,6 +81,40 @@ export default function PrintFormsIndex() {
                                 placeholder="Optional notes to include on the form..."
                             />
                         </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                id="addToCheckin"
+                                type="checkbox"
+                                checked={addToCheckin}
+                                onChange={(e) => {
+                                    setAddToCheckin(e.target.checked);
+                                    if (!e.target.checked) setSelectedCheckin("");
+                                }}
+                                className="rounded border-gray-300"
+                            />
+                            <label htmlFor="addToCheckin" className="text-sm font-medium">
+                                Add to a checkin
+                            </label>
+                        </div>
+
+                        {addToCheckin && (
+                            <div>
+                                <label className="block font-medium text-sm mb-1">Checkin</label>
+                                <select
+                                    className="border rounded px-3 py-2 w-72"
+                                    value={selectedCheckin}
+                                    onChange={(e) => setSelectedCheckin(e.target.value)}
+                                >
+                                    <option value="">Select checkin...</option>
+                                    {activeCheckins.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                            {c.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         <a
                             href={ppeUrl}

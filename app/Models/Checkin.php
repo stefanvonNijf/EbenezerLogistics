@@ -13,6 +13,7 @@ class Checkin extends Model
         'notes',
         'status',
         'contract_exported_at',
+        'ppe_form_exported_at',
         'missing_tools',
         'notification_emails',
         'employee_id',
@@ -20,7 +21,8 @@ class Checkin extends Model
     ];
 
     protected $casts = [
-        'contract_exported_at' => 'datetime',
+        'contract_exported_at'  => 'datetime',
+        'ppe_form_exported_at'  => 'datetime',
         'missing_tools'        => 'array',
         'notification_emails'  => 'array',
     ];
