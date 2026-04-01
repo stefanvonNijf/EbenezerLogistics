@@ -72,6 +72,12 @@ export default function CheckinIndex() {
             )
         },
         {
+            header: "PPE",
+            render: (row) => row.ppe_forms_count > 0
+                ? <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">{row.ppe_forms_count}x issued</span>
+                : <span className="text-gray-400 text-xs">—</span>
+        },
+        {
             header: "",
             render: (row) => {
                 if (row.contract_exported_at) return null;

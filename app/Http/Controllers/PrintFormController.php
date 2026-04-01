@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Checkin;
+use App\Models\CheckinPpeForm;
 use App\Models\Employee;
 use App\Models\PrintFormDocument;
 use Illuminate\Http\Request;
@@ -79,7 +80,10 @@ class PrintFormController extends Controller
         if ($request->query('checkin_id')) {
             $checkin = Checkin::find($request->query('checkin_id'));
             if ($checkin) {
-                $checkin->update(['ppe_form_exported_at' => now()]);
+                CheckinPpeForm::create([
+                    'checkin_id' => $checkin->id,
+                    'notes'      => $request->query('notes', '') ?: null,
+                ]);
             }
         }
 

@@ -21,6 +21,7 @@ class CheckinController extends Controller
     {
         return Inertia::render('Checkin/Index', [
             'checkins' => Checkin::with(['employee', 'toolbag'])
+                ->withCount('ppeForms')
                 ->orderByRaw('planned_checkout_date IS NOT NULL AND status != ? DESC', ['checked_out'])
                 ->latest()
                 ->get(),
