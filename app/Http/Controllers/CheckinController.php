@@ -237,7 +237,10 @@ class CheckinController extends Controller
                 'employee'     => $checkin->employee,
                 'missingTools' => $missingTools,
                 'totalCost'    => $totalCost,
-            ])->save($tempPath);
+            ])->withBrowsershot(function (Browsershot $browsershot) {
+                $browsershot->noSandbox()
+                    ->setChromePath('/usr/bin/google-chrome');
+            })->save($tempPath);
 
             $pdfContent = file_get_contents($tempPath);
             @unlink($tempPath);
