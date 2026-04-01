@@ -60,7 +60,7 @@ export default function PrintFormsIndex() {
                             <select
                                 className="border rounded px-3 py-2 w-64"
                                 value={selectedEmployee}
-                                onChange={(e) => setSelectedEmployee(e.target.value)}
+                                onChange={(e) => { setSelectedEmployee(e.target.value); setSelectedCheckin(""); }}
                             >
                                 <option value="">Select employee...</option>
                                 {employees.map((emp) => (
@@ -107,7 +107,7 @@ export default function PrintFormsIndex() {
                                     onChange={(e) => setSelectedCheckin(e.target.value)}
                                 >
                                     <option value="">Select checkin...</option>
-                                    {activeCheckins.map((c) => (
+                                    {activeCheckins.filter((c) => String(c.employee_id) === String(selectedEmployee)).map((c) => (
                                         <option key={c.id} value={c.id}>
                                             {c.label}
                                         </option>
