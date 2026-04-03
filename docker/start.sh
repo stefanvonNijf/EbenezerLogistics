@@ -10,7 +10,7 @@ php artisan route:cache
 php artisan view:cache
 
 # Migrations draaien
-php artisan migrate --force
+php artisan migrate --force || true
 
 # Start php-fpm op de achtergrond
 php-fpm &

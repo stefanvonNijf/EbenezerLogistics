@@ -17,6 +17,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('/health', function () {
+    return response('OK', 200);
+});
+
 Route::get('/dashboard', function () {
     $plannedCheckins = \App\Models\Checkin::with('employee')
         ->whereIn('status', ['planned_checkin', 'planned_checkout'])
