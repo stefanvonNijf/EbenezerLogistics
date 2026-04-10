@@ -25,7 +25,7 @@ export default function Create() {
 
     const filteredToolbags = useMemo(() => {
         if (!data.employee_id) return [];
-        const employee = employees.find(e => e.id == data.employee_id);
+        const employee = employees.find(e => e.id === Number(data.employee_id));
         if (!employee) return [];
         return toolbags.filter(tb => tb.type === employee.role);
     }, [data.employee_id, employees, toolbags]);
