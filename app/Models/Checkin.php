@@ -17,12 +17,14 @@ class Checkin extends Model
         'notification_emails',
         'employee_id',
         'toolbag_id',
+        'custom_items',
     ];
 
     protected $casts = [
         'contract_exported_at' => 'datetime',
         'missing_tools'        => 'array',
         'notification_emails'  => 'array',
+        'custom_items'         => 'array',
     ];
 
     public function employee()

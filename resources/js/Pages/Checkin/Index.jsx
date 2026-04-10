@@ -40,8 +40,18 @@ export default function CheckinIndex() {
             render: (row) => row.employee?.name || "-"
         },
         {
-            header: "Toolbag",
-            render: (row) => row.toolbag?.name || "-"
+            header: "Toolbag / Items",
+            render: (row) => {
+                if (row.toolbag?.name) return row.toolbag.name;
+                if (row.custom_items?.length) {
+                    return (
+                        <span className="text-gray-600 text-xs italic" title={row.custom_items.join(', ')}>
+                            Custom ({row.custom_items.length} items)
+                        </span>
+                    );
+                }
+                return "-";
+            }
         },
         {
             header: "Check-in date",

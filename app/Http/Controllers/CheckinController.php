@@ -38,49 +38,64 @@ class CheckinController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $isCustom = (bool) $request->input('is_custom', false);
+
+        $rules = [
             'checkin_date'         => 'required|date',
             'notes'                => 'nullable|string',
             'employee_id'          => 'required|exists:employees,id',
-            'toolbag_id'           => 'required|exists:toolbags,id',
             'notification_emails'  => 'nullable|array',
             'notification_emails.*'=> 'email',
-        ]);
+        ];
+
+        if ($isCustom) {
+            $rules['custom_items']                      = 'required|array|min:1';
+            $rules['custom_items.*.name']               = 'required|string|max:255';
+            $rules['custom_items.*.replacement_cost']   = 'nullable|numeric|min:0';
+        } else {
+            $rules['toolbag_id'] = 'required|exists:toolbags,id';
+        }
+
+        $request->validate($rules);
 
         $employee = Employee::findOrFail($request->employee_id);
-        $toolbag  = Toolbag::findOrFail($request->toolbag_id);
+        $toolbag  = null;
 
-        if ($employee->role !== $toolbag->type) {
-            return back()
-                ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
-                ->withInput();
+        if (!$isCustom) {
+            $toolbag = Toolbag::findOrFail($request->toolbag_id);
+
+            if ($employee->role !== $toolbag->type) {
+                return back()
+                    ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
+                    ->withInput();
+            }
         }
 
         $planned = Checkin::where('employee_id', $request->employee_id)
             ->where('status', 'planned_checkin')
             ->first();
 
+        $checkinData = [
+            'checkin_date'        => $request->checkin_date,
+            'notes'               => $request->notes,
+            'status'              => 'planned_checkout',
+            'notification_emails' => $request->notification_emails ?? [],
+            'toolbag_id'          => $isCustom ? null : $request->toolbag_id,
+            'custom_items'        => $isCustom ? $request->custom_items : null,
+        ];
+
         if ($planned) {
-            $planned->update([
-                'checkin_date'        => $request->checkin_date,
-                'notes'               => $request->notes,
-                'toolbag_id'          => $request->toolbag_id,
-                'status'              => 'planned_checkout',
-                'notification_emails' => $request->notification_emails ?? [],
-            ]);
+            $planned->update($checkinData);
             $checkin = $planned;
         } else {
-            $checkin = Checkin::create([
-                'checkin_date'        => $request->checkin_date,
-                'notes'               => $request->notes,
-                'employee_id'         => $request->employee_id,
-                'toolbag_id'          => $request->toolbag_id,
-                'status'              => 'planned_checkout',
-                'notification_emails' => $request->notification_emails ?? [],
-            ]);
+            $checkin = Checkin::create(array_merge($checkinData, [
+                'employee_id' => $request->employee_id,
+            ]));
         }
 
-        $toolbag->update(['employee_id' => $request->employee_id]);
+        if ($toolbag) {
+            $toolbag->update(['employee_id' => $request->employee_id]);
+        }
 
         // Send checkin notification emails
         $checkin->load('employee', 'toolbag.tools');
@@ -119,26 +134,49 @@ class CheckinController extends Controller
                 ->with('error', 'This checkin has been exported as a contract and can no longer be edited.');
         }
 
-        $request->validate([
+        $isCustom = (bool) $request->input('is_custom', false);
+
+        $rules = [
             'checkin_date' => 'required|date',
             'notes'        => 'nullable|string',
             'employee_id'  => 'required|exists:employees,id',
-            'toolbag_id'   => 'required|exists:toolbags,id',
-        ]);
+        ];
 
-        $employee = Employee::findOrFail($request->employee_id);
-        $toolbag  = Toolbag::findOrFail($request->toolbag_id);
-
-        if ($employee->role !== $toolbag->type) {
-            return back()
-                ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
-                ->withInput();
+        if ($isCustom) {
+            $rules['custom_items']                      = 'required|array|min:1';
+            $rules['custom_items.*.name']               = 'required|string|max:255';
+            $rules['custom_items.*.replacement_cost']   = 'nullable|numeric|min:0';
+        } else {
+            $rules['toolbag_id'] = 'required|exists:toolbags,id';
         }
 
-        if ($checkin->toolbag_id !== $request->toolbag_id) {
-            $oldToolbag = Toolbag::find($checkin->toolbag_id);
-            if ($oldToolbag) {
-                $oldToolbag->update(['employee_id' => null]);
+        $request->validate($rules);
+
+        $employee = Employee::findOrFail($request->employee_id);
+        $toolbag  = null;
+
+        if (!$isCustom) {
+            $toolbag = Toolbag::findOrFail($request->toolbag_id);
+
+            if ($employee->role !== $toolbag->type) {
+                return back()
+                    ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
+                    ->withInput();
+            }
+
+            if ($checkin->toolbag_id && $checkin->toolbag_id !== (int) $request->toolbag_id) {
+                $oldToolbag = Toolbag::find($checkin->toolbag_id);
+                if ($oldToolbag) {
+                    $oldToolbag->update(['employee_id' => null]);
+                }
+            }
+        } else {
+            // Switching to custom — release any previously assigned toolbag
+            if ($checkin->toolbag_id) {
+                $oldToolbag = Toolbag::find($checkin->toolbag_id);
+                if ($oldToolbag) {
+                    $oldToolbag->update(['employee_id' => null]);
+                }
             }
         }
 
@@ -146,10 +184,13 @@ class CheckinController extends Controller
             'checkin_date' => $request->checkin_date,
             'notes'        => $request->notes,
             'employee_id'  => $request->employee_id,
-            'toolbag_id'   => $request->toolbag_id,
+            'toolbag_id'   => $isCustom ? null : $request->toolbag_id,
+            'custom_items' => $isCustom ? $request->custom_items : null,
         ]);
 
-        $toolbag->update(['employee_id' => $request->employee_id]);
+        if ($toolbag) {
+            $toolbag->update(['employee_id' => $request->employee_id]);
+        }
 
         return redirect()
             ->route('checkins.index')

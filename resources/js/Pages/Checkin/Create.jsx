@@ -14,10 +14,14 @@ export default function Create() {
         checkin_date:         "",
         notes:                "",
         notification_emails:  [],
+        is_custom:            false,
+        custom_items:         [],
     });
 
     const [emailInput, setEmailInput] = useState("");
     const [emailError, setEmailError] = useState("");
+    const [itemName, setItemName] = useState("");
+    const [itemCost, setItemCost] = useState("");
 
     const filteredToolbags = useMemo(() => {
         if (!data.employee_id) return [];
@@ -43,6 +47,32 @@ export default function Create() {
 
     const handleEmailKeyDown = (e) => {
         if (e.key === "Enter") { e.preventDefault(); addEmail(); }
+    };
+
+    const addItem = () => {
+        const name = itemName.trim();
+        if (!name) return;
+        const cost = itemCost !== "" ? parseFloat(itemCost) : null;
+        setData("custom_items", [...data.custom_items, { name, replacement_cost: cost }]);
+        setItemName("");
+        setItemCost("");
+    };
+
+    const removeItem = (index) => {
+        setData("custom_items", data.custom_items.filter((_, i) => i !== index));
+    };
+
+    const handleItemKeyDown = (e) => {
+        if (e.key === "Enter") { e.preventDefault(); addItem(); }
+    };
+
+    const toggleCustom = () => {
+        setData(prev => ({
+            ...prev,
+            is_custom:    !prev.is_custom,
+            toolbag_id:   "",
+            custom_items: [],
+        }));
     };
 
     const handleSubmit = (e) => {
@@ -77,27 +107,108 @@ export default function Create() {
                         {errors.employee_id && <div className="text-red-600 text-sm">{errors.employee_id}</div>}
                     </div>
 
-                    {/* TOOLBAG */}
-                    <div>
-                        <label className="block font-medium">Assign toolbag</label>
-                        <select
-                            value={data.toolbag_id}
-                            onChange={(e) => setData("toolbag_id", e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                            disabled={!data.employee_id}
+                    {/* CUSTOM TOGGLE */}
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="button"
+                            onClick={toggleCustom}
+                            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                                data.is_custom ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
                         >
-                            <option value="">-- Select toolbag --</option>
-                            {filteredToolbags.length === 0 && data.employee_id && (
-                                <option disabled>No toolbags available for this role</option>
-                            )}
-                            {filteredToolbags.map(tb => (
-                                <option key={tb.id} value={tb.id}>
-                                    {tb.name} ({tb.type})
-                                </option>
-                            ))}
-                        </select>
-                        {errors.toolbag_id && <div className="text-red-600 text-sm">{errors.toolbag_id}</div>}
+                            <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ${
+                                    data.is_custom ? 'translate-x-5' : 'translate-x-0'
+                                }`}
+                            />
+                        </button>
+                        <span className="font-medium text-sm">
+                            {data.is_custom ? 'Custom items' : 'Assign toolbag'}
+                        </span>
                     </div>
+
+                    {/* TOOLBAG or CUSTOM ITEMS */}
+                    {!data.is_custom ? (
+                        <div>
+                            <label className="block font-medium">Assign toolbag</label>
+                            <select
+                                value={data.toolbag_id}
+                                onChange={(e) => setData("toolbag_id", e.target.value)}
+                                className="w-full border rounded px-3 py-2"
+                                disabled={!data.employee_id}
+                            >
+                                <option value="">-- Select toolbag --</option>
+                                {filteredToolbags.length === 0 && data.employee_id && (
+                                    <option disabled>No toolbags available for this role</option>
+                                )}
+                                {filteredToolbags.map(tb => (
+                                    <option key={tb.id} value={tb.id}>
+                                        {tb.name} ({tb.type})
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.toolbag_id && <div className="text-red-600 text-sm">{errors.toolbag_id}</div>}
+                        </div>
+                    ) : (
+                        <div>
+                            <label className="block font-medium mb-1">Custom items</label>
+                            <p className="text-sm text-gray-500 mb-2">Add the items being checked out with an optional replacement cost.</p>
+
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={itemName}
+                                    onChange={(e) => setItemName(e.target.value)}
+                                    onKeyDown={handleItemKeyDown}
+                                    placeholder="Item name"
+                                    className="flex-1 border rounded px-3 py-2 text-sm"
+                                />
+                                <input
+                                    type="number"
+                                    value={itemCost}
+                                    onChange={(e) => setItemCost(e.target.value)}
+                                    onKeyDown={handleItemKeyDown}
+                                    placeholder="Cost (€)"
+                                    min="0"
+                                    step="0.01"
+                                    className="w-28 border rounded px-3 py-2 text-sm"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={addItem}
+                                    className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm"
+                                >
+                                    Add
+                                </button>
+                            </div>
+
+                            {errors.custom_items && <p className="text-red-600 text-sm mt-1">{errors.custom_items}</p>}
+
+                            {data.custom_items.length > 0 && (
+                                <ul className="mt-3 space-y-1">
+                                    {data.custom_items.map((item, i) => (
+                                        <li key={i} className="flex items-center justify-between bg-gray-50 border rounded px-3 py-2 text-sm">
+                                            <span>{item.name}</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-gray-500">
+                                                    {item.replacement_cost != null
+                                                        ? `€ ${parseFloat(item.replacement_cost).toFixed(2)}`
+                                                        : "—"}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeItem(i)}
+                                                    className="text-gray-400 hover:text-red-500 font-bold"
+                                                >
+                                                    &times;
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
 
                     {/* CHECK-IN DATE */}
                     <div>

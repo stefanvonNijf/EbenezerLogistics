@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tools', function (Blueprint $table) {
@@ -17,16 +14,15 @@ return new class extends Migration
             $table->string('brand');
             $table->string('type')->nullable();
             $table->string('image_path')->nullable();
-            $table->enum('roletype', ['shared', 'ironworker', 'electrician'])->default('shared');
+            $table->string('roletype')->default('shared');
             $table->integer('amount_in_stock')->default(0);
+            $table->decimal('replacement_cost', 8, 2)->nullable();
+            $table->unsignedInteger('minimal_stock')->nullable();
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tools');

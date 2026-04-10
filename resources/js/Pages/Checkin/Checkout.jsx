@@ -3,9 +3,13 @@ import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 export default function Checkout({ checkin }) {
+    const isCustom = !checkin.toolbag && Array.isArray(checkin.custom_items) && checkin.custom_items.length > 0;
     const tools = checkin.toolbag?.tools ?? [];
 
     const [presentIds, setPresentIds] = useState(tools.map((t) => t.id));
+    const [returnedItems, setReturnedItems] = useState(
+        isCustom ? checkin.custom_items.map((_, i) => i) : []
+    );
 
     const toggle = (toolId) => {
         setPresentIds((prev) =>
@@ -15,11 +19,29 @@ export default function Checkout({ checkin }) {
         );
     };
 
+    const toggleItem = (index) => {
+        setReturnedItems((prev) =>
+            prev.includes(index)
+                ? prev.filter((i) => i !== index)
+                : [...prev, index]
+        );
+    };
+
     const missingTools = tools.filter((t) => !presentIds.includes(t.id));
     const totalCost = missingTools.reduce(
         (sum, t) => sum + (parseFloat(t.replacement_cost) || 0),
         0
     );
+
+    const missingItemCount = isCustom
+        ? checkin.custom_items.length - returnedItems.length
+        : 0;
+
+    const missingItemTotalCost = isCustom
+        ? checkin.custom_items
+            .filter((_, i) => !returnedItems.includes(i))
+            .reduce((sum, item) => sum + (parseFloat(item.replacement_cost) || 0), 0)
+        : 0;
 
     const submit = () => {
         router.post(
@@ -42,92 +64,130 @@ export default function Checkout({ checkin }) {
                     Checkout — {checkin.employee?.name}
                 </h1>
                 <p className="text-gray-500 mb-6">
-                    Toolbag: {checkin.toolbag?.name}
+                    {isCustom ? "Custom check-in" : `Toolbag: ${checkin.toolbag?.name}`}
                 </p>
 
                 <div className="bg-white rounded-lg shadow p-6">
-                    <p className="text-sm text-gray-600 mb-4">
-                        All tools are marked as returned by default. Uncheck any tool that is <strong>not</strong> being returned.
-                    </p>
+                    {isCustom ? (
+                        <>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Mark each item as returned. Uncheck any item that is <strong>not</strong> being returned.
+                            </p>
 
-                    {/* Header row */}
-                    <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase mb-2 px-1">
-                        <span>Tool</span>
-                        <span>Replacement cost</span>
-                    </div>
+                            <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase mb-2 px-1">
+                                <span>Item</span>
+                                <span>Replacement cost</span>
+                            </div>
 
-                    <div className="space-y-2">
-                        {tools.map((tool) => {
-                            const isPresent = presentIds.includes(tool.id);
-                            return (
-                                <div
-                                    key={tool.id}
-                                    onClick={() => toggle(tool.id)}
-                                    className={`flex items-center justify-between border rounded px-4 py-3 cursor-pointer transition-colors ${
-                                        isPresent
-                                            ? "bg-white border-gray-200 hover:bg-gray-50"
-                                            : "bg-red-50 border-red-300"
-                                    }`}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={isPresent}
-                                            onChange={() => toggle(tool.id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="w-5 h-5 accent-blue-600"
-                                        />
-                                        <div>
-                                            <p
-                                                className={`font-medium ${
-                                                    !isPresent
-                                                        ? "line-through text-red-700"
-                                                        : "text-gray-800"
-                                                }`}
-                                            >
-                                                {tool.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                                {[tool.brand, tool.type]
-                                                    .filter(Boolean)
-                                                    .join(" • ")}
-                                            </p>
+                            <div className="space-y-2">
+                                {checkin.custom_items.map((item, i) => {
+                                    const isReturned = returnedItems.includes(i);
+                                    return (
+                                        <div
+                                            key={i}
+                                            onClick={() => toggleItem(i)}
+                                            className={`flex items-center justify-between border rounded px-4 py-3 cursor-pointer transition-colors ${
+                                                isReturned
+                                                    ? "bg-white border-gray-200 hover:bg-gray-50"
+                                                    : "bg-red-50 border-red-300"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isReturned}
+                                                    onChange={() => toggleItem(i)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="w-5 h-5 accent-blue-600"
+                                                />
+                                                <p className={`font-medium ${!isReturned ? "line-through text-red-700" : "text-gray-800"}`}>
+                                                    {item.name}
+                                                </p>
+                                            </div>
+                                            <span className={`text-sm font-semibold ${!isReturned ? "text-red-600" : "text-gray-500"}`}>
+                                                {item.replacement_cost != null
+                                                    ? `€ ${parseFloat(item.replacement_cost).toFixed(2)}`
+                                                    : "—"}
+                                            </span>
                                         </div>
-                                    </div>
+                                    );
+                                })}
+                            </div>
 
-                                    <span
-                                        className={`text-sm font-semibold ${
-                                            !isPresent
-                                                ? "text-red-600"
-                                                : "text-gray-500"
-                                        }`}
-                                    >
-                                        {tool.replacement_cost
-                                            ? `€ ${parseFloat(tool.replacement_cost).toFixed(2)}`
-                                            : "—"}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
+                            <div className="mt-6 pt-4 border-t flex items-center justify-between">
+                                <span className="text-gray-600">
+                                    {missingItemCount === 0
+                                        ? "All items accounted for"
+                                        : `${missingItemCount} item${missingItemCount > 1 ? "s" : ""} not returned`}
+                                </span>
+                                <span className={`text-lg font-bold ${missingItemTotalCost > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                    Total: € {missingItemTotalCost.toFixed(2)}
+                                </span>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <p className="text-sm text-gray-600 mb-4">
+                                All tools are marked as returned by default. Uncheck any tool that is <strong>not</strong> being returned.
+                            </p>
 
-                    {/* Summary */}
-                    <div className="mt-6 pt-4 border-t flex items-center justify-between">
-                        <span className="text-gray-600">
-                            {missingTools.length === 0
-                                ? "All tools accounted for"
-                                : `${missingTools.length} missing tool${missingTools.length > 1 ? "s" : ""}`}
-                        </span>
-                        <span
-                            className={`text-lg font-bold ${
-                                totalCost > 0
-                                    ? "text-red-600"
-                                    : "text-gray-400"
-                            }`}
-                        >
-                            Total: € {totalCost.toFixed(2)}
-                        </span>
-                    </div>
+                            <div className="flex items-center justify-between text-xs font-semibold text-gray-500 uppercase mb-2 px-1">
+                                <span>Tool</span>
+                                <span>Replacement cost</span>
+                            </div>
+
+                            <div className="space-y-2">
+                                {tools.map((tool) => {
+                                    const isPresent = presentIds.includes(tool.id);
+                                    return (
+                                        <div
+                                            key={tool.id}
+                                            onClick={() => toggle(tool.id)}
+                                            className={`flex items-center justify-between border rounded px-4 py-3 cursor-pointer transition-colors ${
+                                                isPresent
+                                                    ? "bg-white border-gray-200 hover:bg-gray-50"
+                                                    : "bg-red-50 border-red-300"
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isPresent}
+                                                    onChange={() => toggle(tool.id)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="w-5 h-5 accent-blue-600"
+                                                />
+                                                <div>
+                                                    <p className={`font-medium ${!isPresent ? "line-through text-red-700" : "text-gray-800"}`}>
+                                                        {tool.name}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {[tool.brand, tool.type].filter(Boolean).join(" • ")}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span className={`text-sm font-semibold ${!isPresent ? "text-red-600" : "text-gray-500"}`}>
+                                                {tool.replacement_cost
+                                                    ? `€ ${parseFloat(tool.replacement_cost).toFixed(2)}`
+                                                    : "—"}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-6 pt-4 border-t flex items-center justify-between">
+                                <span className="text-gray-600">
+                                    {missingTools.length === 0
+                                        ? "All tools accounted for"
+                                        : `${missingTools.length} missing tool${missingTools.length > 1 ? "s" : ""}`}
+                                </span>
+                                <span className={`text-lg font-bold ${totalCost > 0 ? "text-red-600" : "text-gray-400"}`}>
+                                    Total: € {totalCost.toFixed(2)}
+                                </span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className="flex gap-3 mt-6">

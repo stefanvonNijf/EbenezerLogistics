@@ -39,7 +39,7 @@ COPY . .
 RUN npm run build
 
 # Laravel bootstrap
-RUN php artisan storage:link || true
+RUN php artisan storage:link || truex
 
 # Permissies
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
