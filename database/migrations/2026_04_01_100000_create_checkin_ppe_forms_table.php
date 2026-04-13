@@ -16,7 +16,12 @@ return new class extends Migration
         });
 
         Schema::table('checkins', function (Blueprint $table) {
-            $table->dropColumn('ppe_form_exported_at');
+            if (Schema::hasColumn('checkins', 'ppe_form_exported_at')) {
+                $table->dropColumn('ppe_form_exported_at');
+            }
+            if (!Schema::hasColumn('checkins', 'custom_items')) {
+                $table->json('custom_items')->nullable();
+            }
         });
     }
 
@@ -26,6 +31,9 @@ return new class extends Migration
 
         Schema::table('checkins', function (Blueprint $table) {
             $table->timestamp('ppe_form_exported_at')->nullable()->after('contract_exported_at');
+            if (Schema::hasColumn('checkins', 'custom_items')) {
+                $table->dropColumn('custom_items');
+            }
         });
     }
 };
