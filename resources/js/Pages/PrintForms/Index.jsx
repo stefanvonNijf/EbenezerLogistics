@@ -1,16 +1,17 @@
 import React, { useState } from "react";
-import { Head, usePage, useForm, router } from "@inertiajs/react";
+import { Head, usePage, /* useForm, router */ } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 export default function PrintFormsIndex() {
-    const { employees, activeCheckins, documents, auth } = usePage().props;
-    const isAdmin = auth.user?.role === "admin";
+    const { employees, activeCheckins, /* documents, auth */ } = usePage().props;
+    // const isAdmin = auth.user?.role === "admin";
 
     const [selectedEmployee, setSelectedEmployee] = useState("");
     const [notes, setNotes] = useState("");
     const [addToCheckin, setAddToCheckin] = useState(false);
     const [selectedCheckin, setSelectedCheckin] = useState("");
-    const [deleteTarget, setDeleteTarget] = useState(null);
+    // DISABLED: Document list feature
+    // const [deleteTarget, setDeleteTarget] = useState(null);
 
     const ppeUrl = selectedEmployee
         ? route("print-forms.ppe", selectedEmployee) +
@@ -21,24 +22,25 @@ export default function PrintFormsIndex() {
           }).toString()
         : "#";
 
-    const { data, setData, post, processing, errors, reset } = useForm({
-        name: "",
-        pdf: null,
-    });
+    // DISABLED: Upload document feature
+    // const { data, setData, post, processing, errors, reset } = useForm({
+    //     name: "",
+    //     pdf: null,
+    // });
 
-    const submitUpload = (e) => {
-        e.preventDefault();
-        post(route("print-forms.upload"), {
-            forceFormData: true,
-            onSuccess: () => reset(),
-        });
-    };
+    // const submitUpload = (e) => {
+    //     e.preventDefault();
+    //     post(route("print-forms.upload"), {
+    //         forceFormData: true,
+    //         onSuccess: () => reset(),
+    //     });
+    // };
 
-    const confirmDelete = () => {
-        router.delete(route("print-forms.destroy", deleteTarget.id), {
-            onSuccess: () => setDeleteTarget(null),
-        });
-    };
+    // const confirmDelete = () => {
+    //     router.delete(route("print-forms.destroy", deleteTarget.id), {
+    //         onSuccess: () => setDeleteTarget(null),
+    //     });
+    // };
 
     return (
         <AuthenticatedLayout>
@@ -132,7 +134,7 @@ export default function PrintFormsIndex() {
                     </div>
                 </div>
 
-                {/* UPLOAD DOCUMENT */}
+                {/* DISABLED: Upload Document
                 <div className="bg-white shadow rounded-lg p-6">
                     <h2 className="text-lg font-semibold mb-1">Upload Document</h2>
                     <p className="text-sm text-gray-500 mb-4">
@@ -176,8 +178,9 @@ export default function PrintFormsIndex() {
                         </button>
                     </form>
                 </div>
+                */}
 
-                {/* DOCUMENT LIST */}
+                {/* DISABLED: Document List
                 <div className="bg-white shadow rounded-lg p-6">
                     <h2 className="text-lg font-semibold mb-4">Documents</h2>
 
@@ -220,9 +223,10 @@ export default function PrintFormsIndex() {
                         </div>
                     )}
                 </div>
+                */}
             </div>
 
-            {/* DELETE CONFIRM MODAL */}
+            {/* DISABLED: Delete Confirm Modal
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
@@ -249,6 +253,7 @@ export default function PrintFormsIndex() {
                     </div>
                 </div>
             )}
+            */}
         </AuthenticatedLayout>
     );
 }
