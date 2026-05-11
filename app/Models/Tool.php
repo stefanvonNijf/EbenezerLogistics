@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Storage;
 
 class Tool extends Model
 {
@@ -20,6 +21,18 @@ class Tool extends Model
         'replacement_cost',
         'image_path',
     ];
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image_path) return null;
+        if (Storage::disk('s3')->exists($this->image_path)) {
+            return Storage::disk('s3')->url($this->image_path);
+        }
+        if (Storage::disk('public')->exists($this->image_path)) {
+            return Storage::disk('public')->url($this->image_path);
+        }
+        return null;
+    }
 
     public function category()
     {

@@ -167,12 +167,12 @@ export default function Edit({ tool, categories, roles }) {
                     <div>
                         <label className="block font-medium">Replace image</label>
 
-                        {tool.image_path && (
+                        {tool.image_url && (
                             <div>
                                 <label className="block font-medium">Current image</label>
 
                                 <img
-                                    src={`/storage/${tool.image_path}`}
+                                    src={tool.image_url}
                                     alt={tool.name}
                                     className="mt-2 h-24 rounded border"
                                 />
