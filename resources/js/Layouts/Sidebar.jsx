@@ -98,7 +98,7 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
 
                     <Link onClick={closeSidebar} href={route('print-forms.index')} className={linkClass('print-forms.*')}>
                         <IoPrintOutline className="text-2xl" />
-                        Print Forms
+                        Documents
                     </Link>
                     <hr className="border-white border-t-[2px]" />
 
