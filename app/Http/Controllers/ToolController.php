@@ -54,7 +54,7 @@ class ToolController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $validated['image_path'] = $request->file('image')->store('tools', 's3');
+            $validated['image_path'] = $request->file('image')->store('images', 's3');
         }
 
         Tool::create($validated);
@@ -105,7 +105,7 @@ class ToolController extends Controller
                 Storage::disk('public')->delete($tool->image_path);
             }
 
-            $validated['image_path'] = $request->file('image')->store('tools', 's3');
+            $validated['image_path'] = $request->file('image')->store('images', 's3');
         }
 
         $tool->update($validated);

@@ -282,7 +282,7 @@ class CheckinController extends Controller
         $employeeSignature = $request->employee_signature;
         $managerSignature  = $request->manager_signature;
 
-        $pdfPath = "signed-checkins/{$checkin->id}-checkin.pdf";
+        $pdfPath = "checkins/{$checkin->id}-checkin.pdf";
         $tmpPath = tempnam(sys_get_temp_dir(), 'checkin-pdf');
 
         try {
@@ -342,8 +342,8 @@ class CheckinController extends Controller
     {
         $request->validate(['pdf' => 'required|file|mimes:pdf|max:20480']);
 
-        $pdfPath = "signed-checkins/{$checkin->id}-checkin.pdf";
-        Storage::disk('s3')->putFileAs('signed-checkins', $request->file('pdf'), "{$checkin->id}-checkin.pdf", 'public');
+        $pdfPath = "checkins/{$checkin->id}-checkin.pdf";
+        Storage::disk('s3')->putFileAs('checkins', $request->file('pdf'), "{$checkin->id}-checkin.pdf", 'public');
 
         $checkin->update([
             'signed_checkin_pdf_path' => $pdfPath,
@@ -357,8 +357,8 @@ class CheckinController extends Controller
     {
         $request->validate(['pdf' => 'required|file|mimes:pdf|max:20480']);
 
-        $pdfPath = "signed-checkins/{$checkin->id}-checkout.pdf";
-        Storage::disk('s3')->putFileAs('signed-checkins', $request->file('pdf'), "{$checkin->id}-checkout.pdf", 'public');
+        $pdfPath = "checkins/{$checkin->id}-checkout.pdf";
+        Storage::disk('s3')->putFileAs('checkins', $request->file('pdf'), "{$checkin->id}-checkout.pdf", 'public');
 
         $update = ['signed_checkout_pdf_path' => $pdfPath];
 
@@ -434,7 +434,7 @@ class CheckinController extends Controller
         $missingTools   = !$isCar ? Tool::whereIn('id', $missingToolIds)->get() : collect();
         $totalCost      = $missingTools->sum('replacement_cost');
 
-        $pdfPath    = "signed-checkins/{$checkin->id}-checkout.pdf";
+        $pdfPath    = "checkins/{$checkin->id}-checkout.pdf";
         $tmpPath    = tempnam(sys_get_temp_dir(), 'checkout-pdf');
         $pdfContent = null;
 
