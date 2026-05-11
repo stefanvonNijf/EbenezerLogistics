@@ -176,7 +176,6 @@ class CheckinController extends Controller
         $toolbag  = null;
         $car      = null;
 
-        // Release old car if switching away from car type or changing car
         if ($checkin->car_id) {
             if (!$isCar || (int) $request->car_id !== $checkin->car_id) {
                 $oldCar = Car::find($checkin->car_id);
@@ -283,29 +282,34 @@ class CheckinController extends Controller
         $employeeSignature = $request->employee_signature;
         $managerSignature  = $request->manager_signature;
 
-        $pdfPath  = "signed-checkins/{$checkin->id}-checkin.pdf";
-        Storage::disk('public')->makeDirectory('signed-checkins');
-        $fullPath = Storage::disk('public')->path($pdfPath);
+        $pdfPath = "signed-checkins/{$checkin->id}-checkin.pdf";
+        $tmpPath = tempnam(sys_get_temp_dir(), 'checkin-pdf');
 
-        if ($checkin->car_id) {
-            Pdf::view('pdf.car-checkin', [
-                'checkin'           => $checkin,
-                'employee'          => $checkin->employee,
-                'car'               => $checkin->car,
-                'employeeSignature' => $employeeSignature,
-                'managerSignature'  => $managerSignature,
-            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-              ->save($fullPath);
-        } else {
-            Pdf::view('pdf.checkin', [
-                'checkin'           => $checkin,
-                'employee'          => $checkin->employee,
-                'toolbag'           => $checkin->toolbag,
-                'tools'             => $checkin->toolbag ? $checkin->toolbag->tools : collect(),
-                'employeeSignature' => $employeeSignature,
-                'managerSignature'  => $managerSignature,
-            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-              ->save($fullPath);
+        try {
+            if ($checkin->car_id) {
+                Pdf::view('pdf.car-checkin', [
+                    'checkin'           => $checkin,
+                    'employee'          => $checkin->employee,
+                    'car'               => $checkin->car,
+                    'employeeSignature' => $employeeSignature,
+                    'managerSignature'  => $managerSignature,
+                ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                  ->save($tmpPath);
+            } else {
+                Pdf::view('pdf.checkin', [
+                    'checkin'           => $checkin,
+                    'employee'          => $checkin->employee,
+                    'toolbag'           => $checkin->toolbag,
+                    'tools'             => $checkin->toolbag ? $checkin->toolbag->tools : collect(),
+                    'employeeSignature' => $employeeSignature,
+                    'managerSignature'  => $managerSignature,
+                ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                  ->save($tmpPath);
+            }
+
+            Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+        } finally {
+            @unlink($tmpPath);
         }
 
         $checkin->update([
@@ -315,7 +319,57 @@ class CheckinController extends Controller
             'signed_checkin_pdf_path'    => $pdfPath,
         ]);
 
-        return response()->json(['url' => Storage::disk('public')->url($pdfPath)]);
+        return response()->json(['url' => route('checkins.signed-pdf', $checkin)]);
+    }
+
+    public function viewSignedPdf(Checkin $checkin)
+    {
+        $path = $checkin->signed_checkin_pdf_path;
+
+        if ($path) {
+            if (Storage::disk('s3')->exists($path)) {
+                return redirect(Storage::disk('s3')->url($path));
+            }
+            if (Storage::disk('public')->exists($path)) {
+                return response()->file(Storage::disk('public')->path($path));
+            }
+        }
+
+        abort(404, 'PDF not found.');
+    }
+
+    public function uploadPdf(Request $request, Checkin $checkin)
+    {
+        $request->validate(['pdf' => 'required|file|mimes:pdf|max:20480']);
+
+        $pdfPath = "signed-checkins/{$checkin->id}-checkin.pdf";
+        Storage::disk('s3')->putFileAs('signed-checkins', $request->file('pdf'), "{$checkin->id}-checkin.pdf", 'public');
+
+        $checkin->update([
+            'signed_checkin_pdf_path' => $pdfPath,
+            'contract_exported_at'    => $checkin->contract_exported_at ?? now(),
+        ]);
+
+        return redirect()->route('checkins.index')->with('success', 'Check-in PDF uploaded.');
+    }
+
+    public function uploadCheckoutPdf(Request $request, Checkin $checkin)
+    {
+        $request->validate(['pdf' => 'required|file|mimes:pdf|max:20480']);
+
+        $pdfPath = "signed-checkins/{$checkin->id}-checkout.pdf";
+        Storage::disk('s3')->putFileAs('signed-checkins', $request->file('pdf'), "{$checkin->id}-checkout.pdf", 'public');
+
+        $update = ['signed_checkout_pdf_path' => $pdfPath];
+
+        if (!$checkin->checkout_date) {
+            $update['checkout_date'] = now()->toDateString();
+            $update['status']        = 'checked_out';
+        }
+
+        $checkin->update($update);
+
+        return redirect()->route('checkins.index')->with('success', 'Checkout PDF uploaded.');
     }
 
     public function checkoutShow(Checkin $checkin)
@@ -360,7 +414,6 @@ class CheckinController extends Controller
 
         $checkin->update($updateData);
 
-        // Release car or toolbag
         if ($isCar) {
             $checkin->car->update(['employee_id' => null]);
         } elseif ($checkin->toolbag) {
@@ -377,61 +430,68 @@ class CheckinController extends Controller
 
         $checkin->load('employee', 'toolbag.tools', 'car');
 
-        // Generate and save signed checkout PDF
-        $pdfPath  = "signed-checkins/{$checkin->id}-checkout.pdf";
-        Storage::disk('public')->makeDirectory('signed-checkins');
-        $fullPath = Storage::disk('public')->path($pdfPath);
+        $missingToolIds = $checkin->missing_tools ?? [];
+        $missingTools   = !$isCar ? Tool::whereIn('id', $missingToolIds)->get() : collect();
+        $totalCost      = $missingTools->sum('replacement_cost');
 
-        if ($isCar) {
-            Pdf::view('pdf.car-checkout', [
-                'checkin'           => $checkin,
-                'employee'          => $checkin->employee,
-                'car'               => $checkin->car,
-                'employeeSignature' => $request->employee_signature,
-                'managerSignature'  => $request->manager_signature,
-            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-              ->save($fullPath);
-        } else {
-            $missingToolIds = $checkin->missing_tools ?? [];
-            $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
-            $totalCost      = $missingTools->sum('replacement_cost');
+        $pdfPath    = "signed-checkins/{$checkin->id}-checkout.pdf";
+        $tmpPath    = tempnam(sys_get_temp_dir(), 'checkout-pdf');
+        $pdfContent = null;
 
-            Pdf::view('pdf.checkout', [
-                'checkin'           => $checkin,
-                'employee'          => $checkin->employee,
-                'missingTools'      => $missingTools,
-                'totalCost'         => $totalCost,
-                'employeeSignature' => $request->employee_signature,
-                'managerSignature'  => $request->manager_signature,
-            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-              ->save($fullPath);
+        try {
+            if ($isCar) {
+                Pdf::view('pdf.car-checkout', [
+                    'checkin'           => $checkin,
+                    'employee'          => $checkin->employee,
+                    'car'               => $checkin->car,
+                    'employeeSignature' => $request->employee_signature,
+                    'managerSignature'  => $request->manager_signature,
+                ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                  ->save($tmpPath);
+            } else {
+                Pdf::view('pdf.checkout', [
+                    'checkin'           => $checkin,
+                    'employee'          => $checkin->employee,
+                    'missingTools'      => $missingTools,
+                    'totalCost'         => $totalCost,
+                    'employeeSignature' => $request->employee_signature,
+                    'managerSignature'  => $request->manager_signature,
+                ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                  ->save($tmpPath);
+            }
+
+            $pdfContent = file_get_contents($tmpPath);
+            Storage::disk('s3')->put($pdfPath, $pdfContent, 'public');
+        } finally {
+            @unlink($tmpPath);
         }
 
         $checkin->update(['signed_checkout_pdf_path' => $pdfPath]);
 
-        // Send notification emails
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
-        if ($recipients && !$isCar) {
-            $missingToolIds = $checkin->missing_tools ?? [];
-            $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
-            $totalCost      = $missingTools->sum('replacement_cost');
-            $pdfContent     = file_get_contents($fullPath);
+        if ($recipients && !$isCar && $pdfContent) {
             foreach ($recipients as $email) {
                 Mail::to($email)->send(new CheckoutCompletedMail($checkin, $totalCost, $pdfContent));
             }
         }
 
-        return redirect()->route('checkins.index')
-            ->with('success', 'Checkout completed.')
-            ->with('signed_checkout_url', Storage::disk('public')->url($pdfPath));
+        return redirect()->route('checkins.index')->with('success', 'Checkout completed.');
     }
 
     public function checkoutPdf(Checkin $checkin)
     {
-        if ($checkin->signed_checkout_pdf_path && Storage::disk('public')->exists($checkin->signed_checkout_pdf_path)) {
-            return response()->file(Storage::disk('public')->path($checkin->signed_checkout_pdf_path));
+        $path = $checkin->signed_checkout_pdf_path;
+
+        if ($path) {
+            if (Storage::disk('s3')->exists($path)) {
+                return redirect(Storage::disk('s3')->url($path));
+            }
+            if (Storage::disk('public')->exists($path)) {
+                return response()->file(Storage::disk('public')->path($path));
+            }
         }
 
+        // Regenerate if stored file is not found
         $checkin->load('employee', 'toolbag.tools', 'car');
 
         if ($checkin->car_id) {

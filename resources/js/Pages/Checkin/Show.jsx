@@ -1,5 +1,5 @@
-import React from "react";
-import { Head, Link } from "@inertiajs/react";
+import React, { useRef, useState } from "react";
+import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const statusConfig = {
@@ -11,9 +11,49 @@ const statusConfig = {
 export default function CheckinShow({ checkin }) {
     const status = statusConfig[checkin.status];
 
+    const [uploadType, setUploadType] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
+
+    const triggerUpload = (type) => {
+        setUploadType(type);
+        fileInputRef.current.value = '';
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file || !uploadType) return;
+
+        const routeName = uploadType === 'checkin'
+            ? 'checkins.upload-pdf'
+            : 'checkins.upload-checkout-pdf';
+
+        setUploading(true);
+        router.post(
+            route(routeName, checkin.id),
+            { pdf: file },
+            {
+                forceFormData: true,
+                onFinish: () => {
+                    setUploading(false);
+                    setUploadType(null);
+                },
+            }
+        );
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title={`Check-in — ${checkin.employee?.name}`} />
+
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="hidden"
+                onChange={handleFileChange}
+            />
 
             <div className="lg:max-w-3xl mx-auto px-6">
                 <div className="mb-4">
@@ -89,18 +129,28 @@ export default function CheckinShow({ checkin }) {
                                         : "Not yet signed"}
                                 </p>
                             </div>
-                            {checkin.signed_checkin_pdf_path ? (
-                                <a
-                                    href={`/storage/${checkin.signed_checkin_pdf_path}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                            <div className="flex items-center gap-2">
+                                {checkin.signed_checkin_pdf_path ? (
+                                    <a
+                                        href={route('checkins.signed-pdf', checkin.id)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                                    >
+                                        View PDF
+                                    </a>
+                                ) : (
+                                    <span className="text-sm text-gray-400">No file</span>
+                                )}
+                                <button
+                                    type="button"
+                                    disabled={uploading && uploadType === 'checkin'}
+                                    onClick={() => triggerUpload('checkin')}
+                                    className="px-3 py-1.5 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:opacity-50"
                                 >
-                                    View PDF
-                                </a>
-                            ) : (
-                                <span className="text-sm text-gray-400">—</span>
-                            )}
+                                    {uploading && uploadType === 'checkin' ? 'Uploading…' : 'Upload PDF'}
+                                </button>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-between border rounded px-4 py-3">
@@ -112,18 +162,28 @@ export default function CheckinShow({ checkin }) {
                                         : "Not yet completed"}
                                 </p>
                             </div>
-                            {checkin.signed_checkout_pdf_path ? (
-                                <a
-                                    href={`/storage/${checkin.signed_checkout_pdf_path}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                            <div className="flex items-center gap-2">
+                                {checkin.signed_checkout_pdf_path ? (
+                                    <a
+                                        href={route('checkins.checkout.pdf', checkin.id)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                                    >
+                                        View PDF
+                                    </a>
+                                ) : (
+                                    <span className="text-sm text-gray-400">No file</span>
+                                )}
+                                <button
+                                    type="button"
+                                    disabled={uploading && uploadType === 'checkout'}
+                                    onClick={() => triggerUpload('checkout')}
+                                    className="px-3 py-1.5 bg-gray-500 text-white text-sm rounded hover:bg-gray-600 disabled:opacity-50"
                                 >
-                                    View PDF
-                                </a>
-                            ) : (
-                                <span className="text-sm text-gray-400">—</span>
-                            )}
+                                    {uploading && uploadType === 'checkout' ? 'Uploading…' : 'Upload PDF'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

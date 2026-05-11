@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { usePage, Head, Link, router } from "@inertiajs/react";
 import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
@@ -18,11 +18,14 @@ export default function CheckinIndex() {
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedCheckin, setSelectedCheckin] = useState(null);
     const [exporting, setExporting] = useState(false);
+    const [uploadTarget, setUploadTarget] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef(null);
 
     const normalize = (str) =>
         (str ?? "")
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[̀-ͯ]/g, "")
             .toLowerCase();
 
     const normalizedSearch = normalize(search);
@@ -60,6 +63,34 @@ export default function CheckinIndex() {
             alert('Something went wrong while exporting the contract.');
         })
         .finally(() => setExporting(false));
+    };
+
+    const triggerUpload = (checkin, type) => {
+        setUploadTarget({ id: checkin.id, type });
+        fileInputRef.current.value = '';
+        fileInputRef.current.click();
+    };
+
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file || !uploadTarget) return;
+
+        const routeName = uploadTarget.type === 'checkin'
+            ? 'checkins.upload-pdf'
+            : 'checkins.upload-checkout-pdf';
+
+        setUploading(true);
+        router.post(
+            route(routeName, uploadTarget.id),
+            { pdf: file },
+            {
+                forceFormData: true,
+                onFinish: () => {
+                    setUploading(false);
+                    setUploadTarget(null);
+                },
+            }
+        );
     };
 
     const columns = [
@@ -134,33 +165,46 @@ export default function CheckinIndex() {
         {
             header: "Contract",
             render: (row) => {
-                if (row.contract_exported_at) {
+                if (row.signed_checkin_pdf_path) {
                     return (
                         <div className="flex flex-col gap-1 items-start">
                             <span className="inline-block w-28 py-1 bg-gray-100 text-gray-500 rounded text-xs text-center border border-gray-300">
                                 Exported
                             </span>
-                            {row.signed_checkin_pdf_path && (
-                                <a
-                                    href={`/storage/${row.signed_checkin_pdf_path}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:underline"
-                                >
-                                    View signed
-                                </a>
-                            )}
+                            <a
+                                href={route('checkins.signed-pdf', row.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:underline"
+                            >
+                                View signed
+                            </a>
                         </div>
                     );
                 }
+
                 return (
-                    <button
-                        type="button"
-                        onClick={() => openSignModal(row)}
-                        className="inline-block w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
-                    >
-                        Export PDF
-                    </button>
+                    <div className="flex flex-col gap-1 items-start">
+                        {!row.contract_exported_at && (
+                            <button
+                                type="button"
+                                onClick={() => openSignModal(row)}
+                                className="inline-block w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
+                            >
+                                Export PDF
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            disabled={uploading && uploadTarget?.id === row.id}
+                            onClick={() => triggerUpload(row, 'checkin')}
+                            className="inline-block w-28 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm text-center disabled:opacity-50"
+                        >
+                            {uploading && uploadTarget?.id === row.id && uploadTarget?.type === 'checkin'
+                                ? 'Uploading…'
+                                : 'Upload PDF'}
+                        </button>
+                    </div>
                 );
             }
         },
@@ -180,16 +224,29 @@ export default function CheckinIndex() {
                 if (row.checkout_date) {
                     return (
                         <div className="flex flex-col gap-1 items-start">
-                            <span className="inline-block w-28 py-1 text-gray-400 text-sm text-center">Done</span>
-                            {row.signed_checkout_pdf_path && (
+                            {row.signed_checkout_pdf_path ? (
                                 <a
-                                    href={`/storage/${row.signed_checkout_pdf_path}`}
+                                    href={route('checkins.checkout.pdf', row.id)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-xs text-blue-600 hover:underline"
                                 >
                                     View checkout
                                 </a>
+                            ) : (
+                                <>
+                                    <span className="inline-block w-28 py-1 text-gray-400 text-sm text-center">Done</span>
+                                    <button
+                                        type="button"
+                                        disabled={uploading && uploadTarget?.id === row.id}
+                                        onClick={() => triggerUpload(row, 'checkout')}
+                                        className="inline-block w-28 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm text-center disabled:opacity-50"
+                                    >
+                                        {uploading && uploadTarget?.id === row.id && uploadTarget?.type === 'checkout'
+                                            ? 'Uploading…'
+                                            : 'Upload PDF'}
+                                    </button>
+                                </>
                             )}
                         </div>
                     );
@@ -234,6 +291,15 @@ export default function CheckinIndex() {
                     onClose={() => { setModalOpen(false); setSelectedCheckin(null); }}
                 />
             )}
+
+            {/* Hidden file input for PDF uploads */}
+            <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                className="hidden"
+                onChange={handleFileChange}
+            />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
