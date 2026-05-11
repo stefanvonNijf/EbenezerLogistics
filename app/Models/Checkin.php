@@ -18,6 +18,15 @@ class Checkin extends Model
         'employee_id',
         'toolbag_id',
         'custom_items',
+        'employee_checkin_signature',
+        'manager_checkin_signature',
+        'employee_checkout_signature',
+        'manager_checkout_signature',
+        'signed_checkin_pdf_path',
+        'signed_checkout_pdf_path',
+        'car_id',
+        'checkin_mileage',
+        'checkout_mileage',
     ];
 
     protected $casts = [
@@ -35,6 +44,11 @@ class Checkin extends Model
     public function toolbag()
     {
         return $this->belongsTo(Toolbag::class);
+    }
+
+    public function car()
+    {
+        return $this->belongsTo(\App\Models\Car::class);
     }
 
     public function ppeForms()

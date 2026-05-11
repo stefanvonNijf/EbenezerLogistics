@@ -24,6 +24,7 @@
     },
     "dependencies": {
         "puppeteer": "^24.34.0",
-        "react-icons": "^5.5.0"
+        "react-icons": "^5.5.0",
+        "react-signature-canvas": "^1.1.0-alpha.2"
     }
 }

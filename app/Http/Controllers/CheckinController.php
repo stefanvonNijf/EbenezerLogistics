@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Mail\CheckinCreatedMail;
 use App\Mail\CheckoutCompletedMail;
+use App\Models\Car;
 use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\Tool;
 use App\Models\Toolbag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Spatie\Browsershot\Browsershot;
 use Spatie\LaravelPdf\Facades\Pdf;
@@ -20,7 +22,7 @@ class CheckinController extends Controller
     public function index()
     {
         return Inertia::render('Checkin/Index', [
-            'checkins' => Checkin::with(['employee', 'toolbag'])
+            'checkins' => Checkin::with(['employee', 'toolbag', 'car'])
                 ->withCount('ppeForms')
                 ->orderByRaw('planned_checkout_date IS NOT NULL AND status != ? DESC', ['checked_out'])
                 ->latest()
@@ -33,12 +35,14 @@ class CheckinController extends Controller
         return inertia('Checkin/Create', [
             'employees' => Employee::all(),
             'toolbags'  => Toolbag::whereNull('employee_id')->get(),
+            'cars'      => Car::whereNull('employee_id')->get(),
         ]);
     }
 
     public function store(Request $request)
     {
-        $isCustom = (bool) $request->input('is_custom', false);
+        $isCar    = (bool) $request->input('is_car', false);
+        $isCustom = !$isCar && (bool) $request->input('is_custom', false);
 
         $rules = [
             'checkin_date'         => 'required|date',
@@ -48,10 +52,13 @@ class CheckinController extends Controller
             'notification_emails.*'=> 'email',
         ];
 
-        if ($isCustom) {
-            $rules['custom_items']                      = 'required|array|min:1';
-            $rules['custom_items.*.name']               = 'required|string|max:255';
-            $rules['custom_items.*.replacement_cost']   = 'nullable|numeric|min:0';
+        if ($isCar) {
+            $rules['car_id']          = 'required|exists:cars,id';
+            $rules['checkin_mileage'] = 'nullable|integer|min:0';
+        } elseif ($isCustom) {
+            $rules['custom_items']                    = 'required|array|min:1';
+            $rules['custom_items.*.name']             = 'required|string|max:255';
+            $rules['custom_items.*.replacement_cost'] = 'nullable|numeric|min:0';
         } else {
             $rules['toolbag_id'] = 'required|exists:toolbags,id';
         }
@@ -60,10 +67,12 @@ class CheckinController extends Controller
 
         $employee = Employee::findOrFail($request->employee_id);
         $toolbag  = null;
+        $car      = null;
 
-        if (!$isCustom) {
+        if ($isCar) {
+            $car = Car::findOrFail($request->car_id);
+        } elseif (!$isCustom) {
             $toolbag = Toolbag::findOrFail($request->toolbag_id);
-
             if ($employee->role !== $toolbag->type) {
                 return back()
                     ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
@@ -80,8 +89,10 @@ class CheckinController extends Controller
             'notes'               => $request->notes,
             'status'              => 'planned_checkout',
             'notification_emails' => $request->notification_emails ?? [],
-            'toolbag_id'          => $isCustom ? null : $request->toolbag_id,
+            'toolbag_id'          => (!$isCar && !$isCustom) ? $request->toolbag_id : null,
             'custom_items'        => $isCustom ? $request->custom_items : null,
+            'car_id'              => $isCar ? $request->car_id : null,
+            'checkin_mileage'     => $isCar ? $request->checkin_mileage : null,
         ];
 
         if ($planned) {
@@ -96,9 +107,11 @@ class CheckinController extends Controller
         if ($toolbag) {
             $toolbag->update(['employee_id' => $request->employee_id]);
         }
+        if ($car) {
+            $car->update(['employee_id' => $request->employee_id]);
+        }
 
-        // Send checkin notification emails
-        $checkin->load('employee', 'toolbag.tools');
+        $checkin->load('employee', 'toolbag.tools', 'car');
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
         foreach ($recipients as $email) {
             Mail::to($email)->send(new CheckinCreatedMail($checkin));
@@ -109,9 +122,11 @@ class CheckinController extends Controller
             ->with('success', 'Checkin succesvol aangemaakt.');
     }
 
-    public function show(string $id)
+    public function show(Checkin $checkin)
     {
-        //
+        return Inertia::render('Checkin/Show', [
+            'checkin' => $checkin->load('employee', 'toolbag', 'car'),
+        ]);
     }
 
     public function edit(Checkin $checkin)
@@ -122,8 +137,9 @@ class CheckinController extends Controller
         }
 
         return Inertia::render('Checkin/Edit', [
-            'checkin'  => $checkin->load('employee', 'toolbag'),
+            'checkin'  => $checkin->load('employee', 'toolbag', 'car'),
             'toolbags' => Toolbag::all(),
+            'cars'     => Car::all(),
         ]);
     }
 
@@ -134,7 +150,8 @@ class CheckinController extends Controller
                 ->with('error', 'This checkin has been exported as a contract and can no longer be edited.');
         }
 
-        $isCustom = (bool) $request->input('is_custom', false);
+        $isCar    = (bool) $request->input('is_car', false);
+        $isCustom = !$isCar && (bool) $request->input('is_custom', false);
 
         $rules = [
             'checkin_date' => 'required|date',
@@ -142,10 +159,13 @@ class CheckinController extends Controller
             'employee_id'  => 'required|exists:employees,id',
         ];
 
-        if ($isCustom) {
-            $rules['custom_items']                      = 'required|array|min:1';
-            $rules['custom_items.*.name']               = 'required|string|max:255';
-            $rules['custom_items.*.replacement_cost']   = 'nullable|numeric|min:0';
+        if ($isCar) {
+            $rules['car_id']          = 'required|exists:cars,id';
+            $rules['checkin_mileage'] = 'nullable|integer|min:0';
+        } elseif ($isCustom) {
+            $rules['custom_items']                    = 'required|array|min:1';
+            $rules['custom_items.*.name']             = 'required|string|max:255';
+            $rules['custom_items.*.replacement_cost'] = 'nullable|numeric|min:0';
         } else {
             $rules['toolbag_id'] = 'required|exists:toolbags,id';
         }
@@ -154,42 +174,51 @@ class CheckinController extends Controller
 
         $employee = Employee::findOrFail($request->employee_id);
         $toolbag  = null;
+        $car      = null;
 
-        if (!$isCustom) {
+        // Release old car if switching away from car type or changing car
+        if ($checkin->car_id) {
+            if (!$isCar || (int) $request->car_id !== $checkin->car_id) {
+                $oldCar = Car::find($checkin->car_id);
+                if ($oldCar) $oldCar->update(['employee_id' => null]);
+            }
+        }
+
+        if ($isCar) {
+            $car = Car::findOrFail($request->car_id);
+        } elseif (!$isCustom) {
             $toolbag = Toolbag::findOrFail($request->toolbag_id);
-
             if ($employee->role !== $toolbag->type) {
                 return back()
                     ->withErrors(['toolbag_id' => 'This toolbag is not allowed to check in with this employee.'])
                     ->withInput();
             }
-
             if ($checkin->toolbag_id && $checkin->toolbag_id !== (int) $request->toolbag_id) {
                 $oldToolbag = Toolbag::find($checkin->toolbag_id);
-                if ($oldToolbag) {
-                    $oldToolbag->update(['employee_id' => null]);
-                }
+                if ($oldToolbag) $oldToolbag->update(['employee_id' => null]);
             }
         } else {
-            // Switching to custom — release any previously assigned toolbag
             if ($checkin->toolbag_id) {
                 $oldToolbag = Toolbag::find($checkin->toolbag_id);
-                if ($oldToolbag) {
-                    $oldToolbag->update(['employee_id' => null]);
-                }
+                if ($oldToolbag) $oldToolbag->update(['employee_id' => null]);
             }
         }
 
         $checkin->update([
-            'checkin_date' => $request->checkin_date,
-            'notes'        => $request->notes,
-            'employee_id'  => $request->employee_id,
-            'toolbag_id'   => $isCustom ? null : $request->toolbag_id,
-            'custom_items' => $isCustom ? $request->custom_items : null,
+            'checkin_date'    => $request->checkin_date,
+            'notes'           => $request->notes,
+            'employee_id'     => $request->employee_id,
+            'toolbag_id'      => (!$isCar && !$isCustom) ? $request->toolbag_id : null,
+            'custom_items'    => $isCustom ? $request->custom_items : null,
+            'car_id'          => $isCar ? $request->car_id : null,
+            'checkin_mileage' => $isCar ? $request->checkin_mileage : null,
         ]);
 
         if ($toolbag) {
             $toolbag->update(['employee_id' => $request->employee_id]);
+        }
+        if ($car) {
+            $car->update(['employee_id' => $request->employee_id]);
         }
 
         return redirect()
@@ -210,25 +239,88 @@ class CheckinController extends Controller
         }
 
         $checkin->update(['contract_exported_at' => now()]);
-        $checkin->load('employee', 'toolbag.tools');
+        $checkin->load('employee', 'toolbag.tools', 'car');
+
+        if ($checkin->car_id) {
+            return Pdf::view('pdf.car-checkin', [
+                'checkin'           => $checkin,
+                'employee'          => $checkin->employee,
+                'car'               => $checkin->car,
+                'employeeSignature' => null,
+                'managerSignature'  => null,
+            ])
+                ->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                ->name("car-checkin-{$checkin->employee->name}.pdf")
+                ->inline();
+        }
 
         return Pdf::view('pdf.checkin', [
-            'checkin'  => $checkin,
-            'employee' => $checkin->employee,
-            'toolbag'  => $checkin->toolbag,
-            'tools'    => $checkin->toolbag->tools,
+            'checkin'           => $checkin,
+            'employee'          => $checkin->employee,
+            'toolbag'           => $checkin->toolbag,
+            'tools'             => $checkin->toolbag->tools,
+            'employeeSignature' => null,
+            'managerSignature'  => null,
         ])
-            ->withBrowsershot(function (Browsershot $browsershot) {
-                $browsershot->noSandbox()
-                    ->setChromePath('/usr/bin/google-chrome');
-            })
+            ->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
             ->name("checkin-{$checkin->employee->name}.pdf")
             ->inline();
     }
 
+    public function signAndExport(Request $request, Checkin $checkin)
+    {
+        if ($checkin->contract_exported_at) {
+            return response()->json(['error' => 'Contract already exported.'], 422);
+        }
+
+        $request->validate([
+            'employee_signature' => 'required|string',
+            'manager_signature'  => 'required|string',
+        ]);
+
+        $checkin->load('employee', 'toolbag.tools', 'car');
+
+        $employeeSignature = $request->employee_signature;
+        $managerSignature  = $request->manager_signature;
+
+        $pdfPath  = "signed-checkins/{$checkin->id}-checkin.pdf";
+        Storage::disk('public')->makeDirectory('signed-checkins');
+        $fullPath = Storage::disk('public')->path($pdfPath);
+
+        if ($checkin->car_id) {
+            Pdf::view('pdf.car-checkin', [
+                'checkin'           => $checkin,
+                'employee'          => $checkin->employee,
+                'car'               => $checkin->car,
+                'employeeSignature' => $employeeSignature,
+                'managerSignature'  => $managerSignature,
+            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+              ->save($fullPath);
+        } else {
+            Pdf::view('pdf.checkin', [
+                'checkin'           => $checkin,
+                'employee'          => $checkin->employee,
+                'toolbag'           => $checkin->toolbag,
+                'tools'             => $checkin->toolbag ? $checkin->toolbag->tools : collect(),
+                'employeeSignature' => $employeeSignature,
+                'managerSignature'  => $managerSignature,
+            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+              ->save($fullPath);
+        }
+
+        $checkin->update([
+            'contract_exported_at'       => now(),
+            'employee_checkin_signature' => $employeeSignature,
+            'manager_checkin_signature'  => $managerSignature,
+            'signed_checkin_pdf_path'    => $pdfPath,
+        ]);
+
+        return response()->json(['url' => Storage::disk('public')->url($pdfPath)]);
+    }
+
     public function checkoutShow(Checkin $checkin)
     {
-        $checkin->load('employee', 'toolbag.tools');
+        $checkin->load('employee', 'toolbag.tools', 'car');
 
         return Inertia::render('Checkin/Checkout', [
             'checkin' => $checkin,
@@ -237,90 +329,141 @@ class CheckinController extends Controller
 
     public function checkoutProcess(Request $request, Checkin $checkin)
     {
-        $request->validate([
-            'missing_tool_ids'   => 'nullable|array',
-            'missing_tool_ids.*' => 'integer|exists:tools,id',
-        ]);
+        $isCar = (bool) $checkin->car_id;
 
-        $checkin->update([
-            'checkout_date' => now()->toDateString(),
-            'status'        => 'checked_out',
-            'missing_tools' => $request->missing_tool_ids ?? [],
-        ]);
+        $rules = [
+            'employee_signature' => 'required|string',
+            'manager_signature'  => 'required|string',
+        ];
 
-        if ($checkin->toolbag) {
-            $toolbag = $checkin->toolbag;
-            $toolbag->update(['employee_id' => null]);
+        if ($isCar) {
+            $rules['checkout_mileage'] = 'nullable|integer|min:0';
+        } else {
+            $rules['missing_tool_ids']   = 'nullable|array';
+            $rules['missing_tool_ids.*'] = 'integer|exists:tools,id';
+        }
 
+        $request->validate($rules);
+
+        $updateData = [
+            'checkout_date'               => now()->toDateString(),
+            'status'                      => 'checked_out',
+            'employee_checkout_signature' => $request->employee_signature,
+            'manager_checkout_signature'  => $request->manager_signature,
+        ];
+
+        if ($isCar) {
+            $updateData['checkout_mileage'] = $request->checkout_mileage;
+        } else {
+            $updateData['missing_tools'] = $request->missing_tool_ids ?? [];
+        }
+
+        $checkin->update($updateData);
+
+        // Release car or toolbag
+        if ($isCar) {
+            $checkin->car->update(['employee_id' => null]);
+        } elseif ($checkin->toolbag) {
+            $toolbag        = $checkin->toolbag;
             $missingToolIds = $request->missing_tool_ids ?? [];
+            $toolbag->update(['employee_id' => null]);
             if (!empty($missingToolIds)) {
                 $toolbag->tools()->detach($missingToolIds);
             }
-
-            $requiredTools = Tool::whereIn('roletype', ['shared', $toolbag->type])->get();
+            $requiredTools  = Tool::whereIn('roletype', ['shared', $toolbag->type])->get();
             $currentToolIds = $toolbag->tools()->pluck('tools.id');
-            $isComplete = $requiredTools->pluck('id')->every(
-                fn($id) => $currentToolIds->contains($id)
-            );
-            $toolbag->update(['complete' => $isComplete]);
+            $toolbag->update(['complete' => $requiredTools->pluck('id')->every(fn($id) => $currentToolIds->contains($id))]);
         }
 
-        // Send checkout notification emails
-        $checkin->load('employee', 'toolbag.tools');
-        $missingToolIds = $checkin->missing_tools ?? [];
-        $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
-        $totalCost = $missingTools->sum('replacement_cost');
+        $checkin->load('employee', 'toolbag.tools', 'car');
 
-        $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
-        if ($recipients) {
-            $tempPath = storage_path('app/checkout-' . $checkin->id . '.pdf');
+        // Generate and save signed checkout PDF
+        $pdfPath  = "signed-checkins/{$checkin->id}-checkout.pdf";
+        Storage::disk('public')->makeDirectory('signed-checkins');
+        $fullPath = Storage::disk('public')->path($pdfPath);
+
+        if ($isCar) {
+            Pdf::view('pdf.car-checkout', [
+                'checkin'           => $checkin,
+                'employee'          => $checkin->employee,
+                'car'               => $checkin->car,
+                'employeeSignature' => $request->employee_signature,
+                'managerSignature'  => $request->manager_signature,
+            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+              ->save($fullPath);
+        } else {
+            $missingToolIds = $checkin->missing_tools ?? [];
+            $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
+            $totalCost      = $missingTools->sum('replacement_cost');
+
             Pdf::view('pdf.checkout', [
-                'checkin'      => $checkin,
-                'employee'     => $checkin->employee,
-                'missingTools' => $missingTools,
-                'totalCost'    => $totalCost,
-            ])->withBrowsershot(function (Browsershot $browsershot) {
-                $browsershot->noSandbox()
-                    ->setChromePath('/usr/bin/google-chrome');
-            })->save($tempPath);
+                'checkin'           => $checkin,
+                'employee'          => $checkin->employee,
+                'missingTools'      => $missingTools,
+                'totalCost'         => $totalCost,
+                'employeeSignature' => $request->employee_signature,
+                'managerSignature'  => $request->manager_signature,
+            ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+              ->save($fullPath);
+        }
 
-            $pdfContent = file_get_contents($tempPath);
-            @unlink($tempPath);
+        $checkin->update(['signed_checkout_pdf_path' => $pdfPath]);
 
+        // Send notification emails
+        $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
+        if ($recipients && !$isCar) {
+            $missingToolIds = $checkin->missing_tools ?? [];
+            $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
+            $totalCost      = $missingTools->sum('replacement_cost');
+            $pdfContent     = file_get_contents($fullPath);
             foreach ($recipients as $email) {
                 Mail::to($email)->send(new CheckoutCompletedMail($checkin, $totalCost, $pdfContent));
             }
         }
 
         return redirect()->route('checkins.index')
-            ->with('success', 'Checkout completed.');
+            ->with('success', 'Checkout completed.')
+            ->with('signed_checkout_url', Storage::disk('public')->url($pdfPath));
     }
 
     public function checkoutPdf(Checkin $checkin)
     {
-        $checkin->load('employee', 'toolbag.tools');
+        if ($checkin->signed_checkout_pdf_path && Storage::disk('public')->exists($checkin->signed_checkout_pdf_path)) {
+            return response()->file(Storage::disk('public')->path($checkin->signed_checkout_pdf_path));
+        }
+
+        $checkin->load('employee', 'toolbag.tools', 'car');
+
+        if ($checkin->car_id) {
+            return Pdf::view('pdf.car-checkout', [
+                'checkin'           => $checkin,
+                'employee'          => $checkin->employee,
+                'car'               => $checkin->car,
+                'employeeSignature' => $checkin->employee_checkout_signature,
+                'managerSignature'  => $checkin->manager_checkout_signature,
+            ])
+                ->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                ->name("car-checkout-{$checkin->employee->name}.pdf")
+                ->inline();
+        }
 
         $missingToolIds = $checkin->missing_tools ?? [];
         $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
-        $totalCost = $missingTools->sum('replacement_cost');
+        $totalCost      = $missingTools->sum('replacement_cost');
 
         return Pdf::view('pdf.checkout', [
-            'checkin'      => $checkin,
-            'employee'     => $checkin->employee,
-            'missingTools' => $missingTools,
-            'totalCost'    => $totalCost,
+            'checkin'           => $checkin,
+            'employee'          => $checkin->employee,
+            'missingTools'      => $missingTools,
+            'totalCost'         => $totalCost,
+            'employeeSignature' => $checkin->employee_checkout_signature,
+            'managerSignature'  => $checkin->manager_checkout_signature,
         ])
-            ->withBrowsershot(function (Browsershot $browsershot) {
-                $browsershot->noSandbox()
-                    ->setChromePath('/usr/bin/google-chrome');
-            })
+            ->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
             ->name("checkout-{$checkin->employee->name}.pdf")
             ->inline();
     }
 
-    /**
-     * Combine typed-in emails with the fixed company notification email.
-     */
     private function buildRecipients(array $typedEmails): array
     {
         $company = config('mail.notification_emails', []);

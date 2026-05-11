@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { usePage, Head, Link } from "@inertiajs/react";
+import { usePage, Head, Link, router } from "@inertiajs/react";
+import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Table from "@/Components/Table.jsx";
+import SignatureModal from "@/Components/SignatureModal.jsx";
 
 const statusConfig = {
     planned_checkin:  { label: 'Planned checkin',  bg: 'bg-yellow-100 text-yellow-800' },
@@ -13,6 +15,9 @@ export default function CheckinIndex() {
     const { checkins } = usePage().props;
 
     const [search, setSearch] = useState("");
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedCheckin, setSelectedCheckin] = useState(null);
+    const [exporting, setExporting] = useState(false);
 
     const normalize = (str) =>
         (str ?? "")
@@ -34,14 +39,42 @@ export default function CheckinIndex() {
         );
     });
 
+    const openSignModal = (row) => {
+        setSelectedCheckin(row);
+        setModalOpen(true);
+    };
+
+    const handleSignConfirm = ({ employeeSignature, managerSignature }) => {
+        setExporting(true);
+        axios.post(route('checkins.sign-and-export', selectedCheckin.id), {
+            employee_signature: employeeSignature,
+            manager_signature: managerSignature,
+        })
+        .then((res) => {
+            setModalOpen(false);
+            setSelectedCheckin(null);
+            window.open(res.data.url, '_blank');
+            router.reload();
+        })
+        .catch(() => {
+            alert('Something went wrong while exporting the contract.');
+        })
+        .finally(() => setExporting(false));
+    };
+
     const columns = [
         {
             header: "Employee",
             render: (row) => row.employee?.name || "-"
         },
         {
-            header: "Toolbag / Items",
+            header: "Toolbag / Car / Items",
             render: (row) => {
+                if (row.car) return (
+                    <span className="text-indigo-700 font-medium">
+                        {row.car.brand} — {row.car.license_plate}
+                    </span>
+                );
                 if (row.toolbag?.name) return row.toolbag.name;
                 if (row.custom_items?.length) {
                     return (
@@ -103,20 +136,31 @@ export default function CheckinIndex() {
             render: (row) => {
                 if (row.contract_exported_at) {
                     return (
-                        <span className="inline-block w-28 py-1 bg-gray-100 text-gray-500 rounded text-xs text-center border border-gray-300">
-                            Exported
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                            <span className="inline-block w-28 py-1 bg-gray-100 text-gray-500 rounded text-xs text-center border border-gray-300">
+                                Exported
+                            </span>
+                            {row.signed_checkin_pdf_path && (
+                                <a
+                                    href={`/storage/${row.signed_checkin_pdf_path}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:underline"
+                                >
+                                    View signed
+                                </a>
+                            )}
+                        </div>
                     );
                 }
                 return (
-                    <a
-                        href={route('checkins.pdf', row.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    <button
+                        type="button"
+                        onClick={() => openSignModal(row)}
                         className="inline-block w-28 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm text-center"
                     >
                         Export PDF
-                    </a>
+                    </button>
                 );
             }
         },
@@ -134,7 +178,21 @@ export default function CheckinIndex() {
                     );
                 }
                 if (row.checkout_date) {
-                    return <span className="inline-block w-28 py-1 text-gray-400 text-sm text-center">Done</span>;
+                    return (
+                        <div className="flex flex-col gap-1 items-start">
+                            <span className="inline-block w-28 py-1 text-gray-400 text-sm text-center">Done</span>
+                            {row.signed_checkout_pdf_path && (
+                                <a
+                                    href={`/storage/${row.signed_checkout_pdf_path}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:underline"
+                                >
+                                    View checkout
+                                </a>
+                            )}
+                        </div>
+                    );
                 }
                 const hasPlannedDate = !!row.planned_checkout_date;
                 return (
@@ -151,11 +209,31 @@ export default function CheckinIndex() {
                 );
             }
         },
+        {
+            header: "Details",
+            render: (row) => (
+                <Link
+                    href={route("checkins.show", row.id)}
+                    className="text-blue-600 hover:underline text-sm"
+                >
+                    Details
+                </Link>
+            )
+        },
     ];
 
     return (
         <AuthenticatedLayout>
             <Head title="Check-ins" />
+
+            {modalOpen && selectedCheckin && (
+                <SignatureModal
+                    open={modalOpen}
+                    employeeName={selectedCheckin.employee?.name ?? ''}
+                    onConfirm={handleSignConfirm}
+                    onClose={() => { setModalOpen(false); setSelectedCheckin(null); }}
+                />
+            )}
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
@@ -178,7 +256,6 @@ export default function CheckinIndex() {
                         />
                     </div>
 
-                    {/* TABLE */}
                     <Table columns={columns} data={filteredData} />
 
                 </div>

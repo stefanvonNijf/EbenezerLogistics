@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(du:*)",
+      "Bash(git push:*)",
+      "Bash(xargs grep *)"
+    ]
+  }
+}

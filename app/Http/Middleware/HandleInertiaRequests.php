@@ -43,6 +43,11 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'dashboardAlertCount' => $alertCount,
+            'flash' => [
+                'success'             => fn () => $request->session()->get('success'),
+                'error'               => fn () => $request->session()->get('error'),
+                'signed_checkout_url' => fn () => $request->session()->get('signed_checkout_url'),
+            ],
         ];
     }
 }

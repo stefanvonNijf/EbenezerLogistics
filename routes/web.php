@@ -57,6 +57,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('checkins', CheckinController::class)->except(['destroy']);
     Route::get('/checkins/{checkin}/pdf', [CheckinController::class, 'pdf'])
         ->name('checkins.pdf');
+    Route::post('/checkins/{checkin}/sign-and-export', [CheckinController::class, 'signAndExport'])
+        ->name('checkins.sign-and-export');
     Route::get('/checkins/{checkin}/checkout', [CheckinController::class, 'checkoutShow'])
         ->name('checkins.checkout');
     Route::post('/checkins/{checkin}/checkout', [CheckinController::class, 'checkoutProcess'])

@@ -135,11 +135,23 @@
     <table>
         <tr>
             <td>Signature {{ $employee->name }}: </td>
-            <td class="signature-line">__________________________</td>
+            <td>
+                @if(!empty($employeeSignature))
+                    <img src="{{ $employeeSignature }}" style="height: 55px; max-width: 220px; display: block;">
+                @else
+                    <span class="signature-line">__________________________</span>
+                @endif
+            </td>
         </tr>
         <tr>
             <td>Signature person in charge:</td>
-            <td class="signature-line">__________________________</td>
+            <td>
+                @if(!empty($managerSignature))
+                    <img src="{{ $managerSignature }}" style="height: 55px; max-width: 220px; display: block;">
+                @else
+                    <span class="signature-line">__________________________</span>
+                @endif
+            </td>
         </tr>
     </table>
 </div>
@@ -198,11 +210,23 @@
     <table>
         <tr>
             <td>Signature {{ $employee->name }}:</td>
-            <td class="signature-line">__________________________</td>
+            <td>
+                @if(!empty($employeeSignature))
+                    <img src="{{ $employeeSignature }}" style="height: 55px; max-width: 220px; display: block;">
+                @else
+                    <span class="signature-line">__________________________</span>
+                @endif
+            </td>
         </tr>
         <tr>
             <td>Signature person in charge:</td>
-            <td class="signature-line">__________________________</td>
+            <td>
+                @if(!empty($managerSignature))
+                    <img src="{{ $managerSignature }}" style="height: 55px; max-width: 220px; display: block;">
+                @else
+                    <span class="signature-line">__________________________</span>
+                @endif
+            </td>
         </tr>
     </table>
 </div>
