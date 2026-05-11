@@ -108,6 +108,14 @@ class CheckinController extends Controller
             $toolbag->update(['employee_id' => $request->employee_id]);
         }
         if ($car) {
+            $existingCar = Car::where('employee_id', $request->employee_id)
+                ->where('id', '!=', $car->id)
+                ->first();
+            if ($existingCar) {
+                return back()
+                    ->withErrors(['car_id' => "This employee already has a car assigned ({$existingCar->brand} — {$existingCar->license_plate}). Check it out first."])
+                    ->withInput();
+            }
             $car->update(['employee_id' => $request->employee_id]);
         }
 
