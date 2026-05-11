@@ -62,23 +62,12 @@ class PrintFormController extends Controller
 
     public function download(PrintFormDocument $document)
     {
-        if (Storage::disk('s3')->exists($document->file_path)) {
-            return response()->streamDownload(function () use ($document) {
-                echo Storage::disk('s3')->get($document->file_path);
-            }, $document->name . '.pdf', ['Content-Type' => 'application/pdf']);
-        }
-
-        if (Storage::disk('public')->exists($document->file_path)) {
-            return Storage::disk('public')->download($document->file_path, $document->name . '.pdf');
-        }
-
-        abort(404);
+        return redirect(Storage::disk('s3')->url($document->file_path));
     }
 
     public function destroy(PrintFormDocument $document)
     {
         Storage::disk('s3')->delete($document->file_path);
-        Storage::disk('public')->delete($document->file_path);
         $document->delete();
 
         return redirect()->route('print-forms.index')

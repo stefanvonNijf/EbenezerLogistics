@@ -324,18 +324,8 @@ class CheckinController extends Controller
 
     public function viewSignedPdf(Checkin $checkin)
     {
-        $path = $checkin->signed_checkin_pdf_path;
-
-        if ($path) {
-            if (Storage::disk('s3')->exists($path)) {
-                return redirect(Storage::disk('s3')->url($path));
-            }
-            if (Storage::disk('public')->exists($path)) {
-                return response()->file(Storage::disk('public')->path($path));
-            }
-        }
-
-        abort(404, 'PDF not found.');
+        abort_unless($checkin->signed_checkin_pdf_path, 404, 'PDF not found.');
+        return redirect(Storage::disk('s3')->url($checkin->signed_checkin_pdf_path));
     }
 
     public function uploadPdf(Request $request, Checkin $checkin)
@@ -480,48 +470,8 @@ class CheckinController extends Controller
 
     public function checkoutPdf(Checkin $checkin)
     {
-        $path = $checkin->signed_checkout_pdf_path;
-
-        if ($path) {
-            if (Storage::disk('s3')->exists($path)) {
-                return redirect(Storage::disk('s3')->url($path));
-            }
-            if (Storage::disk('public')->exists($path)) {
-                return response()->file(Storage::disk('public')->path($path));
-            }
-        }
-
-        // Regenerate if stored file is not found
-        $checkin->load('employee', 'toolbag.tools', 'car');
-
-        if ($checkin->car_id) {
-            return Pdf::view('pdf.car-checkout', [
-                'checkin'           => $checkin,
-                'employee'          => $checkin->employee,
-                'car'               => $checkin->car,
-                'employeeSignature' => $checkin->employee_checkout_signature,
-                'managerSignature'  => $checkin->manager_checkout_signature,
-            ])
-                ->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-                ->name("car-checkout-{$checkin->employee->name}.pdf")
-                ->inline();
-        }
-
-        $missingToolIds = $checkin->missing_tools ?? [];
-        $missingTools   = Tool::whereIn('id', $missingToolIds)->get();
-        $totalCost      = $missingTools->sum('replacement_cost');
-
-        return Pdf::view('pdf.checkout', [
-            'checkin'           => $checkin,
-            'employee'          => $checkin->employee,
-            'missingTools'      => $missingTools,
-            'totalCost'         => $totalCost,
-            'employeeSignature' => $checkin->employee_checkout_signature,
-            'managerSignature'  => $checkin->manager_checkout_signature,
-        ])
-            ->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-            ->name("checkout-{$checkin->employee->name}.pdf")
-            ->inline();
+        abort_unless($checkin->signed_checkout_pdf_path, 404, 'PDF not found.');
+        return redirect(Storage::disk('s3')->url($checkin->signed_checkout_pdf_path));
     }
 
     private function buildRecipients(array $typedEmails): array

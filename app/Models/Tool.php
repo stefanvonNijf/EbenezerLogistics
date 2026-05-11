@@ -25,13 +25,7 @@ class Tool extends Model
     public function getImageUrlAttribute(): ?string
     {
         if (!$this->image_path) return null;
-        if (Storage::disk('s3')->exists($this->image_path)) {
-            return Storage::disk('s3')->url($this->image_path);
-        }
-        if (Storage::disk('public')->exists($this->image_path)) {
-            return Storage::disk('public')->url($this->image_path);
-        }
-        return null;
+        return Storage::disk('s3')->url($this->image_path);
     }
 
     public function category()
