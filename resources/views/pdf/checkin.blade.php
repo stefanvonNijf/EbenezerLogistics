@@ -67,10 +67,17 @@
         <td>{{ $employee->name }}</td>
     </tr>
 
+    @if($toolbag)
     <tr>
         <td class="label">Toolbag</td>
         <td>{{ $toolbag->name }}</td>
     </tr>
+    @elseif($checkin->custom_items)
+    <tr>
+        <td class="label">Items</td>
+        <td>Custom ({{ count($checkin->custom_items) }} items)</td>
+    </tr>
+    @endif
 
     @if($checkin->notes)
         <tr>
@@ -80,6 +87,7 @@
     @endif
 </table>
 
+@if($toolbag && count($tools) > 0)
 <h2>Tools in this toolbag</h2>
 
 <table class="tools-table">
@@ -98,8 +106,8 @@
     @foreach ($tools as $tool)
         <tr>
             <td style="text-align:center;">
-                @if($tool->image_path)
-                    <img src="{{ public_path('storage/' . $tool->image_path) }}"
+                @if($tool->image_url)
+                    <img src="{{ $tool->image_url }}"
                          alt="{{ $tool->name }}"
                          style="width: 100px; height: auto;">
                 @else
@@ -120,6 +128,30 @@
     @endforeach
     </tbody>
 </table>
+@elseif($checkin->custom_items)
+<h2>Items</h2>
+
+<table class="tools-table">
+    <thead>
+    <tr>
+        <td class="label">Item</td>
+        <td class="label" style="width: 12%;">Repl. Cost</td>
+        <td class="label" style="text-align:center; width: 30px;">Check -In</td>
+        <td class="label" style="text-align:center; width: 30px;">-Out</td>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach ($checkin->custom_items as $item)
+        <tr>
+            <td>{{ $item['name'] }}</td>
+            <td>&euro; {{ isset($item['replacement_cost']) && $item['replacement_cost'] ? number_format($item['replacement_cost'], 2) : '-' }}</td>
+            <td style="text-align:center;"><input type="checkbox"></td>
+            <td style="text-align:center;"><input type="checkbox"></td>
+        </tr>
+    @endforeach
+    </tbody>
+</table>
+@endif
 
 
 @if($checkin->notes)
