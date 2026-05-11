@@ -59,8 +59,8 @@ export default function CheckinIndex() {
             window.open(res.data.url, '_blank');
             router.reload();
         })
-        .catch(() => {
-            alert('Something went wrong while exporting the contract.');
+        .catch((err) => {
+            alert(err?.response?.data?.message || err?.response?.data?.error || JSON.stringify(err?.response?.data) || err.message);
         })
         .finally(() => setExporting(false));
     };
