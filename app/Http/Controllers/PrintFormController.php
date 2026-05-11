@@ -48,7 +48,7 @@ class PrintFormController extends Controller
             'pdf'  => 'required|file|mimes:pdf|max:20480',
         ]);
 
-        $path = $request->file('pdf')->store('print-forms', 'public');
+        $path = $request->file('pdf')->store('documents', 's3');
 
         PrintFormDocument::create([
             'name'        => $request->name,
@@ -62,13 +62,22 @@ class PrintFormController extends Controller
 
     public function download(PrintFormDocument $document)
     {
-        abort_unless(Storage::disk('public')->exists($document->file_path), 404);
+        if (Storage::disk('s3')->exists($document->file_path)) {
+            return response()->streamDownload(function () use ($document) {
+                echo Storage::disk('s3')->get($document->file_path);
+            }, $document->name . '.pdf', ['Content-Type' => 'application/pdf']);
+        }
 
-        return Storage::disk('public')->download($document->file_path, $document->name . '.pdf');
+        if (Storage::disk('public')->exists($document->file_path)) {
+            return Storage::disk('public')->download($document->file_path, $document->name . '.pdf');
+        }
+
+        abort(404);
     }
 
     public function destroy(PrintFormDocument $document)
     {
+        Storage::disk('s3')->delete($document->file_path);
         Storage::disk('public')->delete($document->file_path);
         $document->delete();
 
