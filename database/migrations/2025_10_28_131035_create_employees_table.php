@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('shoe_size')->nullable();
             $table->string('pants_size')->nullable();
             $table->string('jacket_size')->nullable();
+            $table->string('coverall_size')->nullable();
             $table->timestamps();
         });
     }
