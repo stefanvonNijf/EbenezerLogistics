@@ -4,7 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function Edit({ tool, categories, roles }) {
 
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, put, processing, errors } = useForm({
         name: tool.name || "",
         brand: tool.brand || "",
         type: tool.type || "",
@@ -19,9 +19,8 @@ export default function Edit({ tool, categories, roles }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route("tools.update", tool.id),{
+        put(route("tools.update", tool.id), {
             forceFormData: true,
-            _method: "put",
         });
     };
 
