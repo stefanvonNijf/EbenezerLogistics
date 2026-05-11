@@ -291,7 +291,7 @@ class CheckinController extends Controller
         $managerSignature  = $request->manager_signature;
 
         $pdfPath = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
-        $tmpPath = tempnam(sys_get_temp_dir(), 'checkin-pdf');
+        $tmpPath = sys_get_temp_dir() . '/' . uniqid('checkin-pdf') . '.pdf';
 
         try {
             if ($checkin->car_id) {
@@ -433,7 +433,7 @@ class CheckinController extends Controller
         $totalCost      = $missingTools->sum('replacement_cost');
 
         $pdfPath    = "checkins/signed-checkins/{$checkin->id}-checkout.pdf";
-        $tmpPath    = tempnam(sys_get_temp_dir(), 'checkout-pdf');
+        $tmpPath    = sys_get_temp_dir() . '/' . uniqid('checkout-pdf') . '.pdf';
         $pdfContent = null;
 
         try {
