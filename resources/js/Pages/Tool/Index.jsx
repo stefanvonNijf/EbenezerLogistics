@@ -67,7 +67,7 @@ export default function ToolIndex() {
                             href={route("tools.create")}
                             className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
                         >
-                            Add new tool
+                            Add new item
                         </Link>
                         <input
                             type="text"

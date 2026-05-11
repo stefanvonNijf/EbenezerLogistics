@@ -208,7 +208,7 @@ export default function Edit({ tool, categories, roles }) {
                             href={route("tools.index")}
                             className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                         >
-                            Annuleren
+                            Cancel
                         </Link>
 
                         <button
@@ -216,7 +216,7 @@ export default function Edit({ tool, categories, roles }) {
                             disabled={processing}
                             className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800"
                         >
-                            Opslaan
+                            Save
                         </button>
                     </div>
                 </form>

@@ -127,7 +127,7 @@ class CheckinController extends Controller
 
         return redirect()
             ->route('checkins.index')
-            ->with('success', 'Checkin succesvol aangemaakt.');
+            ->with('success', 'Check-in created successfully.');
     }
 
     public function show(Checkin $checkin)
@@ -230,7 +230,7 @@ class CheckinController extends Controller
 
         return redirect()
             ->route('checkins.index')
-            ->with('success', 'Checkin succesvol bijgewerkt.');
+            ->with('success', 'Check-in updated successfully.');
     }
 
     public function destroy(string $id)
