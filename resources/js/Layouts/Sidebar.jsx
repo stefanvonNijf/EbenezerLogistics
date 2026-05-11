@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
-import { FaWarehouse } from "react-icons/fa";
+import { FaWarehouse, FaHardHat } from "react-icons/fa";
 import { FaCar, FaPeopleGroup, FaUsersGear } from "react-icons/fa6";
 import { IoLogOutOutline, IoPrintOutline, IoSettingsSharp } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
@@ -55,6 +55,12 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
             <Link onClick={closeSidebar} href={route('tools.index')} className={linkClass('tools.*')}>
                 <FaWarehouse className="text-2xl" />
                 Inventory
+            </Link>
+            <hr className="border-white border-t-[2px]" />
+
+            <Link onClick={closeSidebar} href={route('pbm.index')} className={linkClass('pbm.*')}>
+                <FaHardHat className="text-2xl" />
+                PPE / PBM
             </Link>
             <hr className="border-white border-t-[2px]" />
 

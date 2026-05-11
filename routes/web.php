@@ -9,6 +9,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PrintFormController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\PbmController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -73,6 +74,13 @@ Route::middleware('auth')->group(function () {
         ->name('checkins.upload-checkout-pdf');
 
 //    Route::resource('cars', CarController::class)->except(['destroy']);
+
+    Route::resource('pbm', PbmController::class)->except(['show']);
+    Route::patch('/pbm/{pbm}/increment-stock', [PbmController::class, 'incrementStock'])->name('pbm.incrementStock');
+    Route::patch('/pbm/{pbm}/decrement-stock', [PbmController::class, 'decrementStock'])->name('pbm.decrementStock');
+    Route::post('/pbm-categories', [PbmController::class, 'storeCategory'])->name('pbm.categories.store');
+    Route::put('/pbm-categories/{pbmCategory}', [PbmController::class, 'updateCategory'])->name('pbm.categories.update');
+    Route::delete('/pbm-categories/{pbmCategory}', [PbmController::class, 'destroyCategory'])->name('pbm.categories.destroy');
 
     Route::get('/print-forms', [PrintFormController::class, 'index'])->name('print-forms.index');
     Route::get('/print-forms/ppe/{employee}', [PrintFormController::class, 'ppe'])->name('print-forms.ppe');
