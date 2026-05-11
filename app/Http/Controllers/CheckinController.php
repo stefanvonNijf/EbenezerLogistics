@@ -147,7 +147,7 @@ class CheckinController extends Controller
         return Inertia::render('Checkin/Edit', [
             'checkin'  => $checkin->load('employee', 'toolbag', 'car'),
             'toolbags' => Toolbag::all(),
-            'cars'     => Car::all(),
+            'cars'     => Car::where(fn($q) => $q->whereNull('employee_id')->orWhere('id', $checkin->car_id))->get(),
         ]);
     }
 
