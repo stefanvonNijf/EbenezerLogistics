@@ -125,7 +125,7 @@ function InlineList({ title, items, onAdd, onUpdate, onDelete }) {
 }
 
 export default function SettingsIndex() {
-    const { categories, roles } = usePage().props;
+    const { categories, roles, pbmCategories } = usePage().props;
 
     const handleAddCategory = (name) => {
         router.post(route('settings.categories.store'), { name });
@@ -147,14 +147,24 @@ export default function SettingsIndex() {
         router.delete(route('settings.roles.destroy', id));
     };
 
+    const handleAddPbmCategory = (name) => {
+        router.post(route('pbm.categories.store'), { name });
+    };
+    const handleUpdatePbmCategory = (id, name) => {
+        router.put(route('pbm.categories.update', id), { name });
+    };
+    const handleDeletePbmCategory = (id) => {
+        router.delete(route('pbm.categories.destroy', id));
+    };
+
     return (
         <AuthenticatedLayout>
             <Head title="Settings" />
 
-            <div className="lg:max-w-4xl mx-auto px-6 sm:px-6 lg:px-8">
+            <div className="lg:max-w-6xl mx-auto px-6 sm:px-6 lg:px-8">
                 <h1 className="text-xl font-bold mb-4">Settings</h1>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <InlineList
                         title="Tool Categories"
                         items={categories}
@@ -168,6 +178,13 @@ export default function SettingsIndex() {
                         onAdd={handleAddRole}
                         onUpdate={handleUpdateRole}
                         onDelete={handleDeleteRole}
+                    />
+                    <InlineList
+                        title="PPE Categories"
+                        items={pbmCategories}
+                        onAdd={handleAddPbmCategory}
+                        onUpdate={handleUpdatePbmCategory}
+                        onDelete={handleDeletePbmCategory}
                     />
                 </div>
             </div>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\PbmCategory;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,8 +13,9 @@ class SettingsController extends Controller
     public function index()
     {
         return Inertia::render('Settings/Index', [
-            'categories' => Category::orderBy('name')->get(),
-            'roles' => Role::orderBy('name')->get(),
+            'categories'    => Category::orderBy('name')->get(),
+            'roles'         => Role::orderBy('name')->get(),
+            'pbmCategories' => PbmCategory::orderBy('name')->get(),
         ]);
     }
 

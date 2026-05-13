@@ -23,6 +23,8 @@ class DatabaseSeeder extends Seeder
             CarSeeder::class,
             ToolbagSeeder::class,
             ToolbagToolSeeder::class,
+            PbmCategorySeeder::class,
+            PbmItemSeeder::class,
         ]);
     }
 }
