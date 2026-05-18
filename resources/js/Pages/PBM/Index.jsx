@@ -9,21 +9,16 @@ export default function PbmIndex() {
     const canDelete = auth.user?.role === 'admin';
 
     const [search, setSearch] = useState('');
-    const [filterCategory, setFilterCategory] = useState('');
-
     const normalize = (str) =>
         (str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
     const normalizedSearch = normalize(search);
 
-    const filtered = items.filter((item) => {
-        const matchesSearch =
-            normalize(item.name).includes(normalizedSearch) ||
-            normalize(item.size).includes(normalizedSearch) ||
-            normalize(item.category?.name).includes(normalizedSearch);
-        const matchesCategory = !filterCategory || String(item.pbm_category_id) === filterCategory;
-        return matchesSearch && matchesCategory;
-    });
+    const filtered = items.filter((item) =>
+        normalize(item.name).includes(normalizedSearch) ||
+        normalize(item.size).includes(normalizedSearch) ||
+        normalize(item.category?.name).includes(normalizedSearch)
+    );
 
     const isLowStock = (item) =>
         item.minimal_stock != null && item.amount_in_stock <= item.minimal_stock;
@@ -90,16 +85,6 @@ export default function PbmIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
-                        <select
-                            value={filterCategory}
-                            onChange={(e) => setFilterCategory(e.target.value)}
-                            className="border rounded px-3 py-2"
-                        >
-                            <option value="">All categories</option>
-                            {categories.map((cat) => (
-                                <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-                            ))}
-                        </select>
                     </div>
 
                     <div className="overflow-x-auto">
