@@ -48,9 +48,8 @@
             margin-top: 60px;
         }
 
-        .arrow {
-            color: #6b7280;
-            font-size: 14px;
+        .text-right {
+            text-align: right;
         }
     </style>
 </head>
@@ -84,38 +83,20 @@
 <table>
     <thead>
     <tr>
-        <th>Lost / Broken tool</th>
-        <th></th>
-        <th>Replacement tool</th>
-        <th>Replacement cost</th>
+        <th>Tool</th>
+        <th>Brand</th>
+        <th>Type</th>
+        <th class="text-right">Replacement cost</th>
     </tr>
     </thead>
     <tbody>
-    @foreach ($replacements as $item)
-        @php
-            $old = $oldTools[$item['old_tool_id']] ?? null;
-            $new = $newTools[$item['new_tool_id']] ?? null;
-        @endphp
+    @foreach ($tools as $tool)
         <tr>
-            <td>
-                @if($old)
-                    {{ $old->name }}
-                    @if($old->brand) <span style="color:#6b7280;">({{ $old->brand }})</span> @endif
-                @else
-                    —
-                @endif
-            </td>
-            <td class="arrow">→</td>
-            <td>
-                @if($new)
-                    {{ $new->name }}
-                    @if($new->brand) <span style="color:#6b7280;">({{ $new->brand }})</span> @endif
-                @else
-                    —
-                @endif
-            </td>
-            <td>
-                {{ $new?->replacement_cost ? '€ ' . number_format($new->replacement_cost, 2) : '-' }}
+            <td>{{ $tool->name }}</td>
+            <td>{{ $tool->brand ?? '-' }}</td>
+            <td>{{ $tool->type ?? '-' }}</td>
+            <td class="text-right">
+                {{ $tool->replacement_cost ? '€ ' . number_format($tool->replacement_cost, 2) : '-' }}
             </td>
         </tr>
     @endforeach

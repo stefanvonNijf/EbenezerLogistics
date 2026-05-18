@@ -4,12 +4,12 @@ namespace App\Mail;
 
 use App\Models\Checkin;
 use Illuminate\Bus\Queueable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Collection;
 
 class LostItemsReplacementMail extends Mailable
 {
@@ -17,9 +17,7 @@ class LostItemsReplacementMail extends Mailable
 
     public function __construct(
         public Checkin    $checkin,
-        public array      $replacements,
-        public Collection $oldTools,
-        public Collection $newTools,
+        public Collection $tools,
         public string     $pdfContent,
     ) {}
 

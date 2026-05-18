@@ -500,54 +500,37 @@ class CheckinController extends Controller
     {
         $checkin->load(['employee', 'toolbag.tools']);
 
-        $availableTools = Tool::where('amount_in_stock', '>', 0)
-            ->orderBy('name')
-            ->get(['id', 'name', 'brand', 'type', 'amount_in_stock', 'replacement_cost']);
-
         return Inertia::render('Checkin/LostItems', [
-            'checkin'        => $checkin,
-            'availableTools' => $availableTools,
+            'checkin' => $checkin,
         ]);
     }
 
     public function lostItemsProcess(Request $request, Checkin $checkin)
     {
         $request->validate([
-            'replacements'               => 'required|array|min:1',
-            'replacements.*.old_tool_id' => 'required|integer|exists:tools,id',
-            'replacements.*.new_tool_id' => 'required|integer|exists:tools,id',
-            'employee_signature'         => 'required|string',
-            'manager_signature'          => 'required|string',
+            'tool_ids'           => 'required|array|min:1',
+            'tool_ids.*'         => 'integer|exists:tools,id',
+            'employee_signature' => 'required|string',
+            'manager_signature'  => 'required|string',
         ]);
 
         $checkin->load(['employee', 'toolbag.tools']);
 
-        $replacements = $request->replacements;
-        $toolbag      = $checkin->toolbag;
+        $toolIds = $request->tool_ids;
 
-        foreach ($replacements as $item) {
-            $toolbag->tools()->detach($item['old_tool_id']);
-            $toolbag->tools()->attach($item['new_tool_id'], ['amount_in_bag' => 1]);
-            Tool::where('id', $item['new_tool_id'])->decrement('amount_in_stock');
-        }
+        Tool::whereIn('id', $toolIds)->decrement('amount_in_stock');
 
-        $oldToolIds = array_column($replacements, 'old_tool_id');
-        $newToolIds = array_column($replacements, 'new_tool_id');
+        $tools = Tool::whereIn('id', $toolIds)->get();
 
-        $oldTools = Tool::whereIn('id', $oldToolIds)->get()->keyBy('id');
-        $newTools = Tool::whereIn('id', $newToolIds)->get()->keyBy('id');
-
-        $pdfPath = "checkins/replacements/{$checkin->id}-replacement-" . now()->timestamp . ".pdf";
-        $tmpPath = sys_get_temp_dir() . '/' . uniqid('lost-items-pdf') . '.pdf';
+        $pdfPath    = "checkins/replacements/{$checkin->id}-replacement-" . now()->timestamp . ".pdf";
+        $tmpPath    = sys_get_temp_dir() . '/' . uniqid('lost-items-pdf') . '.pdf';
         $pdfContent = null;
 
         try {
             Pdf::view('pdf.lost-items-replacement', [
                 'checkin'           => $checkin,
                 'employee'          => $checkin->employee,
-                'replacements'      => $replacements,
-                'oldTools'          => $oldTools,
-                'newTools'          => $newTools,
+                'tools'             => $tools,
                 'employeeSignature' => $request->employee_signature,
                 'managerSignature'  => $request->manager_signature,
                 'date'              => now()->format('d-m-Y'),
@@ -562,7 +545,7 @@ class CheckinController extends Controller
 
         CheckinReplacement::create([
             'checkin_id'         => $checkin->id,
-            'replaced_tools'     => $replacements,
+            'replaced_tools'     => $toolIds,
             'employee_signature' => $request->employee_signature,
             'manager_signature'  => $request->manager_signature,
             'pdf_path'           => $pdfPath,
@@ -571,7 +554,7 @@ class CheckinController extends Controller
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
         if ($recipients && $pdfContent) {
             foreach ($recipients as $email) {
-                Mail::to($email)->send(new LostItemsReplacementMail($checkin, $replacements, $oldTools, $newTools, $pdfContent));
+                Mail::to($email)->send(new LostItemsReplacementMail($checkin, $tools, $pdfContent));
             }
         }
 

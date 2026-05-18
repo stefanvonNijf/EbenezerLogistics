@@ -16,14 +16,10 @@ Replacement tools have been issued and signed for.
 ## Replaced tools
 
 <x-mail::table>
-| Lost / Broken tool | | Replacement tool | Replacement cost |
+| Tool | Brand | Type | Replacement cost |
 |:--|:--|:--|--:|
-@foreach($replacements as $item)
-@php
-    $old = $oldTools[$item['old_tool_id']] ?? null;
-    $new = $newTools[$item['new_tool_id']] ?? null;
-@endphp
-| {{ $old?->name ?? '-' }} | → | {{ $new?->name ?? '-' }} | {{ $new?->replacement_cost ? '€ ' . number_format($new->replacement_cost, 2) : '-' }} |
+@foreach($tools as $tool)
+| {{ $tool->name }} | {{ $tool->brand ?? '-' }} | {{ $tool->type ?? '-' }} | {{ $tool->replacement_cost ? '€ ' . number_format($tool->replacement_cost, 2) : '-' }} |
 @endforeach
 </x-mail::table>
 
