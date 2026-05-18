@@ -60,4 +60,9 @@ class Checkin extends Model
     {
         return $this->belongsToMany(PrintFormDocument::class, 'checkin_print_form_document');
     }
+
+    public function replacements()
+    {
+        return $this->hasMany(CheckinReplacement::class);
+    }
 }

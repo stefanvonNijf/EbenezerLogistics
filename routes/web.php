@@ -72,6 +72,10 @@ Route::middleware('auth')->group(function () {
         ->name('checkins.upload-pdf');
     Route::post('/checkins/{checkin}/upload-checkout-pdf', [CheckinController::class, 'uploadCheckoutPdf'])
         ->name('checkins.upload-checkout-pdf');
+    Route::get('/checkins/{checkin}/lost-items', [CheckinController::class, 'lostItemsShow'])
+        ->name('checkins.lost-items');
+    Route::post('/checkins/{checkin}/lost-items', [CheckinController::class, 'lostItemsProcess'])
+        ->name('checkins.lost-items.process');
 
 //    Route::resource('cars', CarController::class)->except(['destroy']);
 

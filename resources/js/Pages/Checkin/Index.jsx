@@ -253,16 +253,26 @@ export default function CheckinIndex() {
                 }
                 const hasPlannedDate = !!row.planned_checkout_date;
                 return (
-                    <Link
-                        href={route("checkins.checkout", row.id)}
-                        className={`inline-block w-28 py-1 text-white rounded text-sm text-center ${
-                            hasPlannedDate
-                                ? 'bg-red-600 hover:bg-red-700'
-                                : 'bg-blue-400 hover:bg-blue-500'
-                        }`}
-                    >
-                        Checkout
-                    </Link>
+                    <div className="flex flex-col gap-1 items-start">
+                        <Link
+                            href={route("checkins.checkout", row.id)}
+                            className={`inline-block w-28 py-1 text-white rounded text-sm text-center ${
+                                hasPlannedDate
+                                    ? 'bg-red-600 hover:bg-red-700'
+                                    : 'bg-blue-400 hover:bg-blue-500'
+                            }`}
+                        >
+                            Checkout
+                        </Link>
+                        {row.toolbag_id && (
+                            <Link
+                                href={route("checkins.lost-items", row.id)}
+                                className="inline-block w-28 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 text-sm text-center"
+                            >
+                                Lost/broken
+                            </Link>
+                        )}
+                    </div>
                 );
             }
         },
