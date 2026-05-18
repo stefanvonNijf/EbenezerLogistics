@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { usePage, Head, Link, router } from '@inertiajs/react';
+import { usePage, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Table from '@/Components/Table.jsx';
+import PbmActionButtons from '@/Components/PbmActionButtons.jsx';
 
 export default function PbmIndex() {
     const { items, categories, auth } = usePage().props;
@@ -9,7 +10,6 @@ export default function PbmIndex() {
 
     const [search, setSearch] = useState('');
     const [filterCategory, setFilterCategory] = useState('');
-
 
     const normalize = (str) =>
         (str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -43,20 +43,12 @@ export default function PbmIndex() {
         {
             header: 'Stock',
             render: (row) => (
-                <div className="flex items-center gap-1">
-                    <button
-                        onClick={() => router.patch(route('pbm.decrementStock', row.id))}
-                        className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-sm font-bold flex items-center justify-center"
-                    >−</button>
-                    <span className={`w-8 text-center font-medium ${isLowStock(row) ? 'text-red-600' : ''}`}>
-                        {row.amount_in_stock}
-                        {isLowStock(row) && <span title={`Below minimum (${row.minimal_stock})`}> ⚠</span>}
-                    </span>
-                    <button
-                        onClick={() => router.patch(route('pbm.incrementStock', row.id))}
-                        className="w-6 h-6 rounded bg-gray-200 hover:bg-gray-300 text-sm font-bold flex items-center justify-center"
-                    >+</button>
-                </div>
+                <span className={`flex items-center gap-1 ${isLowStock(row) ? 'text-red-600 font-semibold' : ''}`}>
+                    {row.amount_in_stock}
+                    {isLowStock(row) && (
+                        <span title={`Below minimum (${row.minimal_stock})`} className="text-red-500">&#9888;</span>
+                    )}
+                </span>
             )
         },
         {
@@ -71,19 +63,7 @@ export default function PbmIndex() {
         },
         {
             header: 'Actions',
-            render: (row) => (
-                <div className="flex items-center gap-2">
-                    <Link href={route('pbm.edit', row.id)} className="text-blue-600 hover:underline text-sm">Edit</Link>
-                    {canDelete && (
-                        <button
-                            onClick={() => { if (confirm('Delete this item?')) router.delete(route('pbm.destroy', row.id)); }}
-                            className="text-red-600 hover:underline text-sm"
-                        >
-                            Delete
-                        </button>
-                    )}
-                </div>
-            )
+            render: (row) => <PbmActionButtons row={row} canDelete={canDelete} />
         },
     ];
 
@@ -92,35 +72,41 @@ export default function PbmIndex() {
             <Head title="PPE / PBM" />
 
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
-                <h1 className="text-xl font-bold mb-4">PPE / PBM</h1>
+                <div className="max-w-full mx-auto">
 
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                    <Link
-                        href={route('pbm.create')}
-                        className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
-                    >
-                        Add new item
-                    </Link>
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border rounded px-3 py-2"
-                    />
-                    <select
-                        value={filterCategory}
-                        onChange={(e) => setFilterCategory(e.target.value)}
-                        className="border rounded px-3 py-2"
-                    >
-                        <option value="">All categories</option>
-                        {categories.map((cat) => (
-                            <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
-                        ))}
-                    </select>
+                    <h1 className="text-xl font-bold mb-4">PPE / PBM</h1>
+
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                        <Link
+                            href={route('pbm.create')}
+                            className="w-44 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 text-center whitespace-nowrap"
+                        >
+                            Add new item
+                        </Link>
+                        <input
+                            type="text"
+                            placeholder="Search on keyword..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="border rounded px-3 py-2"
+                        />
+                        <select
+                            value={filterCategory}
+                            onChange={(e) => setFilterCategory(e.target.value)}
+                            className="border rounded px-3 py-2"
+                        >
+                            <option value="">All categories</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <Table columns={columns} data={filtered} />
+                    </div>
+
                 </div>
-
-                <Table columns={columns} data={filtered} />
             </div>
         </AuthenticatedLayout>
     );
