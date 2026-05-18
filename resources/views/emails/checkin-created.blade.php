@@ -50,6 +50,18 @@ A check-in has been completed.
 </x-mail::table>
 @endif
 
+@if($checkin->documents && $checkin->documents->count())
+## Attached documents
+
+<x-mail::table>
+| Document |
+|:--|
+@foreach($checkin->documents as $document)
+| {{ $document->name }} |
+@endforeach
+</x-mail::table>
+@endif
+
 Thanks,
 {{ config('app.name') }}
 </x-mail::message>

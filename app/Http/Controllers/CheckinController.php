@@ -125,7 +125,7 @@ class CheckinController extends Controller
 
         $checkin->documents()->sync($request->document_ids ?? []);
 
-        $checkin->load('employee', 'toolbag.tools', 'car');
+        $checkin->load('employee', 'toolbag.tools', 'car', 'documents');
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
         foreach ($recipients as $email) {
             Mail::to($email)->send(new CheckinCreatedMail($checkin));
