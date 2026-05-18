@@ -115,6 +115,28 @@ export default function CheckinShow({ checkin }) {
                     </dl>
                 </div>
 
+                {/* Attached Documents */}
+                {checkin.documents && checkin.documents.length > 0 && (
+                    <div className="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 className="font-semibold text-gray-700 mb-3">Attached Documents</h2>
+                        <ul className="space-y-2">
+                            {checkin.documents.map(doc => (
+                                <li key={doc.id} className="flex items-center justify-between border rounded px-4 py-2 text-sm">
+                                    <span className="text-gray-800">{doc.name}</span>
+                                    <a
+                                        href={route('print-forms.documents.download', doc.id)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                                    >
+                                        Download
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Signed Documents */}
                 <div className="bg-white rounded-lg shadow p-6">
                     <h2 className="font-semibold text-gray-700 mb-4">Signed Documents</h2>

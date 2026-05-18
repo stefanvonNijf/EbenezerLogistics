@@ -8,6 +8,7 @@ use App\Mail\CheckoutCompletedMail;
 use App\Models\Car;
 use App\Models\Checkin;
 use App\Models\Employee;
+use App\Models\PrintFormDocument;
 use App\Models\Tool;
 use App\Models\Toolbag;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class CheckinController extends Controller
             'employees' => Employee::all(),
             'toolbags'  => Toolbag::whereNull('employee_id')->get(),
             'cars'      => Car::whereNull('employee_id')->get(),
+            'documents' => PrintFormDocument::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -45,11 +47,13 @@ class CheckinController extends Controller
         $isCustom = !$isCar && (bool) $request->input('is_custom', false);
 
         $rules = [
-            'checkin_date'         => 'required|date',
-            'notes'                => 'nullable|string',
-            'employee_id'          => 'required|exists:employees,id',
-            'notification_emails'  => 'nullable|array',
-            'notification_emails.*'=> 'email',
+            'checkin_date'          => 'required|date',
+            'notes'                 => 'nullable|string',
+            'employee_id'           => 'required|exists:employees,id',
+            'notification_emails'   => 'nullable|array',
+            'notification_emails.*' => 'email',
+            'document_ids'          => 'nullable|array',
+            'document_ids.*'        => 'exists:print_form_documents,id',
         ];
 
         if ($isCar) {
@@ -119,6 +123,8 @@ class CheckinController extends Controller
             $car->update(['employee_id' => $request->employee_id]);
         }
 
+        $checkin->documents()->sync($request->document_ids ?? []);
+
         $checkin->load('employee', 'toolbag.tools', 'car');
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
         foreach ($recipients as $email) {
@@ -133,7 +139,7 @@ class CheckinController extends Controller
     public function show(Checkin $checkin)
     {
         return Inertia::render('Checkin/Show', [
-            'checkin' => $checkin->load('employee', 'toolbag', 'car'),
+            'checkin' => $checkin->load('employee', 'toolbag', 'car', 'documents'),
         ]);
     }
 
@@ -145,9 +151,11 @@ class CheckinController extends Controller
         }
 
         return Inertia::render('Checkin/Edit', [
-            'checkin'  => $checkin->load('employee', 'toolbag', 'car'),
-            'toolbags' => Toolbag::all(),
-            'cars'     => Car::where(fn($q) => $q->whereNull('employee_id')->orWhere('id', $checkin->car_id))->get(),
+            'checkin'             => $checkin->load('employee', 'toolbag', 'car'),
+            'toolbags'            => Toolbag::all(),
+            'cars'                => Car::where(fn($q) => $q->whereNull('employee_id')->orWhere('id', $checkin->car_id))->get(),
+            'documents'           => PrintFormDocument::orderBy('name')->get(['id', 'name']),
+            'selectedDocumentIds' => $checkin->documents()->pluck('print_form_documents.id')->toArray(),
         ]);
     }
 
@@ -162,9 +170,11 @@ class CheckinController extends Controller
         $isCustom = !$isCar && (bool) $request->input('is_custom', false);
 
         $rules = [
-            'checkin_date' => 'required|date',
-            'notes'        => 'nullable|string',
-            'employee_id'  => 'required|exists:employees,id',
+            'checkin_date'   => 'required|date',
+            'notes'          => 'nullable|string',
+            'employee_id'    => 'required|exists:employees,id',
+            'document_ids'   => 'nullable|array',
+            'document_ids.*' => 'exists:print_form_documents,id',
         ];
 
         if ($isCar) {
@@ -227,6 +237,8 @@ class CheckinController extends Controller
         if ($car) {
             $car->update(['employee_id' => $request->employee_id]);
         }
+
+        $checkin->documents()->sync($request->document_ids ?? []);
 
         return redirect()
             ->route('checkins.index')

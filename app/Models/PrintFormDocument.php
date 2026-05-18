@@ -16,4 +16,9 @@ class PrintFormDocument extends Model
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
+
+    public function checkins()
+    {
+        return $this->belongsToMany(Checkin::class, 'checkin_print_form_document');
+    }
 }

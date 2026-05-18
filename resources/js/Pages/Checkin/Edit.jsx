@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useForm, Head, Link, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
@@ -7,7 +7,7 @@ const TYPE_CAR     = 'car';
 const TYPE_CUSTOM  = 'custom';
 
 export default function Edit() {
-    const { checkin, toolbags, cars } = usePage().props;
+    const { checkin, toolbags, cars, documents, selectedDocumentIds } = usePage().props;
 
     const initType = checkin.car_id
         ? TYPE_CAR
@@ -25,11 +25,13 @@ export default function Edit() {
         is_custom:       initType === TYPE_CUSTOM,
         is_car:          initType === TYPE_CAR,
         custom_items:    checkin.custom_items || [],
+        document_ids:    selectedDocumentIds || [],
     });
 
     const [type, setType] = useState(initType);
     const [itemName, setItemName] = useState("");
     const [itemCost, setItemCost] = useState("");
+    const [docSearch, setDocSearch] = useState("");
 
     const switchType = (newType) => {
         setType(newType);
@@ -60,6 +62,18 @@ export default function Edit() {
         setData("custom_items", data.custom_items.filter((_, i) => i !== index));
 
     const handleItemKeyDown = (e) => { if (e.key === "Enter") { e.preventDefault(); addItem(); } };
+
+    const toggleDocument = (id) => {
+        setData('document_ids', data.document_ids.includes(id)
+            ? data.document_ids.filter(d => d !== id)
+            : [...data.document_ids, id]
+        );
+    };
+
+    const filteredDocs = useMemo(() =>
+        (documents || []).filter(d => d.name.toLowerCase().includes(docSearch.toLowerCase())),
+        [documents, docSearch]
+    );
 
     const handleSubmit = (e) => { e.preventDefault(); put(route("checkins.update", checkin.id)); };
 
@@ -183,6 +197,49 @@ export default function Edit() {
                         <textarea className="w-full border rounded px-3 py-2" rows="4" value={data.notes} onChange={(e) => setData("notes", e.target.value)} />
                         {errors.notes && <div className="text-red-600 text-sm">{errors.notes}</div>}
                     </div>
+
+                    {/* DOCUMENTS */}
+                    {documents && documents.length > 0 && (
+                        <div>
+                            <label className="block font-medium mb-1">Attach documents</label>
+                            <p className="text-sm text-gray-500 mb-2">Select documents from the library to attach to this check-in.</p>
+                            <input
+                                type="text"
+                                value={docSearch}
+                                onChange={(e) => setDocSearch(e.target.value)}
+                                placeholder="Search documents…"
+                                className="w-full border rounded px-3 py-2 text-sm mb-2"
+                            />
+                            <div className="border rounded max-h-48 overflow-y-auto divide-y">
+                                {filteredDocs.length === 0 ? (
+                                    <p className="px-3 py-2 text-sm text-gray-400">No documents found.</p>
+                                ) : filteredDocs.map(doc => (
+                                    <label key={doc.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.document_ids.includes(doc.id)}
+                                            onChange={() => toggleDocument(doc.id)}
+                                            className="rounded border-gray-300"
+                                        />
+                                        <span>{doc.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            {data.document_ids.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {data.document_ids.map(id => {
+                                        const doc = documents.find(d => d.id === id);
+                                        return doc ? (
+                                            <span key={id} className="flex items-center gap-1 bg-gray-100 border text-gray-700 text-sm rounded-full px-3 py-1">
+                                                {doc.name}
+                                                <button type="button" onClick={() => toggleDocument(id)} className="text-gray-400 hover:text-red-500 font-bold ml-1">&times;</button>
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="flex justify-between">
                         <Link href={route("checkins.index")} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</Link>

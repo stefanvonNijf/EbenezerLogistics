@@ -55,4 +55,9 @@ class Checkin extends Model
     {
         return $this->hasMany(CheckinPpeForm::class);
     }
+
+    public function documents()
+    {
+        return $this->belongsToMany(PrintFormDocument::class, 'checkin_print_form_document');
+    }
 }

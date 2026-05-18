@@ -7,7 +7,7 @@ const TYPE_CAR     = 'car';
 const TYPE_CUSTOM  = 'custom';
 
 export default function Create() {
-    const { employees, toolbags, cars } = usePage().props;
+    const { employees, toolbags, cars, documents } = usePage().props;
 
     const urlParams = new URLSearchParams(window.location.search);
     const preselectedEmployee = urlParams.get('employee_id') || "";
@@ -23,6 +23,7 @@ export default function Create() {
         is_custom:           false,
         is_car:              false,
         custom_items:        [],
+        document_ids:        [],
     });
 
     const [type, setType] = useState(TYPE_TOOLBAG);
@@ -30,6 +31,7 @@ export default function Create() {
     const [emailError, setEmailError] = useState("");
     const [itemName, setItemName] = useState("");
     const [itemCost, setItemCost] = useState("");
+    const [docSearch, setDocSearch] = useState("");
 
     const switchType = (newType) => {
         setType(newType);
@@ -78,6 +80,18 @@ export default function Create() {
         setData("custom_items", data.custom_items.filter((_, i) => i !== index));
 
     const handleItemKeyDown = (e) => { if (e.key === "Enter") { e.preventDefault(); addItem(); } };
+
+    const toggleDocument = (id) => {
+        setData('document_ids', data.document_ids.includes(id)
+            ? data.document_ids.filter(d => d !== id)
+            : [...data.document_ids, id]
+        );
+    };
+
+    const filteredDocs = useMemo(() =>
+        documents.filter(d => d.name.toLowerCase().includes(docSearch.toLowerCase())),
+        [documents, docSearch]
+    );
 
     const handleSubmit = (e) => { e.preventDefault(); post(route("checkins.store")); };
 
@@ -251,6 +265,49 @@ export default function Create() {
                             </div>
                         )}
                     </div>
+
+                    {/* DOCUMENTS */}
+                    {documents.length > 0 && (
+                        <div>
+                            <label className="block font-medium mb-1">Attach documents</label>
+                            <p className="text-sm text-gray-500 mb-2">Select documents from the library to attach to this check-in.</p>
+                            <input
+                                type="text"
+                                value={docSearch}
+                                onChange={(e) => setDocSearch(e.target.value)}
+                                placeholder="Search documents…"
+                                className="w-full border rounded px-3 py-2 text-sm mb-2"
+                            />
+                            <div className="border rounded max-h-48 overflow-y-auto divide-y">
+                                {filteredDocs.length === 0 ? (
+                                    <p className="px-3 py-2 text-sm text-gray-400">No documents found.</p>
+                                ) : filteredDocs.map(doc => (
+                                    <label key={doc.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.document_ids.includes(doc.id)}
+                                            onChange={() => toggleDocument(doc.id)}
+                                            className="rounded border-gray-300"
+                                        />
+                                        <span>{doc.name}</span>
+                                    </label>
+                                ))}
+                            </div>
+                            {data.document_ids.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {data.document_ids.map(id => {
+                                        const doc = documents.find(d => d.id === id);
+                                        return doc ? (
+                                            <span key={id} className="flex items-center gap-1 bg-gray-100 border text-gray-700 text-sm rounded-full px-3 py-1">
+                                                {doc.name}
+                                                <button type="button" onClick={() => toggleDocument(id)} className="text-gray-400 hover:text-red-500 font-bold ml-1">&times;</button>
+                                            </span>
+                                        ) : null;
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* BUTTONS */}
                     <div className="flex justify-between">
