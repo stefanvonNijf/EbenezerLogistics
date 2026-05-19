@@ -223,12 +223,25 @@
         </tr>
     </thead>
     <tbody>
-        @foreach(['GOGGLES', 'GLOVES', 'RAIN JACKET', 'INNER JACKET (Lining)', 'RAIN PANTS', 'OVERALLS', 'BOOTS', 'HELMET'] as $item)
+        @php
+            $ppeRows = [
+                ['key' => 'goggles',      'label' => 'GOGGLES'],
+                ['key' => 'gloves',       'label' => 'GLOVES'],
+                ['key' => 'rain_jacket',  'label' => 'RAIN JACKET'],
+                ['key' => 'inner_jacket', 'label' => 'INNER JACKET (Lining)'],
+                ['key' => 'rain_pants',   'label' => 'RAIN PANTS'],
+                ['key' => 'overalls',     'label' => 'OVERALLS'],
+                ['key' => 'boots',        'label' => 'BOOTS'],
+                ['key' => 'helmet',       'label' => 'HELMET'],
+            ];
+        @endphp
+        @foreach($ppeRows as $row)
+            @php $item = $checkin->ppe_items[$row['key']] ?? []; @endphp
             <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ $item }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">1</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;"></td>
-                <td style="border: 1px solid #ddd; padding: 8px;"></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{{ $row['label'] }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ $item['quantity'] ?? 1 }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">{{ $item['size'] ?? '' }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{{ $item['notes'] ?? '' }}</td>
             </tr>
         @endforeach
     </tbody>
