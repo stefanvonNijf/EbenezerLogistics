@@ -7,7 +7,7 @@ const TYPE_CAR     = 'car';
 const TYPE_CUSTOM  = 'custom';
 
 export default function Create() {
-    const { employees, toolbags, cars, documents } = usePage().props;
+    const { employees, toolbags, cars, documents, takenCheckinTypes } = usePage().props;
 
     const urlParams = new URLSearchParams(window.location.search);
     const preselectedEmployee = urlParams.get('employee_id') || "";
@@ -57,15 +57,25 @@ export default function Create() {
 
     useEffect(() => {
         const employee = employees.find(e => e.id === Number(data.employee_id));
-        setData(prev => ({
-            ...prev,
-            ppe_items: Object.fromEntries(
-                PPE_ITEMS.map(({ key }) => [
-                    key,
-                    { ...prev.ppe_items[key], size: employeeSizeForPpe(employee, key) },
-                ])
-            ),
-        }));
+        const taken = (takenCheckinTypes ?? {})[data.employee_id] ?? [];
+
+        setData(prev => {
+            const newType = taken.includes(type)
+                ? ([TYPE_TOOLBAG, TYPE_CAR, TYPE_CUSTOM].find(t => !taken.includes(t)) ?? type)
+                : type;
+
+            return {
+                ...prev,
+                is_custom: newType === TYPE_CUSTOM,
+                is_car:    newType === TYPE_CAR,
+                ppe_items: Object.fromEntries(
+                    PPE_ITEMS.map(({ key }) => [
+                        key,
+                        { ...prev.ppe_items[key], size: employeeSizeForPpe(employee, key) },
+                    ])
+                ),
+            };
+        });
     }, [data.employee_id]);
 
     const [type, setType] = useState(TYPE_TOOLBAG);
@@ -137,19 +147,28 @@ export default function Create() {
 
     const handleSubmit = (e) => { e.preventDefault(); post(route("checkins.store")); };
 
-    const typeBtn = (label, value) => (
-        <button
-            type="button"
-            onClick={() => switchType(value)}
-            className={`px-4 py-2 text-sm rounded border transition-colors ${
-                type === value
-                    ? 'bg-blue-700 text-white border-blue-700'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-        >
-            {label}
-        </button>
-    );
+    const takenTypes = (takenCheckinTypes ?? {})[data.employee_id] ?? [];
+
+    const typeBtn = (label, value) => {
+        const taken = takenTypes.includes(value);
+        return (
+            <button
+                type="button"
+                onClick={() => !taken && switchType(value)}
+                disabled={taken}
+                title={taken ? `Already checked in with ${value}` : undefined}
+                className={`px-4 py-2 text-sm rounded border transition-colors ${
+                    taken
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : type === value
+                            ? 'bg-blue-700 text-white border-blue-700'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+            >
+                {label}
+            </button>
+        );
+    };
 
     return (
         <AuthenticatedLayout>

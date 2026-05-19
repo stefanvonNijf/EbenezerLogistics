@@ -35,11 +35,19 @@ class CheckinController extends Controller
 
     public function create()
     {
+        $takenCheckinTypes = Checkin::where('status', 'planned_checkout')
+            ->get(['employee_id', 'toolbag_id', 'car_id', 'custom_items'])
+            ->groupBy('employee_id')
+            ->map(fn($checkins) => $checkins->map(fn($c) =>
+                $c->car_id ? 'car' : ($c->toolbag_id ? 'toolbag' : 'custom')
+            )->values()->all());
+
         return inertia('Checkin/Create', [
-            'employees' => Employee::all(),
-            'toolbags'  => Toolbag::whereNull('employee_id')->get(),
-            'cars'      => Car::whereNull('employee_id')->get(),
-            'documents' => PrintFormDocument::orderBy('name')->get(['id', 'name']),
+            'employees'         => Employee::all(),
+            'toolbags'          => Toolbag::whereNull('employee_id')->get(),
+            'cars'              => Car::whereNull('employee_id')->get(),
+            'documents'         => PrintFormDocument::orderBy('name')->get(['id', 'name']),
+            'takenCheckinTypes' => $takenCheckinTypes,
         ]);
     }
 
@@ -74,6 +82,22 @@ class CheckinController extends Controller
         }
 
         $request->validate($rules);
+
+        $activeQuery = Checkin::where('employee_id', $request->employee_id)
+            ->where('status', 'planned_checkout');
+        if ($isCar) {
+            $activeQuery->whereNotNull('car_id');
+        } elseif ($isCustom) {
+            $activeQuery->whereNotNull('custom_items');
+        } else {
+            $activeQuery->whereNotNull('toolbag_id');
+        }
+        if ($activeQuery->exists()) {
+            $typeLabel = $isCar ? 'car' : ($isCustom ? 'custom items' : 'toolbag');
+            return back()
+                ->withErrors(['employee_id' => "This employee already has an active {$typeLabel} check-in. Check them out first."])
+                ->withInput();
+        }
 
         $employee = Employee::findOrFail($request->employee_id);
         $toolbag  = null;
