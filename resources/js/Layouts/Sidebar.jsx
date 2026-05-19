@@ -163,7 +163,7 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
 
             {/* Sidebar desktop */}
             <div className="hidden lg:flex w-1/12 min-w-40 bg-[#014489] text-white fixed top-28 bottom-0 left-0 z-40 p-4 pt-6 flex-col items-center overflow-y-auto">
-                <nav className="space-y-2">{menuItems}</nav>
+                <nav className="space-y-[15px]">{menuItems}</nav>
             </div>
         </>
     );
