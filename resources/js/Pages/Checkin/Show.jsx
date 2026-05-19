@@ -137,36 +137,7 @@ export default function CheckinShow({ checkin }) {
                     </div>
                 )}
 
-                {/* Lost / Broken Replacements */}
-                {checkin.replacements && checkin.replacements.length > 0 && (
-                    <div className="bg-white rounded-lg shadow p-6 mb-6">
-                        <h2 className="font-semibold text-gray-700 mb-3">Lost / Broken Item Documents</h2>
-                        <div className="space-y-3">
-                            {checkin.replacements.map((replacement, i) => (
-                                <div key={replacement.id} className="flex items-center justify-between border rounded px-4 py-3">
-                                    <div>
-                                        <p className="font-medium text-gray-800">Replacement #{i + 1}</p>
-                                        <p className="text-xs text-gray-500">
-                                            {new Date(replacement.created_at).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                    {replacement.pdf_path ? (
-                                        <a
-                                            href={route('checkins.replacement-pdf', replacement.id)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                        >
-                                            View PDF
-                                        </a>
-                                    ) : (
-                                        <span className="text-sm text-gray-400">No file</span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+
 
                 {/* Signed Documents */}
                 <div className="bg-white rounded-lg shadow p-6">
@@ -240,6 +211,37 @@ export default function CheckinShow({ checkin }) {
                         </div>
                     </div>
                 </div>
+
+                {/* Lost / Broken Replacements */}
+                {checkin.replacements && checkin.replacements.length > 0 && (
+                    <div className="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 className="font-semibold text-gray-700 mb-3">Lost / Broken Item Documents</h2>
+                        <div className="space-y-3">
+                            {checkin.replacements.map((replacement, i) => (
+                                <div key={replacement.id} className="flex items-center justify-between border rounded px-4 py-3">
+                                    <div>
+                                        <p className="font-medium text-gray-800">Replacement #{i + 1}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(replacement.created_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    {replacement.pdf_path ? (
+                                        <a
+                                            href={route('checkins.replacement-pdf', replacement.id)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                                        >
+                                            View PDF
+                                        </a>
+                                    ) : (
+                                        <span className="text-sm text-gray-400">No file</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );
