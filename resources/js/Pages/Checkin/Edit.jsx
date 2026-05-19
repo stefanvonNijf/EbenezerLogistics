@@ -2,9 +2,6 @@ import React, { useState, useMemo } from "react";
 import { useForm, Head, Link, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
-const TYPE_TOOLBAG = 'toolbag';
-const TYPE_CAR     = 'car';
-const TYPE_CUSTOM  = 'custom';
 
 export default function Edit() {
     const { checkin, toolbags, cars, documents, selectedDocumentIds } = usePage().props;
@@ -42,10 +39,10 @@ export default function Edit() {
     );
 
     const initType = checkin.car_id
-        ? TYPE_CAR
+        ? 'car'
         : (!checkin.toolbag_id && Array.isArray(checkin.custom_items) && checkin.custom_items.length > 0)
-            ? TYPE_CUSTOM
-            : TYPE_TOOLBAG;
+            ? 'custom'
+            : 'toolbag';
 
     const { data, setData, put, processing, errors } = useForm({
         checkin_date:    checkin.checkin_date || "",
@@ -54,8 +51,8 @@ export default function Edit() {
         toolbag_id:      checkin.toolbag_id || "",
         car_id:          checkin.car_id || "",
         checkin_mileage: checkin.checkin_mileage ?? "",
-        is_custom:       initType === TYPE_CUSTOM,
-        is_car:          initType === TYPE_CAR,
+        is_custom:       initType === 'custom',
+        is_car:          initType === 'car',
         custom_items:    checkin.custom_items || [],
         document_ids:    selectedDocumentIds || [],
         ppe_items:       initPpeItems(),
@@ -64,23 +61,10 @@ export default function Edit() {
     const setPpe = (key, field, value) =>
         setData('ppe_items', { ...data.ppe_items, [key]: { ...data.ppe_items[key], [field]: value } });
 
-    const [type, setType] = useState(initType);
+    const type = initType;
     const [itemName, setItemName] = useState("");
     const [itemCost, setItemCost] = useState("");
     const [docSearch, setDocSearch] = useState("");
-
-    const switchType = (newType) => {
-        setType(newType);
-        setData(prev => ({
-            ...prev,
-            is_custom:       newType === TYPE_CUSTOM,
-            is_car:          newType === TYPE_CAR,
-            toolbag_id:      "",
-            car_id:          "",
-            checkin_mileage: "",
-            custom_items:    [],
-        }));
-    };
 
     const filteredToolbags = toolbags.filter(
         (tb) => tb.type === checkin.employee.role?.toLowerCase()
@@ -113,19 +97,7 @@ export default function Edit() {
 
     const handleSubmit = (e) => { e.preventDefault(); put(route("checkins.update", checkin.id)); };
 
-    const typeBtn = (label, value) => (
-        <button
-            type="button"
-            onClick={() => switchType(value)}
-            className={`px-4 py-2 text-sm rounded border transition-colors ${
-                type === value
-                    ? 'bg-blue-700 text-white border-blue-700'
-                    : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-            }`}
-        >
-            {label}
-        </button>
-    );
+    const typeLabels = { toolbag: 'Toolbag', car: 'Car', custom: 'Custom items' };
 
     return (
         <AuthenticatedLayout
@@ -148,18 +120,14 @@ export default function Edit() {
                         <input className="w-full border rounded px-3 py-2 bg-gray-100" value={checkin.employee.name} disabled />
                     </div>
 
-                    {/* TYPE SELECTOR */}
+                    {/* TYPE (read-only) */}
                     <div>
-                        <label className="block font-medium mb-2">Type</label>
-                        <div className="flex gap-2">
-                            {typeBtn('Toolbag', TYPE_TOOLBAG)}
-                            {typeBtn('Car', TYPE_CAR)}
-                            {typeBtn('Custom items', TYPE_CUSTOM)}
-                        </div>
+                        <label className="block font-medium">Type</label>
+                        <input className="w-full border rounded px-3 py-2 bg-gray-100" value={typeLabels[type]} disabled />
                     </div>
 
                     {/* TOOLBAG */}
-                    {type === TYPE_TOOLBAG && (
+                    {type === 'toolbag' && (
                         <div>
                             <label className="block font-medium">Toolbag</label>
                             <select className="w-full border rounded px-3 py-2" value={data.toolbag_id} onChange={(e) => setData("toolbag_id", e.target.value)}>
@@ -173,7 +141,7 @@ export default function Edit() {
                     )}
 
                     {/* CAR */}
-                    {type === TYPE_CAR && (
+                    {type === 'car' && (
                         <div className="space-y-4">
                             <div>
                                 <label className="block font-medium">Assign car</label>
@@ -194,7 +162,7 @@ export default function Edit() {
                     )}
 
                     {/* CUSTOM ITEMS */}
-                    {type === TYPE_CUSTOM && (
+                    {type === 'custom' && (
                         <div>
                             <label className="block font-medium mb-1">Custom items</label>
                             <p className="text-sm text-gray-500 mb-2">Add the items being checked out with an optional replacement cost.</p>
