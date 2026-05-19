@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Car;
-use App\Models\Employee;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -22,9 +21,7 @@ class CarController extends Controller
 
     public function create()
     {
-        return Inertia::render('Car/Create', [
-            'employees' => Employee::orderBy('name')->get(['id', 'name']),
-        ]);
+        return Inertia::render('Car/Create');
     }
 
     public function store(Request $request)
@@ -32,10 +29,9 @@ class CarController extends Controller
         $request->validate([
             'brand'         => 'required|string|max:100',
             'license_plate' => 'required|string|max:20|unique:cars,license_plate',
-            'employee_id'   => 'nullable|exists:employees,id',
         ]);
 
-        Car::create($request->only('brand', 'license_plate', 'employee_id'));
+        Car::create($request->only('brand', 'license_plate'));
 
         return redirect()->route('cars.index');
     }
@@ -45,8 +41,7 @@ class CarController extends Controller
     public function edit(Car $car)
     {
         return Inertia::render('Car/Edit', [
-            'car'       => $car->load('employee'),
-            'employees' => Employee::orderBy('name')->get(['id', 'name']),
+            'car' => $car,
         ]);
     }
 
@@ -55,10 +50,9 @@ class CarController extends Controller
         $request->validate([
             'brand'         => 'required|string|max:100',
             'license_plate' => 'required|string|max:20|unique:cars,license_plate,' . $car->id,
-            'employee_id'   => 'nullable|exists:employees,id',
         ]);
 
-        $car->update($request->only('brand', 'license_plate', 'employee_id'));
+        $car->update($request->only('brand', 'license_plate'));
 
         return redirect()->route('cars.index');
     }

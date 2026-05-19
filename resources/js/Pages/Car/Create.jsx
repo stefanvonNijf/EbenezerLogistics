@@ -1,14 +1,11 @@
 import React from 'react';
-import { useForm, Link, Head, usePage } from '@inertiajs/react';
+import { useForm, Link, Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
 export default function CarCreate() {
-    const { employees } = usePage().props;
-
     const { data, setData, post, processing, errors } = useForm({
         brand: '',
         license_plate: '',
-        employee_id: '',
     });
 
     const submit = (e) => {
@@ -46,21 +43,6 @@ export default function CarCreate() {
                             placeholder="e.g. AB-123-C"
                         />
                         {errors.license_plate && <p className="text-red-600 text-sm mt-1">{errors.license_plate}</p>}
-                    </div>
-
-                    <div>
-                        <label className="font-medium">Assigned to <span className="text-gray-400 font-normal">(optional)</span></label>
-                        <select
-                            value={data.employee_id}
-                            onChange={(e) => setData('employee_id', e.target.value)}
-                            className="border rounded px-3 py-2 w-full mt-1"
-                        >
-                            <option value="">— Not assigned —</option>
-                            {employees.map((emp) => (
-                                <option key={emp.id} value={emp.id}>{emp.name}</option>
-                            ))}
-                        </select>
-                        {errors.employee_id && <p className="text-red-600 text-sm mt-1">{errors.employee_id}</p>}
                     </div>
 
                     <div className="flex gap-3">
