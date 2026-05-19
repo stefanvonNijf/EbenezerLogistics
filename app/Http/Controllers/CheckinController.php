@@ -203,8 +203,8 @@ class CheckinController extends Controller
                 ->with('error', 'This checkin has been exported as a contract and can no longer be edited.');
         }
 
-        $isCar    = (bool) $request->input('is_car', false);
-        $isCustom = !$isCar && (bool) $request->input('is_custom', false);
+        $isCar    = (bool) $checkin->car_id;
+        $isCustom = !$isCar && !$checkin->toolbag_id && !empty($checkin->custom_items);
 
         $rules = [
             'checkin_date'          => 'required|date',
