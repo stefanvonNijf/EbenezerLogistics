@@ -76,6 +76,8 @@ class PrintFormController extends Controller
 
     public function ppe(Request $request, Employee $employee)
     {
+        $checkin = null;
+
         if ($request->query('checkin_id')) {
             $checkin = Checkin::find($request->query('checkin_id'));
             if ($checkin) {
@@ -88,10 +90,10 @@ class PrintFormController extends Controller
 
         return Pdf::view('pdf.ppe-issue-form-print', [
             'employee'              => $employee,
-            'admission_date'        => now()->toDateString(),
+            'admission_date'        => $checkin?->checkin_date ?? now()->toDateString(),
             'professional_category' => $employee->role,
             'notes'                 => $request->query('notes', ''),
-            'ppe'                   => [],
+            'ppe'                   => $checkin?->ppe_items ?? [],
         ])
             ->withBrowsershot(function (Browsershot $browsershot) {
                 $browsershot->noSandbox()
