@@ -16,20 +16,8 @@ class PrintFormController extends Controller
 {
     public function index()
     {
-        $activeCheckins = Checkin::with('employee')
-            ->whereIn('status', ['planned_checkin', 'planned_checkout'])
-            ->orderBy('checkin_date', 'desc')
-            ->get()
-            ->map(fn($c) => [
-                'id'          => $c->id,
-                'employee_id' => $c->employee_id,
-                'label'       => ($c->employee->name ?? 'Unknown') . ' — ' . ($c->checkin_date ?? 'No date'),
-            ]);
-
         return Inertia::render('PrintForms/Index', [
-            'employees'      => Employee::orderBy('name')->get(),
-            'activeCheckins' => $activeCheckins,
-            'documents'      => PrintFormDocument::with('uploader')
+            'documents' => PrintFormDocument::with('uploader')
                 ->latest()
                 ->get()
                 ->map(fn($doc) => [

@@ -272,6 +272,14 @@ export default function CheckinIndex() {
                                 Lost/broken
                             </Link>
                         )}
+                        <a
+                            href={route('print-forms.ppe', row.employee_id) + `?checkin_id=${row.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block w-28 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm text-center"
+                        >
+                            PPE Form
+                        </a>
                     </div>
                 );
             }
