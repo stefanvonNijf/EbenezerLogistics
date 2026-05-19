@@ -79,7 +79,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/checkins/replacements/{replacement}/pdf', [CheckinController::class, 'replacementPdf'])
         ->name('checkins.replacement-pdf');
 
-//    Route::resource('cars', CarController::class)->except(['destroy']);
+    Route::resource('cars', CarController::class)->except(['destroy']);
 
     Route::resource('pbm', PbmController::class)->except(['show']);
     Route::patch('/pbm/{pbm}/increment-stock', [PbmController::class, 'incrementStock'])->name('pbm.incrementStock');

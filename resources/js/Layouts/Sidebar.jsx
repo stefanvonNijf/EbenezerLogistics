@@ -96,7 +96,8 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
                         </>
                     )}
 
-                    <Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">
+
+                    <Link onClick={closeSidebar} href={route('cars.index')} className={linkClass('cars.*')}>
                         <FaCar className="text-2xl" />
                         Cars
                     </Link>
