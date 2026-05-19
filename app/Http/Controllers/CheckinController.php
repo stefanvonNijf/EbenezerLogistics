@@ -56,6 +56,10 @@ class CheckinController extends Controller
             'notification_emails.*' => 'email',
             'document_ids'          => 'nullable|array',
             'document_ids.*'        => 'exists:print_form_documents,id',
+            'ppe_items'             => 'nullable|array',
+            'ppe_items.*.quantity'  => 'nullable|integer|min:1',
+            'ppe_items.*.size'      => 'nullable|string|max:50',
+            'ppe_items.*.notes'     => 'nullable|string|max:255',
         ];
 
         if ($isCar) {
@@ -99,6 +103,7 @@ class CheckinController extends Controller
             'custom_items'        => $isCustom ? $request->custom_items : null,
             'car_id'              => $isCar ? $request->car_id : null,
             'checkin_mileage'     => $isCar ? $request->checkin_mileage : null,
+            'ppe_items'           => $request->ppe_items ?? null,
         ];
 
         if ($planned) {
@@ -172,11 +177,15 @@ class CheckinController extends Controller
         $isCustom = !$isCar && (bool) $request->input('is_custom', false);
 
         $rules = [
-            'checkin_date'   => 'required|date',
-            'notes'          => 'nullable|string',
-            'employee_id'    => 'required|exists:employees,id',
-            'document_ids'   => 'nullable|array',
-            'document_ids.*' => 'exists:print_form_documents,id',
+            'checkin_date'          => 'required|date',
+            'notes'                 => 'nullable|string',
+            'employee_id'           => 'required|exists:employees,id',
+            'document_ids'          => 'nullable|array',
+            'document_ids.*'        => 'exists:print_form_documents,id',
+            'ppe_items'             => 'nullable|array',
+            'ppe_items.*.quantity'  => 'nullable|integer|min:1',
+            'ppe_items.*.size'      => 'nullable|string|max:50',
+            'ppe_items.*.notes'     => 'nullable|string|max:255',
         ];
 
         if ($isCar) {
@@ -231,6 +240,7 @@ class CheckinController extends Controller
             'custom_items'    => $isCustom ? $request->custom_items : null,
             'car_id'          => $isCar ? $request->car_id : null,
             'checkin_mileage' => $isCar ? $request->checkin_mileage : null,
+            'ppe_items'       => $request->ppe_items ?? null,
         ]);
 
         if ($toolbag) {

@@ -18,6 +18,7 @@ class Checkin extends Model
         'employee_id',
         'toolbag_id',
         'custom_items',
+        'ppe_items',
         'employee_checkin_signature',
         'manager_checkin_signature',
         'employee_checkout_signature',
@@ -34,6 +35,7 @@ class Checkin extends Model
         'missing_tools'        => 'array',
         'notification_emails'  => 'array',
         'custom_items'         => 'array',
+        'ppe_items'            => 'array',
     ];
 
     public function employee()

@@ -50,6 +50,18 @@ A check-in has been completed.
 </x-mail::table>
 @endif
 
+@if($checkin->ppe_items)
+## PPE
+
+<x-mail::table>
+| Item | Qty | Size | Notes |
+|:--|:--|:--|:--|
+@foreach($checkin->ppe_items as $key => $item)
+| {{ strtoupper(str_replace('_', ' ', $key)) }} | {{ $item['quantity'] ?? 1 }} | {{ !empty($item['size']) ? $item['size'] : '—' }} | {{ !empty($item['notes']) ? $item['notes'] : '—' }} |
+@endforeach
+</x-mail::table>
+@endif
+
 @if($checkin->documents && $checkin->documents->count())
 ## Attached documents
 

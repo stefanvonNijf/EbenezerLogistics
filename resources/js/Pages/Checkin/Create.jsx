@@ -12,6 +12,21 @@ export default function Create() {
     const urlParams = new URLSearchParams(window.location.search);
     const preselectedEmployee = urlParams.get('employee_id') || "";
 
+    const PPE_ITEMS = [
+        { key: 'goggles',      label: 'GOGGLES' },
+        { key: 'gloves',       label: 'GLOVES' },
+        { key: 'rain_jacket',  label: 'RAIN JACKET' },
+        { key: 'inner_jacket', label: 'INNER JACKET (Lining)' },
+        { key: 'rain_pants',   label: 'RAIN PANTS' },
+        { key: 'overalls',     label: 'OVERALLS' },
+        { key: 'boots',        label: 'BOOTS' },
+        { key: 'helmet',       label: 'HELMET' },
+    ];
+
+    const defaultPpeItems = () => Object.fromEntries(
+        PPE_ITEMS.map(({ key }) => [key, { quantity: 1, size: '', notes: '' }])
+    );
+
     const { data, setData, post, processing, errors } = useForm({
         employee_id:         preselectedEmployee,
         toolbag_id:          "",
@@ -24,7 +39,11 @@ export default function Create() {
         is_car:              false,
         custom_items:        [],
         document_ids:        [],
+        ppe_items:           defaultPpeItems(),
     });
+
+    const setPpe = (key, field, value) =>
+        setData('ppe_items', { ...data.ppe_items, [key]: { ...data.ppe_items[key], [field]: value } });
 
     const [type, setType] = useState(TYPE_TOOLBAG);
     const [emailInput, setEmailInput] = useState("");
@@ -235,6 +254,57 @@ export default function Create() {
                         <label className="block font-medium">Check-in date</label>
                         <input type="date" className="w-full border rounded px-3 py-2" value={data.checkin_date} onChange={(e) => setData("checkin_date", e.target.value)} />
                         {errors.checkin_date && <div className="text-red-600 text-sm">{errors.checkin_date}</div>}
+                    </div>
+
+                    {/* PPE ITEMS */}
+                    <div>
+                        <label className="block font-medium mb-2">PPE</label>
+                        <div className="border rounded overflow-hidden">
+                            <table className="w-full text-sm">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="text-left px-3 py-2 font-medium text-gray-600 w-1/3">Item</th>
+                                        <th className="text-left px-3 py-2 font-medium text-gray-600 w-16">Qty</th>
+                                        <th className="text-left px-3 py-2 font-medium text-gray-600 w-24">Size</th>
+                                        <th className="text-left px-3 py-2 font-medium text-gray-600">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {PPE_ITEMS.map(({ key, label }) => (
+                                        <tr key={key}>
+                                            <td className="px-3 py-2 text-gray-700">{label}</td>
+                                            <td className="px-3 py-2">
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    value={data.ppe_items[key].quantity}
+                                                    onChange={(e) => setPpe(key, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
+                                                    className="w-14 border rounded px-2 py-1 text-center"
+                                                />
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <input
+                                                    type="text"
+                                                    value={data.ppe_items[key].size}
+                                                    onChange={(e) => setPpe(key, 'size', e.target.value)}
+                                                    placeholder="—"
+                                                    className="w-20 border rounded px-2 py-1"
+                                                />
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                <input
+                                                    type="text"
+                                                    value={data.ppe_items[key].notes}
+                                                    onChange={(e) => setPpe(key, 'notes', e.target.value)}
+                                                    placeholder="—"
+                                                    className="w-full border rounded px-2 py-1"
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     {/* NOTES */}
