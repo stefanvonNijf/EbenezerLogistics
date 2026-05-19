@@ -62,6 +62,36 @@ class PrintFormController extends Controller
             ->with('success', 'Document deleted.');
     }
 
+    public function ppeExtras(Request $request, Checkin $checkin)
+    {
+        $request->validate([
+            'ppe_items'                      => 'nullable|array',
+            'ppe_items.*.quantity'           => 'nullable|integer|min:1',
+            'ppe_items.*.size'               => 'nullable|string|max:50',
+        ]);
+
+        $checkin->load('employee');
+
+        CheckinPpeForm::create([
+            'checkin_id' => $checkin->id,
+            'notes'      => null,
+        ]);
+
+        return Pdf::view('pdf.ppe-issue-form-print', [
+            'employee'              => $checkin->employee,
+            'admission_date'        => $checkin->checkin_date,
+            'professional_category' => $checkin->employee->role,
+            'notes'                 => '',
+            'ppe'                   => $request->input('ppe_items', []),
+            'selectedOnly'          => true,
+        ])
+            ->withBrowsershot(function (Browsershot $browsershot) {
+                $browsershot->noSandbox()->setChromePath('/usr/bin/google-chrome');
+            })
+            ->name("ppe-extras-{$checkin->employee->name}.pdf")
+            ->inline();
+    }
+
     public function ppe(Request $request, Employee $employee)
     {
         $checkin = null;

@@ -90,6 +90,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/print-forms', [PrintFormController::class, 'index'])->name('print-forms.index');
     Route::get('/print-forms/ppe/{employee}', [PrintFormController::class, 'ppe'])->name('print-forms.ppe');
+    Route::post('/print-forms/ppe-extras/{checkin}', [PrintFormController::class, 'ppeExtras'])->name('print-forms.ppe-extras');
     Route::post('/print-forms/upload', [PrintFormController::class, 'upload'])->name('print-forms.upload');
     Route::get('/print-forms/documents/{document}/download', [PrintFormController::class, 'download'])->name('print-forms.download');
 });

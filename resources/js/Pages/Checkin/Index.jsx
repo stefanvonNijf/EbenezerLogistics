@@ -256,7 +256,7 @@ export default function CheckinIndex() {
                     <div className="flex flex-col gap-1 items-start">
                         <Link
                             href={route("checkins.checkout", row.id)}
-                            className={`inline-block w-28 py-1 text-white rounded text-sm text-center ${
+                            className={`inline-block w-36 py-1 text-white rounded text-sm text-center ${
                                 hasPlannedDate
                                     ? 'bg-red-600 hover:bg-red-700'
                                     : 'bg-blue-400 hover:bg-blue-500'
@@ -264,22 +264,12 @@ export default function CheckinIndex() {
                         >
                             Checkout
                         </Link>
-                        {row.toolbag_id && (
-                            <Link
-                                href={route("checkins.lost-items", row.id)}
-                                className="inline-block w-28 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 text-sm text-center"
-                            >
-                                Lost/broken
-                            </Link>
-                        )}
-                        <a
-                            href={route('print-forms.ppe', row.employee_id) + `?checkin_id=${row.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-block w-28 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm text-center"
+                        <Link
+                            href={route("checkins.lost-items", row.id)}
+                            className="inline-block w-36 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 text-sm text-center"
                         >
-                            PPE Form
-                        </a>
+                            Lost/Broken/Extras
+                        </Link>
                     </div>
                 );
             }

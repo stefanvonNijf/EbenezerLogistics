@@ -1,11 +1,27 @@
 import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
+import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SignaturePad from "@/Components/SignaturePad.jsx";
+
+const PPE_ITEMS = [
+    { key: 'goggles',      label: 'Goggles' },
+    { key: 'gloves',       label: 'Gloves' },
+    { key: 'rain_jacket',  label: 'Rain Jacket' },
+    { key: 'inner_jacket', label: 'Inner Jacket (Lining)' },
+    { key: 'rain_pants',   label: 'Rain Pants' },
+    { key: 'overalls',     label: 'Overalls' },
+    { key: 'boots',        label: 'Boots' },
+    { key: 'helmet',       label: 'Helmet' },
+];
 
 export default function LostItems({ checkin }) {
     const tools = checkin.toolbag?.tools ?? [];
 
+    // Tabs
+    const [tab, setTab] = useState('lost');
+
+    // Lost/Broken tab state
     const [step, setStep] = useState("mark");
     const [lostIds, setLostIds] = useState([]);
     const [customItems, setCustomItems] = useState([]);
@@ -13,6 +29,11 @@ export default function LostItems({ checkin }) {
     const [managerSig, setManagerSig] = useState(null);
     const [submitting, setSubmitting] = useState(false);
 
+    // Extras (PPE) tab state
+    const [selectedPpe, setSelectedPpe] = useState({});
+    const [generatingPpe, setGeneratingPpe] = useState(false);
+
+    // --- Lost/Broken helpers ---
     const toggle = (toolId) =>
         setLostIds((prev) =>
             prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]
@@ -47,13 +68,55 @@ export default function LostItems({ checkin }) {
         );
     };
 
+    // --- Extras (PPE) helpers ---
+    const togglePpe = (key) => {
+        setSelectedPpe((prev) => {
+            if (prev[key]) {
+                const { [key]: _, ...rest } = prev;
+                return rest;
+            }
+            return {
+                ...prev,
+                [key]: {
+                    quantity: checkin.ppe_items?.[key]?.quantity ?? 1,
+                    size: checkin.ppe_items?.[key]?.size ?? '',
+                },
+            };
+        });
+    };
+
+    const setPpeField = (key, field, value) =>
+        setSelectedPpe((prev) => ({
+            ...prev,
+            [key]: { ...prev[key], [field]: value },
+        }));
+
+    const generatePpeForm = async () => {
+        if (Object.keys(selectedPpe).length === 0) return;
+        setGeneratingPpe(true);
+        try {
+            const response = await axios.post(
+                route('print-forms.ppe-extras', checkin.id),
+                { ppe_items: selectedPpe },
+                { responseType: 'blob' }
+            );
+            const url = URL.createObjectURL(response.data);
+            window.open(url, '_blank');
+        } catch {
+            alert('Failed to generate PPE form.');
+        } finally {
+            setGeneratingPpe(false);
+        }
+    };
+
+    // --- Sign step (Lost/Broken tab only) ---
     if (step === "sign") {
         return (
             <AuthenticatedLayout>
-                <Head title="Lost/broken items — Sign" />
+                <Head title="Lost/Broken/Extras — Sign" />
                 <div className="lg:max-w-4xl mx-auto px-6">
                     <h1 className="text-xl font-bold mb-1">
-                        Lost/broken items — {checkin.employee?.name}
+                        Lost/Broken/Extras — {checkin.employee?.name}
                     </h1>
                     <p className="text-gray-500 mb-6">
                         Please have both parties sign below to confirm the replacements.
@@ -133,140 +196,245 @@ export default function LostItems({ checkin }) {
 
     return (
         <AuthenticatedLayout>
-            <Head title="Lost/broken items" />
+            <Head title="Lost/Broken/Extras" />
             <div className="lg:max-w-4xl mx-auto px-6">
                 <h1 className="text-xl font-bold mb-1">
-                    Lost/broken items — {checkin.employee?.name}
+                    Lost/Broken/Extras — {checkin.employee?.name}
                 </h1>
-                <p className="text-gray-500 mb-6">Toolbag: {checkin.toolbag?.name}</p>
+                {checkin.toolbag?.name && (
+                    <p className="text-gray-500 mb-4">Toolbag: {checkin.toolbag.name}</p>
+                )}
 
-                {/* TOOLBAG TOOLS */}
-                <div className="bg-white rounded-lg shadow p-6 mb-4">
-                    <p className="text-sm text-gray-600 mb-4">
-                        Check the tools that are <strong>lost or broken</strong>. The employee will receive a new unit from inventory.
-                    </p>
+                {/* TAB NAV */}
+                <div className="flex border-b mb-6">
+                    <button
+                        type="button"
+                        onClick={() => setTab('lost')}
+                        className={`px-5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                            tab === 'lost'
+                                ? 'border-blue-600 text-blue-700'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        Lost / Broken
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setTab('extras')}
+                        className={`px-5 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                            tab === 'extras'
+                                ? 'border-blue-600 text-blue-700'
+                                : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                    >
+                        Extras (PPE)
+                    </button>
+                </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        {tools.map((tool) => {
-                            const isLost = lostIds.includes(tool.id);
-                            const noStock = tool.amount_in_stock <= 0;
-                            return (
-                                <div
-                                    key={tool.id}
-                                    onClick={() => toggle(tool.id)}
-                                    className={`border rounded px-4 py-3 cursor-pointer transition-colors select-none ${
-                                        isLost
-                                            ? "bg-red-50 border-red-300"
-                                            : "bg-white border-gray-200 hover:bg-gray-50"
-                                    }`}
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={isLost}
-                                            onChange={() => toggle(tool.id)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="w-5 h-5 accent-red-600 mt-0.5 shrink-0"
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <p className={`font-medium truncate ${isLost ? "line-through text-red-700" : "text-gray-800"}`}>
-                                                {tool.name}
-                                            </p>
-                                            <p className="text-xs text-gray-500">
-                                                {[tool.brand, tool.type].filter(Boolean).join(" • ")}
-                                            </p>
-                                            <p className={`text-xs mt-1 ${noStock ? "text-red-500 font-medium" : "text-gray-400"}`}>
-                                                {noStock ? "No stock available" : `In stock: ${tool.amount_in_stock}`}
-                                            </p>
+                {/* LOST/BROKEN TAB */}
+                {tab === 'lost' && (
+                    <>
+                        {tools.length > 0 ? (
+                            <div className="bg-white rounded-lg shadow p-6 mb-4">
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Check the tools that are <strong>lost or broken</strong>. The employee will receive a new unit from inventory.
+                                </p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {tools.map((tool) => {
+                                        const isLost = lostIds.includes(tool.id);
+                                        const noStock = tool.amount_in_stock <= 0;
+                                        return (
+                                            <div
+                                                key={tool.id}
+                                                onClick={() => toggle(tool.id)}
+                                                className={`border rounded px-4 py-3 cursor-pointer transition-colors select-none ${
+                                                    isLost
+                                                        ? "bg-red-50 border-red-300"
+                                                        : "bg-white border-gray-200 hover:bg-gray-50"
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isLost}
+                                                        onChange={() => toggle(tool.id)}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="w-5 h-5 accent-red-600 mt-0.5 shrink-0"
+                                                    />
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className={`font-medium truncate ${isLost ? "line-through text-red-700" : "text-gray-800"}`}>
+                                                            {tool.name}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            {[tool.brand, tool.type].filter(Boolean).join(" • ")}
+                                                        </p>
+                                                        <p className={`text-xs mt-1 ${noStock ? "text-red-500 font-medium" : "text-gray-400"}`}>
+                                                            {noStock ? "No stock available" : `In stock: ${tool.amount_in_stock}`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="mt-4 pt-3 border-t text-sm text-gray-500">
+                                    {lostIds.length === 0
+                                        ? "No tools marked as lost or broken."
+                                        : `${lostIds.length} tool${lostIds.length > 1 ? "s" : ""} marked as lost/broken.`}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-lg shadow p-6 mb-4 text-sm text-gray-400 text-center py-8">
+                                No toolbag linked to this checkin.
+                            </div>
+                        )}
+
+                        {/* CUSTOM ITEMS */}
+                        <div className="bg-white rounded-lg shadow p-6 mb-6">
+                            <h2 className="text-sm font-semibold text-gray-700 uppercase mb-3">
+                                Custom items
+                            </h2>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Add any additional lost or broken items not in the toolbag.
+                            </p>
+                            {customItems.length > 0 && (
+                                <div className="space-y-2 mb-4">
+                                    {customItems.map((item, index) => (
+                                        <div key={index} className="flex items-center gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Item name"
+                                                value={item.name}
+                                                onChange={(e) => updateCustomItem(index, "name", e.target.value)}
+                                                className="border rounded px-3 py-2 flex-1"
+                                            />
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
+                                                <input
+                                                    type="number"
+                                                    placeholder="Price"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={item.price}
+                                                    onChange={(e) => updateCustomItem(index, "price", e.target.value)}
+                                                    className="border rounded pl-7 pr-3 py-2 w-28"
+                                                />
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => removeCustomItem(index)}
+                                                className="text-red-500 hover:text-red-700 px-2 py-1 text-lg leading-none"
+                                            >
+                                                ×
+                                            </button>
                                         </div>
-                                    </div>
+                                    ))}
                                 </div>
-                            );
-                        })}
-                    </div>
-
-                    {tools.length === 0 && (
-                        <p className="text-gray-400 text-sm text-center py-4">
-                            No tools in this toolbag.
-                        </p>
-                    )}
-
-                    <div className="mt-4 pt-3 border-t text-sm text-gray-500">
-                        {lostIds.length === 0
-                            ? "No tools marked as lost or broken."
-                            : `${lostIds.length} tool${lostIds.length > 1 ? "s" : ""} marked as lost/broken.`}
-                    </div>
-                </div>
-
-                {/* CUSTOM ITEMS */}
-                <div className="bg-white rounded-lg shadow p-6 mb-6">
-                    <h2 className="text-sm font-semibold text-gray-700 uppercase mb-3">
-                        Custom items
-                    </h2>
-                    <p className="text-sm text-gray-500 mb-4">
-                        Add any additional lost or broken items not in the toolbag.
-                    </p>
-
-                    {customItems.length > 0 && (
-                        <div className="space-y-2 mb-4">
-                            {customItems.map((item, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                    <input
-                                        type="text"
-                                        placeholder="Item name"
-                                        value={item.name}
-                                        onChange={(e) => updateCustomItem(index, "name", e.target.value)}
-                                        className="border rounded px-3 py-2 flex-1"
-                                    />
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
-                                        <input
-                                            type="number"
-                                            placeholder="Price"
-                                            min="0"
-                                            step="0.01"
-                                            value={item.price}
-                                            onChange={(e) => updateCustomItem(index, "price", e.target.value)}
-                                            className="border rounded pl-7 pr-3 py-2 w-28"
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeCustomItem(index)}
-                                        className="text-red-500 hover:text-red-700 px-2 py-1 text-lg leading-none"
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
+                            )}
+                            <button
+                                type="button"
+                                onClick={addCustomItem}
+                                className="px-4 py-2 text-sm border border-dashed border-gray-300 text-gray-600 rounded hover:bg-gray-50 w-full"
+                            >
+                                + Add custom item
+                            </button>
                         </div>
-                    )}
 
-                    <button
-                        type="button"
-                        onClick={addCustomItem}
-                        className="px-4 py-2 text-sm border border-dashed border-gray-300 text-gray-600 rounded hover:bg-gray-50 w-full"
-                    >
-                        + Add custom item
-                    </button>
-                </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setStep("sign")}
+                                disabled={!canContinue}
+                                className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Continue to signing
+                            </button>
+                            <Link
+                                href={route("checkins.index")}
+                                className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                            >
+                                Cancel
+                            </Link>
+                        </div>
+                    </>
+                )}
 
-                <div className="flex gap-3">
-                    <button
-                        type="button"
-                        onClick={() => setStep("sign")}
-                        disabled={!canContinue}
-                        className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                        Continue to signing
-                    </button>
-                    <Link
-                        href={route("checkins.index")}
-                        className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-50"
-                    >
-                        Cancel
-                    </Link>
-                </div>
+                {/* EXTRAS (PPE) TAB */}
+                {tab === 'extras' && (
+                    <>
+                        <div className="bg-white rounded-lg shadow p-6 mb-6">
+                            <p className="text-sm text-gray-600 mb-5">
+                                Select the PPE items to issue. Quantities and sizes are pre-filled from the checkin where available.
+                            </p>
+                            <div className="space-y-3">
+                                {PPE_ITEMS.map(({ key, label }) => {
+                                    const checked = !!selectedPpe[key];
+                                    return (
+                                        <div
+                                            key={key}
+                                            className={`border rounded px-4 py-3 transition-colors ${
+                                                checked ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={() => togglePpe(key)}
+                                                    className="w-5 h-5 accent-blue-600 shrink-0"
+                                                />
+                                                <span className={`font-medium w-44 shrink-0 ${checked ? 'text-blue-800' : 'text-gray-700'}`}>
+                                                    {label}
+                                                </span>
+                                                {checked && (
+                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                        <div className="flex items-center gap-1">
+                                                            <label className="text-xs text-gray-500 whitespace-nowrap">Qty</label>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                value={selectedPpe[key].quantity}
+                                                                onChange={(e) => setPpeField(key, 'quantity', parseInt(e.target.value) || 1)}
+                                                                className="border rounded px-2 py-1 w-16 text-sm"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <label className="text-xs text-gray-500 whitespace-nowrap">Size</label>
+                                                            <input
+                                                                type="text"
+                                                                value={selectedPpe[key].size}
+                                                                onChange={(e) => setPpeField(key, 'size', e.target.value)}
+                                                                className="border rounded px-2 py-1 w-20 text-sm"
+                                                                placeholder="e.g. M"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={generatePpeForm}
+                                disabled={Object.keys(selectedPpe).length === 0 || generatingPpe}
+                                className="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                {generatingPpe ? "Generating…" : "Generate PPE Form"}
+                            </button>
+                            <Link
+                                href={route("checkins.index")}
+                                className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                            >
+                                Cancel
+                            </Link>
+                        </div>
+                    </>
+                )}
             </div>
         </AuthenticatedLayout>
     );

@@ -90,55 +90,30 @@
             <th>NOTES</th>
         </tr>
     </thead>
+    @php
+        $selectedOnly = $selectedOnly ?? false;
+        $ppeRows = [
+            ['key' => 'goggles',      'label' => 'GOGGLES'],
+            ['key' => 'gloves',       'label' => 'GLOVES'],
+            ['key' => 'rain_jacket',  'label' => 'RAIN JACKET'],
+            ['key' => 'inner_jacket', 'label' => 'INNER JACKET (Lining)'],
+            ['key' => 'rain_pants',   'label' => 'RAIN PANTS'],
+            ['key' => 'overalls',     'label' => 'OVERALLS'],
+            ['key' => 'boots',        'label' => 'BOOTS'],
+            ['key' => 'helmet',       'label' => 'HELMET'],
+        ];
+    @endphp
     <tbody>
-        <tr>
-            <td>GOGGLES</td>
-            <td class="checkbox-cell">{{ $ppe['goggles']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['goggles']['size'] ?? '' }}</td>
-            <td>{{ $ppe['goggles']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>GLOVES</td>
-            <td class="checkbox-cell">{{ $ppe['gloves']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['gloves']['size'] ?? '' }}</td>
-            <td>{{ $ppe['gloves']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>RAIN JACKET</td>
-            <td class="checkbox-cell">{{ $ppe['rain_jacket']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['rain_jacket']['size'] ?? '' }}</td>
-            <td>{{ $ppe['rain_jacket']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>INNER JACKET (Lining)</td>
-            <td class="checkbox-cell">{{ $ppe['inner_jacket']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['inner_jacket']['size'] ?? '' }}</td>
-            <td>{{ $ppe['inner_jacket']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>RAIN PANTS</td>
-            <td class="checkbox-cell">{{ $ppe['rain_pants']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['rain_pants']['size'] ?? '' }}</td>
-            <td>{{ $ppe['rain_pants']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>OVERALLS</td>
-            <td class="checkbox-cell">{{ $ppe['overalls']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['overalls']['size'] ?? '' }}</td>
-            <td>{{ $ppe['overalls']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>BOOTS</td>
-            <td class="checkbox-cell">{{ $ppe['boots']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['boots']['size'] ?? '' }}</td>
-            <td>{{ $ppe['boots']['notes'] ?? '' }}</td>
-        </tr>
-        <tr>
-            <td>HELMET</td>
-            <td class="checkbox-cell">{{ $ppe['helmet']['quantity'] ?? '1' }}</td>
-            <td class="checkbox-cell">{{ $ppe['helmet']['size'] ?? '' }}</td>
-            <td>{{ $ppe['helmet']['notes'] ?? '' }}</td>
-        </tr>
+        @foreach($ppeRows as $row)
+            @if(!$selectedOnly || isset($ppe[$row['key']]))
+            <tr>
+                <td>{{ $row['label'] }}</td>
+                <td class="checkbox-cell">{{ $ppe[$row['key']]['quantity'] ?? '1' }}</td>
+                <td class="checkbox-cell">{{ $ppe[$row['key']]['size'] ?? '' }}</td>
+                <td>{{ $ppe[$row['key']]['notes'] ?? '' }}</td>
+            </tr>
+            @endif
+        @endforeach
     </tbody>
 </table>
 
