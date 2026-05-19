@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { FaWarehouse, FaHardHat } from "react-icons/fa";
 import { FaCar, FaPeopleGroup, FaUsersGear } from "react-icons/fa6";
-import { IoLogOutOutline, IoPrintOutline, IoSettingsSharp } from "react-icons/io5";
+import { IoLogOutOutline, IoDocuments, IoSettingsSharp } from "react-icons/io5";
 import { IoIosSwap } from "react-icons/io";
 import { MdDashboard } from "react-icons/md";
 import { RiBriefcase4Fill } from "react-icons/ri";
@@ -96,14 +96,14 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
                         </>
                     )}
 
-                    {/*<Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">*/}
-                    {/*    <FaCar className="text-2xl" />*/}
-                    {/*    Cars*/}
-                    {/*</Link>*/}
-                    {/*<hr className="border-white border-t-[2px]" />*/}
+                    <Link onClick={closeSidebar} href={route('cars.index')} className="flex items-center gap-2 hover:text-gray-300">
+                        <FaCar className="text-2xl" />
+                        Cars
+                    </Link>
+                    <hr className="border-white border-t-[2px]" />
 
                     <Link onClick={closeSidebar} href={route('print-forms.index')} className={linkClass('print-forms.*')}>
-                        <IoPrintOutline className="text-2xl" />
+                        <IoDocuments className="text-2xl" />
                         Documents
                     </Link>
                     <hr className="border-white border-t-[2px]" />
