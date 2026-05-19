@@ -18,6 +18,7 @@ class LostItemsReplacementMail extends Mailable
     public function __construct(
         public Checkin    $checkin,
         public Collection $tools,
+        public array      $customItems,
         public string     $pdfContent,
     ) {}
 

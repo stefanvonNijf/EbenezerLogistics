@@ -548,19 +548,27 @@ class CheckinController extends Controller
     public function lostItemsProcess(Request $request, Checkin $checkin)
     {
         $request->validate([
-            'tool_ids'           => 'required|array|min:1',
-            'tool_ids.*'         => 'integer|exists:tools,id',
-            'employee_signature' => 'required|string',
-            'manager_signature'  => 'required|string',
+            'tool_ids'             => 'nullable|array',
+            'tool_ids.*'           => 'integer|exists:tools,id',
+            'custom_items'         => 'nullable|array',
+            'custom_items.*.name'  => 'required|string|max:255',
+            'custom_items.*.price' => 'nullable|numeric|min:0',
+            'employee_signature'   => 'required|string',
+            'manager_signature'    => 'required|string',
         ]);
+
+        $toolIds     = $request->tool_ids ?? [];
+        $customItems = $request->custom_items ?? [];
+
+        abort_if(count($toolIds) === 0 && count($customItems) === 0, 422, 'Select at least one tool or add a custom item.');
 
         $checkin->load(['employee', 'toolbag.tools']);
 
-        $toolIds = $request->tool_ids;
+        if ($toolIds) {
+            Tool::whereIn('id', $toolIds)->decrement('amount_in_stock');
+        }
 
-        Tool::whereIn('id', $toolIds)->decrement('amount_in_stock');
-
-        $tools = Tool::whereIn('id', $toolIds)->get();
+        $tools = $toolIds ? Tool::whereIn('id', $toolIds)->get() : collect();
 
         $pdfPath    = "checkins/replacements/{$checkin->id}-replacement-" . now()->timestamp . ".pdf";
         $tmpPath    = sys_get_temp_dir() . '/' . uniqid('lost-items-pdf') . '.pdf';
@@ -571,6 +579,7 @@ class CheckinController extends Controller
                 'checkin'           => $checkin,
                 'employee'          => $checkin->employee,
                 'tools'             => $tools,
+                'customItems'       => $customItems,
                 'employeeSignature' => $request->employee_signature,
                 'managerSignature'  => $request->manager_signature,
                 'date'              => now()->format('d-m-Y'),
@@ -586,6 +595,7 @@ class CheckinController extends Controller
         CheckinReplacement::create([
             'checkin_id'         => $checkin->id,
             'replaced_tools'     => $toolIds,
+            'custom_items'       => $customItems ?: null,
             'employee_signature' => $request->employee_signature,
             'manager_signature'  => $request->manager_signature,
             'pdf_path'           => $pdfPath,
@@ -594,7 +604,7 @@ class CheckinController extends Controller
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
         if ($recipients && $pdfContent) {
             foreach ($recipients as $email) {
-                Mail::to($email)->send(new LostItemsReplacementMail($checkin, $tools, $pdfContent));
+                Mail::to($email)->send(new LostItemsReplacementMail($checkin, $tools, $customItems, $pdfContent));
             }
         }
 

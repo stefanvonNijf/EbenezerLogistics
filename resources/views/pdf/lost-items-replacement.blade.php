@@ -100,6 +100,16 @@
             </td>
         </tr>
     @endforeach
+    @foreach ($customItems ?? [] as $item)
+        <tr>
+            <td>{{ $item['name'] }}</td>
+            <td>—</td>
+            <td>—</td>
+            <td class="text-right">
+                {{ isset($item['price']) && $item['price'] !== '' && $item['price'] !== null ? '€ ' . number_format((float)$item['price'], 2) : '-' }}
+            </td>
+        </tr>
+    @endforeach
     </tbody>
 </table>
 
