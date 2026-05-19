@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useForm, usePage, Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
@@ -23,8 +23,18 @@ export default function Create() {
         { key: 'helmet',       label: 'HELMET' },
     ];
 
-    const defaultPpeItems = () => Object.fromEntries(
-        PPE_ITEMS.map(({ key }) => [key, { quantity: 1, size: '', notes: '' }])
+    const PPE_SIZE_MAP = {
+        rain_jacket:  'jacket_size',
+        inner_jacket: 'jacket_size',
+        rain_pants:   'pants_size',
+        overalls:     'coverall_size',
+        boots:        'shoe_size',
+    };
+
+    const employeeSizeForPpe = (employee, key) => employee?.[PPE_SIZE_MAP[key]] || '';
+
+    const defaultPpeItems = (employee = null) => Object.fromEntries(
+        PPE_ITEMS.map(({ key }) => [key, { quantity: 1, size: employeeSizeForPpe(employee, key), notes: '' }])
     );
 
     const { data, setData, post, processing, errors } = useForm({
@@ -44,6 +54,19 @@ export default function Create() {
 
     const setPpe = (key, field, value) =>
         setData('ppe_items', { ...data.ppe_items, [key]: { ...data.ppe_items[key], [field]: value } });
+
+    useEffect(() => {
+        const employee = employees.find(e => e.id === Number(data.employee_id));
+        setData(prev => ({
+            ...prev,
+            ppe_items: Object.fromEntries(
+                PPE_ITEMS.map(({ key }) => [
+                    key,
+                    { ...prev.ppe_items[key], size: employeeSizeForPpe(employee, key) },
+                ])
+            ),
+        }));
+    }, [data.employee_id]);
 
     const [type, setType] = useState(TYPE_TOOLBAG);
     const [emailInput, setEmailInput] = useState("");

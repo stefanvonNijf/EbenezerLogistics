@@ -20,14 +20,24 @@ export default function Edit() {
         { key: 'helmet',       label: 'HELMET' },
     ];
 
-    const defaultPpeItem = () => ({ quantity: 1, size: '', notes: '' });
+    const PPE_SIZE_MAP = {
+        rain_jacket:  'jacket_size',
+        inner_jacket: 'jacket_size',
+        rain_pants:   'pants_size',
+        overalls:     'coverall_size',
+        boots:        'shoe_size',
+    };
+
+    const employeeSizeForPpe = (employee, key) => employee?.[PPE_SIZE_MAP[key]] || '';
 
     const initPpeItems = () => Object.fromEntries(
         PPE_ITEMS.map(({ key }) => [
             key,
-            checkin.ppe_items?.[key]
-                ? { quantity: checkin.ppe_items[key].quantity ?? 1, size: checkin.ppe_items[key].size ?? '', notes: checkin.ppe_items[key].notes ?? '' }
-                : defaultPpeItem(),
+            {
+                quantity: checkin.ppe_items?.[key]?.quantity ?? 1,
+                size:     checkin.ppe_items?.[key]?.size ?? employeeSizeForPpe(checkin.employee, key),
+                notes:    checkin.ppe_items?.[key]?.notes ?? '',
+            },
         ])
     );
 
