@@ -146,8 +146,14 @@ class CheckinController extends Controller
     public function show(Checkin $checkin)
     {
         return Inertia::render('Checkin/Show', [
-            'checkin' => $checkin->load('employee', 'toolbag', 'car', 'documents'),
+            'checkin' => $checkin->load('employee', 'toolbag', 'car', 'documents', 'replacements'),
         ]);
+    }
+
+    public function replacementPdf(CheckinReplacement $replacement)
+    {
+        abort_unless($replacement->pdf_path, 404, 'PDF not found.');
+        return redirect(Storage::disk('s3')->url($replacement->pdf_path));
     }
 
     public function edit(Checkin $checkin)
