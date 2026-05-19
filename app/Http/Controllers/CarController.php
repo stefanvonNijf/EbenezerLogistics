@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Car;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,56 +15,58 @@ class CarController extends Controller
      */
     public function index()
     {
-        $cars = Car::all();
-
-        return Inertia::render('Car/Index', ['cars' => $cars]);
+        return Inertia::render('Car/Index', [
+            'cars' => Car::with('employee')->get(),
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return Inertia::render('Car/Create');
+        return Inertia::render('Car/Create', [
+            'employees' => Employee::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'brand'         => 'required|string|max:100',
+            'license_plate' => 'required|string|max:20|unique:cars,license_plate',
+            'employee_id'   => 'nullable|exists:employees,id',
+        ]);
+
+        Car::create($request->only('brand', 'license_plate', 'employee_id'));
+
+        return redirect()->route('cars.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(string $id) {}
+
+    public function edit(Car $car)
     {
-        //
+        return Inertia::render('Car/Edit', [
+            'car'       => $car->load('employee'),
+            'employees' => Employee::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Car $car)
     {
-        //
+        $request->validate([
+            'brand'         => 'required|string|max:100',
+            'license_plate' => 'required|string|max:20|unique:cars,license_plate,' . $car->id,
+            'employee_id'   => 'nullable|exists:employees,id',
+        ]);
+
+        $car->update($request->only('brand', 'license_plate', 'employee_id'));
+
+        return redirect()->route('cars.index');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Car $car)
     {
-        //
-    }
+        $car->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('cars.index');
     }
 }
