@@ -21,7 +21,7 @@ export default function PbmIndex() {
     );
 
     const isLowStock = (item) =>
-        item.minimal_stock != null && item.amount_in_stock <= item.minimal_stock;
+        item.minimal_stock != null && item.amount_in_stock < item.minimal_stock;
 
     const columns = [
         {
