@@ -153,7 +153,7 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
             {/* Sidebar mobile/tablet */}
             <div
                 ref={sidebarRef}
-                className={`lg:hidden fixed top-40 left-0 h-[calc(100%-10rem)] w-64 bg-[#014489] text-white z-40 p-6 transition-transform duration-300 ease-in-out ${
+                className={`lg:hidden fixed top-40 left-0 h-[calc(100%-10rem)] w-64 bg-[#014489] text-white z-40 p-6 overflow-y-auto transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : '-translate-x-full'
                 }`}
             >
@@ -161,7 +161,7 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
             </div>
 
             {/* Sidebar desktop */}
-            <div className="hidden lg:flex w-1/12 min-w-40 bg-[#014489] text-white fixed top-28 bottom-0 left-0 z-40 p-4 pt-16 flex-col items-center">
+            <div className="hidden lg:flex w-1/12 min-w-40 bg-[#014489] text-white fixed top-28 bottom-0 left-0 z-40 p-4 pt-16 flex-col items-center overflow-y-auto">
                 <nav className="space-y-5">{menuItems}</nav>
             </div>
         </>
