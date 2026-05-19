@@ -134,7 +134,7 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
 
     return (
         <>
-            {/* Blauwe balk onder header met Menu-knop (alleen mobiel/tablet) */}
+            {/* TOP BLUE MENU BAR */}
             <div
                 onClick={toggleSidebar}
                 className="lg:hidden fixed top-28 left-0 w-full bg-[#014489] z-50 py-2 flex justify-center cursor-pointer"
@@ -162,8 +162,8 @@ export default function Sidebar({ role, handleLogout, alertCount = 0 }) {
             </div>
 
             {/* Sidebar desktop */}
-            <div className="hidden lg:flex w-1/12 min-w-40 bg-[#014489] text-white fixed top-28 bottom-0 left-0 z-40 p-4 pt-16 flex-col items-center overflow-y-auto">
-                <nav className="space-y-5">{menuItems}</nav>
+            <div className="hidden lg:flex w-1/12 min-w-40 bg-[#014489] text-white fixed top-28 bottom-0 left-0 z-40 p-4 pt-6 flex-col items-center overflow-y-auto">
+                <nav className="space-y-2">{menuItems}</nav>
             </div>
         </>
     );
