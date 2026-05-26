@@ -117,6 +117,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/toolbags/{toolbag}', [ToolbagController::class, 'destroy'])->name('toolbags.destroy');
     Route::delete('/checkins/{checkin}', [CheckinController::class, 'destroy'])->name('checkins.destroy');
     Route::delete('/cars/{car}', [CarController::class, 'destroy'])->name('cars.destroy');
+    Route::delete('/cars/photos/{photo}', [CarController::class, 'destroyPhoto'])->name('cars.photos.destroy');
 });
 
 require __DIR__.'/auth.php';
