@@ -298,8 +298,8 @@ export default function Create() {
                         {errors.checkin_date && <div className="text-red-600 text-sm">{errors.checkin_date}</div>}
                     </div>
 
-                    {/* PPE ITEMS */}
-                    <div>
+                    {/* PPE ITEMS — only on toolbag and custom items tabs */}
+                    {(type === TYPE_TOOLBAG || type === TYPE_CUSTOM) && <div>
                         <label className="block font-medium mb-2">PPE</label>
                         <div className="border rounded overflow-hidden">
                             <table className="w-full text-sm">
@@ -347,7 +347,7 @@ export default function Create() {
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </div>}
 
                     {/* NOTES */}
                     <div>
