@@ -20,13 +20,43 @@ return new class extends Migration
             $table->json('notification_emails')->nullable();
             $table->foreignId('employee_id')->constrained('employees');
             $table->foreignId('toolbag_id')->nullable()->constrained('toolbags');
+            $table->foreignId('car_id')->nullable()->constrained('cars')->nullOnDelete();
+            $table->unsignedInteger('checkin_mileage')->nullable();
+            $table->unsignedInteger('checkout_mileage')->nullable();
             $table->json('custom_items')->nullable();
+            $table->json('ppe_items')->nullable();
+            $table->text('employee_checkin_signature')->nullable();
+            $table->text('manager_checkin_signature')->nullable();
+            $table->text('employee_checkout_signature')->nullable();
+            $table->text('manager_checkout_signature')->nullable();
+            $table->string('signed_checkin_pdf_path')->nullable();
+            $table->string('signed_checkout_pdf_path')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('checkin_ppe_forms', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('checkin_id')->constrained('checkins')->cascadeOnDelete();
+            $table->text('notes')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('checkin_replacements', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('checkin_id')->constrained('checkins')->cascadeOnDelete();
+            $table->json('replaced_tools');
+            $table->json('custom_items')->nullable();
+            $table->text('employee_signature')->nullable();
+            $table->text('manager_signature')->nullable();
+            $table->string('pdf_path')->nullable();
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('checkin_replacements');
+        Schema::dropIfExists('checkin_ppe_forms');
         Schema::dropIfExists('checkins');
     }
 };

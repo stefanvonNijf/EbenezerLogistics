@@ -3,7 +3,11 @@
     "allow": [
       "Bash(du:*)",
       "Bash(git push:*)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "Bash(grep -rn \"//\" app/Http/Controllers/ resources/js/Pages/ --include=\"*.php\" --include=\"*.jsx\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\xampp\\\\htdocs\\\\EbenezerLogistics\\\\resources\\\\Pages\" -Recurse -File)",
+      "Bash(Select-Object FullName)",
+      "Bash(Head -30)"
     ]
   }
 }

@@ -50,7 +50,7 @@ class CarController extends Controller
 
         $photos = $car->photos->map(fn($p) => [
             'id'  => $p->id,
-            'url' => Storage::disk('s3')->url($p->path),
+            'url' => $p->url,
         ]);
 
         return Inertia::render('Car/Edit', [
