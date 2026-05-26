@@ -69,8 +69,6 @@ export default function PbmIndex() {
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-full mx-auto">
 
-                    <h1 className="text-xl font-bold mb-4">PPE / PBM</h1>
-
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route('pbm.create')}
@@ -85,6 +83,7 @@ export default function PbmIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
+                        <h1 className="text-xl font-bold ml-auto">PPE / PBM</h1>
                     </div>
 
                     <div className="overflow-x-auto">

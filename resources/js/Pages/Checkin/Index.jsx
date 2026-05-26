@@ -312,8 +312,6 @@ export default function CheckinIndex() {
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
 
-                    <h1 className="text-xl font-bold mb-4">Check-ins</h1>
-
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("checkins.create")}
@@ -328,6 +326,7 @@ export default function CheckinIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
+                        <h1 className="text-xl font-bold ml-auto">Check-ins</h1>
                     </div>
 
                     <div className="overflow-x-auto">

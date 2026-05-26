@@ -80,8 +80,6 @@ export default function CarIndex() {
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
 
-                    <h1 className="text-xl font-bold mb-4">Cars ({cars.length})</h1>
-
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route('cars.create')}
@@ -96,6 +94,7 @@ export default function CarIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
+                        <h1 className="text-xl font-bold ml-auto">Cars ({cars.length})</h1>
                     </div>
 
                     <div className="overflow-x-auto">

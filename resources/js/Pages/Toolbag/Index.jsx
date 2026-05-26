@@ -103,8 +103,6 @@ export default function ToolbagIndex() {
             <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div className="max-w-11/12 mx-auto">
 
-                    <h1 className="text-xl font-bold mb-4">Toolbags ({toolbags.length})</h1>
-
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("toolbags.create")}
@@ -129,6 +127,7 @@ export default function ToolbagIndex() {
                             <option value="incomplete">Incomplete ({counts.incomplete})</option>
                             <option value="in_use">In use ({counts.in_use})</option>
                         </select>
+                        <h1 className="text-xl font-bold ml-auto">Toolbags ({toolbags.length})</h1>
                     </div>
 
                     {/* TABLE */}

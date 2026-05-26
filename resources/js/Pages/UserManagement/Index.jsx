@@ -68,8 +68,6 @@ export default function UserIndex() {
 
                 <div className="max-w-full mx-auto">
 
-                    <h1 className="text-xl font-bold mb-4">Users</h1>
-
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("users.create")}
@@ -84,6 +82,7 @@ export default function UserIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
+                        <h1 className="text-xl font-bold ml-auto">Users</h1>
                     </div>
 
                     <div className="overflow-x-auto">

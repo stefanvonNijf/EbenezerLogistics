@@ -60,8 +60,6 @@ export default function ToolIndex() {
 
                 <div className="max-w-full mx-auto">
 
-                    <h1 className="text-xl font-bold mb-4">Inventory</h1>
-
                     <div className="flex flex-wrap items-center gap-3 mb-4">
                         <Link
                             href={route("tools.create")}
@@ -76,6 +74,7 @@ export default function ToolIndex() {
                             onChange={(e) => setSearch(e.target.value)}
                             className="border rounded px-3 py-2"
                         />
+                        <h1 className="text-xl font-bold ml-auto">Inventory</h1>
                     </div>
 
                     {/* TABLE */}
