@@ -5,7 +5,7 @@ export function getValueByAccessor(obj, accessor) {
 const Table = ({ columns, data, onToggle, maxHeight = "70vh" }) => {
     return (
         <div className="overflow-auto border rounded" style={{ maxHeight }}>
-            <table className="w-full border-collapse">
+            <table className="min-w-full border-collapse">
                 <thead className="sticky top-0 z-10">
                 <tr>
                     {columns.map((col, i) => (

@@ -330,7 +330,9 @@ export default function CheckinIndex() {
                         />
                     </div>
 
-                    <Table columns={columns} data={filteredData} />
+                    <div className="overflow-x-auto">
+                        <Table columns={columns} data={filteredData} />
+                    </div>
 
                 </div>
             </div>

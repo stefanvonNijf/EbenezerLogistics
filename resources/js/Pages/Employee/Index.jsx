@@ -178,7 +178,9 @@ export default function EmployeeIndex() {
                     </div>
 
                     {/* TABLE */}
-                    <Table columns={columns} data={filteredData} />
+                    <div className="overflow-x-auto">
+                        <Table columns={columns} data={filteredData} />
+                    </div>
 
                 </div>
 
