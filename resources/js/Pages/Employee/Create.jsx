@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 
-export default function Create({ roles }) {
+export default function Create({ toolbagTypes }) {
 
     const { data, setData, post, processing, errors } = useForm({
         name: "",
@@ -57,17 +57,17 @@ export default function Create({ roles }) {
                         {errors.employee_number && <div className="text-red-600 text-sm">{errors.employee_number}</div>}
                     </div>
 
-                    {/* ROLE */}
+                    {/* TOOLBAG TYPE */}
                     <div>
-                        <label className="block font-medium">Role</label>
+                        <label className="block font-medium">Toolbag type</label>
                         <select
                             className="w-full border rounded px-3 py-2"
                             value={data.role}
                             onChange={(e) => setData("role", e.target.value)}
                         >
-                            <option value="">Select a role</option>
-                            {roles.map(role => (
-                                <option key={role.id} value={role.name}>{role.name}</option>
+                            <option value="">Select a toolbag type</option>
+                            {toolbagTypes.map(type => (
+                                <option key={type} value={type}>{type}</option>
                             ))}
                         </select>
                         {errors.role && <div className="text-red-600 text-sm">{errors.role}</div>}

@@ -7,6 +7,7 @@ use App\Mail\CheckinPlannedMail;
 use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\Role;
+use App\Models\Toolbag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
@@ -29,7 +30,7 @@ class EmployeeController extends Controller
     public function create()
     {
         return Inertia::render('Employee/Create', [
-            'roles' => Role::orderBy('name')->get(),
+            'toolbagTypes' => Toolbag::select('type')->distinct()->orderBy('type')->pluck('type'),
         ]);
     }
 
@@ -65,8 +66,8 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         return Inertia::render('Employee/Edit', [
-            'employee' => $employee,
-            'roles' => Role::orderBy('name')->get(),
+            'employee'     => $employee,
+            'toolbagTypes' => Toolbag::select('type')->distinct()->orderBy('type')->pluck('type'),
         ]);
     }
 
