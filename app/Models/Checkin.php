@@ -28,6 +28,7 @@ class Checkin extends Model
         'car_id',
         'checkin_mileage',
         'checkout_mileage',
+        'is_ppe',
     ];
 
     protected $casts = [
@@ -36,6 +37,7 @@ class Checkin extends Model
         'notification_emails'  => 'array',
         'custom_items'         => 'array',
         'ppe_items'            => 'array',
+        'is_ppe'               => 'boolean',
     ];
 
     public function employee()

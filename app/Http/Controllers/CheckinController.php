@@ -36,10 +36,10 @@ class CheckinController extends Controller
     public function create()
     {
         $takenCheckinTypes = Checkin::where('status', 'planned_checkout')
-            ->get(['employee_id', 'toolbag_id', 'car_id', 'custom_items'])
+            ->get(['employee_id', 'toolbag_id', 'car_id', 'custom_items', 'is_ppe'])
             ->groupBy('employee_id')
             ->map(fn($checkins) => $checkins->map(fn($c) =>
-                $c->car_id ? 'car' : ($c->toolbag_id ? 'toolbag' : 'custom')
+                $c->car_id ? 'car' : ($c->toolbag_id ? 'toolbag' : ($c->is_ppe ? 'ppe' : 'custom'))
             )->values()->all());
 
         return inertia('Checkin/Create', [
@@ -54,7 +54,8 @@ class CheckinController extends Controller
     public function store(Request $request)
     {
         $isCar    = (bool) $request->input('is_car', false);
-        $isCustom = !$isCar && (bool) $request->input('is_custom', false);
+        $isPpe    = !$isCar && (bool) $request->input('is_ppe', false);
+        $isCustom = !$isCar && !$isPpe && (bool) $request->input('is_custom', false);
 
         $rules = [
             'checkin_date'          => 'required|date',
@@ -62,8 +63,6 @@ class CheckinController extends Controller
             'employee_id'           => 'required|exists:employees,id',
             'notification_emails'   => 'nullable|array',
             'notification_emails.*' => 'email',
-            'document_ids'          => 'nullable|array',
-            'document_ids.*'        => 'exists:print_form_documents,id',
             'ppe_items'             => 'nullable|array',
             'ppe_items.*.quantity'  => 'nullable|integer|min:1',
             'ppe_items.*.size'      => 'nullable|string|max:50',
@@ -73,6 +72,8 @@ class CheckinController extends Controller
         if ($isCar) {
             $rules['car_id']          = 'required|exists:cars,id';
             $rules['checkin_mileage'] = 'nullable|integer|min:0';
+        } elseif ($isPpe) {
+            $rules['pdf'] = 'required|file|mimes:pdf|max:20480';
         } elseif ($isCustom) {
             $rules['custom_items']                    = 'required|array|min:1';
             $rules['custom_items.*.name']             = 'required|string|max:255';
@@ -81,19 +82,27 @@ class CheckinController extends Controller
             $rules['toolbag_id'] = 'required|exists:toolbags,id';
         }
 
+        // Document library attachments are available for all types except PPE/document.
+        if (!$isPpe) {
+            $rules['document_ids']   = 'nullable|array';
+            $rules['document_ids.*'] = 'exists:print_form_documents,id';
+        }
+
         $request->validate($rules);
 
         $activeQuery = Checkin::where('employee_id', $request->employee_id)
             ->where('status', 'planned_checkout');
         if ($isCar) {
             $activeQuery->whereNotNull('car_id');
+        } elseif ($isPpe) {
+            $activeQuery->where('is_ppe', true);
         } elseif ($isCustom) {
             $activeQuery->whereNotNull('custom_items');
         } else {
             $activeQuery->whereNotNull('toolbag_id');
         }
         if ($activeQuery->exists()) {
-            $typeLabel = $isCar ? 'car' : ($isCustom ? 'custom items' : 'toolbag');
+            $typeLabel = $isCar ? 'car' : ($isPpe ? 'PPE / document' : ($isCustom ? 'custom items' : 'toolbag'));
             return back()
                 ->withErrors(['employee_id' => "This employee already has an active {$typeLabel} check-in. Check them out first."])
                 ->withInput();
@@ -105,7 +114,7 @@ class CheckinController extends Controller
 
         if ($isCar) {
             $car = Car::findOrFail($request->car_id);
-        } elseif (!$isCustom) {
+        } elseif (!$isCustom && !$isPpe) {
             $toolbag = Toolbag::findOrFail($request->toolbag_id);
             if ($employee->role !== $toolbag->type) {
                 return back()
@@ -123,7 +132,8 @@ class CheckinController extends Controller
             'notes'               => $request->notes,
             'status'              => 'planned_checkout',
             'notification_emails' => $request->notification_emails ?? [],
-            'toolbag_id'          => (!$isCar && !$isCustom) ? $request->toolbag_id : null,
+            'is_ppe'              => $isPpe,
+            'toolbag_id'          => (!$isCar && !$isCustom && !$isPpe) ? $request->toolbag_id : null,
             'custom_items'        => $isCustom ? $request->custom_items : null,
             'car_id'              => $isCar ? $request->car_id : null,
             'checkin_mileage'     => $isCar ? $request->checkin_mileage : null,
@@ -137,6 +147,21 @@ class CheckinController extends Controller
             $checkin = Checkin::create(array_merge($checkinData, [
                 'employee_id' => $request->employee_id,
             ]));
+        }
+
+        // For PPE type, store the uploaded PDF immediately as the signed check-in PDF.
+        if ($isPpe && $request->hasFile('pdf')) {
+            $pdfPath = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
+            Storage::disk('s3')->putFileAs(
+                'checkins/signed-checkins',
+                $request->file('pdf'),
+                "{$checkin->id}-checkin.pdf",
+                'public'
+            );
+            $checkin->update([
+                'signed_checkin_pdf_path' => $pdfPath,
+                'contract_exported_at'    => now(),
+            ]);
         }
 
         if ($toolbag) {
@@ -154,7 +179,9 @@ class CheckinController extends Controller
             $car->update(['employee_id' => $request->employee_id]);
         }
 
-        $checkin->documents()->sync($request->document_ids ?? []);
+        if (!$isPpe) {
+            $checkin->documents()->sync($request->document_ids ?? []);
+        }
 
         $checkin->load('employee', 'toolbag.tools', 'car', 'documents');
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
@@ -294,6 +321,12 @@ class CheckinController extends Controller
 
     public function pdf(Checkin $checkin)
     {
+        // PPE / document type: PDF was uploaded at check-in time — just serve it.
+        if ($checkin->is_ppe) {
+            abort_unless($checkin->signed_checkin_pdf_path, 404, 'No PDF uploaded for this check-in.');
+            return redirect(Storage::disk('s3')->url($checkin->signed_checkin_pdf_path));
+        }
+
         if ($checkin->contract_exported_at) {
             return redirect()->route('checkins.index')
                 ->with('error', 'The contract for this checkin has already been exported and cannot be exported again.');
@@ -330,6 +363,10 @@ class CheckinController extends Controller
 
     public function signAndExport(Request $request, Checkin $checkin)
     {
+        if ($checkin->is_ppe) {
+            return response()->json(['error' => 'PPE / document check-ins do not support sign & export.'], 422);
+        }
+
         if ($checkin->contract_exported_at) {
             return response()->json(['error' => 'Contract already exported.'], 422);
         }

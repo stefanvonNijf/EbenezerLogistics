@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useForm, usePage, Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 const TYPE_TOOLBAG = 'toolbag';
 const TYPE_CAR     = 'car';
 const TYPE_CUSTOM  = 'custom';
+const TYPE_PPE     = 'ppe';
 
 export default function Create() {
     const { employees, toolbags, cars, documents, takenCheckinTypes } = usePage().props;
@@ -47,10 +48,14 @@ export default function Create() {
         notification_emails: [],
         is_custom:           false,
         is_car:              false,
+        is_ppe:              false,
         custom_items:        [],
         document_ids:        [],
         ppe_items:           defaultPpeItems(),
+        pdf:                 null,
     });
+
+    const pdfInputRef = useRef(null);
 
     const setPpe = (key, field, value) =>
         setData('ppe_items', { ...data.ppe_items, [key]: { ...data.ppe_items[key], [field]: value } });
@@ -61,13 +66,14 @@ export default function Create() {
 
         setData(prev => {
             const newType = taken.includes(type)
-                ? ([TYPE_TOOLBAG, TYPE_CAR, TYPE_CUSTOM].find(t => !taken.includes(t)) ?? type)
+                ? ([TYPE_TOOLBAG, TYPE_CAR, TYPE_CUSTOM, TYPE_PPE].find(t => !taken.includes(t)) ?? type)
                 : type;
 
             return {
                 ...prev,
                 is_custom: newType === TYPE_CUSTOM,
                 is_car:    newType === TYPE_CAR,
+                is_ppe:    newType === TYPE_PPE,
                 ppe_items: Object.fromEntries(
                     PPE_ITEMS.map(({ key }) => [
                         key,
@@ -89,13 +95,18 @@ export default function Create() {
         setType(newType);
         setData(prev => ({
             ...prev,
-            is_custom:    newType === TYPE_CUSTOM,
-            is_car:       newType === TYPE_CAR,
-            toolbag_id:   "",
-            car_id:       "",
+            is_custom:       newType === TYPE_CUSTOM,
+            is_car:          newType === TYPE_CAR,
+            is_ppe:          newType === TYPE_PPE,
+            toolbag_id:      "",
+            car_id:          "",
             checkin_mileage: "",
-            custom_items: [],
+            custom_items:    [],
+            pdf:             null,
         }));
+        if (newType !== TYPE_PPE && pdfInputRef.current) {
+            pdfInputRef.current.value = '';
+        }
     };
 
     const filteredToolbags = useMemo(() => {
@@ -170,6 +181,8 @@ export default function Create() {
         );
     };
 
+    const showPpe = type === TYPE_TOOLBAG || type === TYPE_CUSTOM || type === TYPE_PPE;
+
     return (
         <AuthenticatedLayout>
             <Head title="New Check-in" />
@@ -200,10 +213,11 @@ export default function Create() {
                     {/* TYPE SELECTOR */}
                     <div>
                         <label className="block font-medium mb-2">Type</label>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                             {typeBtn('Toolbag', TYPE_TOOLBAG)}
                             {typeBtn('Car', TYPE_CAR)}
                             {typeBtn('Custom items', TYPE_CUSTOM)}
+                            {typeBtn('PPE / Document', TYPE_PPE)}
                         </div>
                     </div>
 
@@ -291,6 +305,25 @@ export default function Create() {
                         </div>
                     )}
 
+                    {/* PPE / DOCUMENT — PDF upload */}
+                    {type === TYPE_PPE && (
+                        <div>
+                            <label className="block font-medium mb-1">Upload signed document (PDF)</label>
+                            <p className="text-sm text-gray-500 mb-2">Upload the signed PPE / document PDF for this check-in.</p>
+                            <input
+                                ref={pdfInputRef}
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => setData('pdf', e.target.files[0] || null)}
+                                className="block w-full text-sm text-gray-600
+                                    file:mr-4 file:py-2 file:px-4 file:rounded file:border-0
+                                    file:text-sm file:bg-gray-100 file:text-gray-700
+                                    hover:file:bg-gray-200"
+                            />
+                            {errors.pdf && <p className="text-red-600 text-sm mt-1">{errors.pdf}</p>}
+                        </div>
+                    )}
+
                     {/* CHECK-IN DATE */}
                     <div>
                         <label className="block font-medium">Check-in date</label>
@@ -298,56 +331,58 @@ export default function Create() {
                         {errors.checkin_date && <div className="text-red-600 text-sm">{errors.checkin_date}</div>}
                     </div>
 
-                    {/* PPE ITEMS — only on toolbag and custom items tabs */}
-                    {(type === TYPE_TOOLBAG || type === TYPE_CUSTOM) && <div>
-                        <label className="block font-medium mb-2">PPE</label>
-                        <div className="border rounded overflow-hidden">
-                            <table className="w-full text-sm">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="text-left px-3 py-2 font-medium text-gray-600 w-1/3">Item</th>
-                                        <th className="text-left px-3 py-2 font-medium text-gray-600 w-16">Qty</th>
-                                        <th className="text-left px-3 py-2 font-medium text-gray-600 w-24">Size</th>
-                                        <th className="text-left px-3 py-2 font-medium text-gray-600">Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
-                                    {PPE_ITEMS.map(({ key, label }) => (
-                                        <tr key={key}>
-                                            <td className="px-3 py-2 text-gray-700">{label}</td>
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={data.ppe_items[key].quantity}
-                                                    onChange={(e) => setPpe(key, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
-                                                    className="w-14 border rounded px-2 py-1 text-center"
-                                                />
-                                            </td>
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="text"
-                                                    value={data.ppe_items[key].size}
-                                                    onChange={(e) => setPpe(key, 'size', e.target.value)}
-                                                    placeholder="—"
-                                                    className="w-20 border rounded px-2 py-1"
-                                                />
-                                            </td>
-                                            <td className="px-3 py-2">
-                                                <input
-                                                    type="text"
-                                                    value={data.ppe_items[key].notes}
-                                                    onChange={(e) => setPpe(key, 'notes', e.target.value)}
-                                                    placeholder="—"
-                                                    className="w-full border rounded px-2 py-1"
-                                                />
-                                            </td>
+                    {/* PPE ITEMS — toolbag, custom and PPE/document tabs */}
+                    {showPpe && (
+                        <div>
+                            <label className="block font-medium mb-2">PPE</label>
+                            <div className="border rounded overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="text-left px-3 py-2 font-medium text-gray-600 w-1/3">Item</th>
+                                            <th className="text-left px-3 py-2 font-medium text-gray-600 w-16">Qty</th>
+                                            <th className="text-left px-3 py-2 font-medium text-gray-600 w-24">Size</th>
+                                            <th className="text-left px-3 py-2 font-medium text-gray-600">Notes</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {PPE_ITEMS.map(({ key, label }) => (
+                                            <tr key={key}>
+                                                <td className="px-3 py-2 text-gray-700">{label}</td>
+                                                <td className="px-3 py-2">
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={data.ppe_items[key].quantity}
+                                                        onChange={(e) => setPpe(key, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
+                                                        className="w-14 border rounded px-2 py-1 text-center"
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <input
+                                                        type="text"
+                                                        value={data.ppe_items[key].size}
+                                                        onChange={(e) => setPpe(key, 'size', e.target.value)}
+                                                        placeholder="—"
+                                                        className="w-20 border rounded px-2 py-1"
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-2">
+                                                    <input
+                                                        type="text"
+                                                        value={data.ppe_items[key].notes}
+                                                        onChange={(e) => setPpe(key, 'notes', e.target.value)}
+                                                        placeholder="—"
+                                                        className="w-full border rounded px-2 py-1"
+                                                    />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>}
+                    )}
 
                     {/* NOTES */}
                     <div>
@@ -378,8 +413,8 @@ export default function Create() {
                         )}
                     </div>
 
-                    {/* DOCUMENTS */}
-                    {documents.length > 0 && (
+                    {/* DOCUMENTS — hidden for PPE/document type (the PDF is the document) */}
+                    {type !== TYPE_PPE && documents.length > 0 && (
                         <div>
                             <label className="block font-medium mb-1">Attach documents</label>
                             <p className="text-sm text-gray-500 mb-2">Select documents from the library to attach to this check-in.</p>

@@ -25,6 +25,7 @@ return new class extends Migration
             $table->unsignedInteger('checkout_mileage')->nullable();
             $table->json('custom_items')->nullable();
             $table->json('ppe_items')->nullable();
+            $table->boolean('is_ppe')->default(false);
             $table->text('employee_checkin_signature')->nullable();
             $table->text('manager_checkin_signature')->nullable();
             $table->text('employee_checkout_signature')->nullable();
