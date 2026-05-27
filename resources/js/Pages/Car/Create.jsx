@@ -35,7 +35,7 @@ export default function CarCreate() {
         <AuthenticatedLayout>
             <Head title="Add Car" />
 
-            <div className="lg:max-w-2xl mx-auto px-6 sm:px-6 lg:px-8">
+            <div className="lg:max-w-2xl mx-auto px-3 sm:px-3 lg:px-4">
                 <h1 className="text-xl font-bold mb-6">Add Car</h1>
 
                 <form onSubmit={submit} className="space-y-6">

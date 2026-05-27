@@ -42,7 +42,7 @@ export default function Edit({ toolbag, tools }) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
+                <div className="lg:max-w-8xl mx-auto px-3 sm:px-3 lg:px-4">
                     <div className="flex items-start justify-between py-6">
                         <h1 className="text-xl font-bold">Edit Toolbag</h1>
                     </div>
@@ -51,7 +51,7 @@ export default function Edit({ toolbag, tools }) {
         >
             <Head title="Edit Toolbag" />
 
-            <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
+            <div className="lg:max-w-8xl mx-auto px-3 sm:px-3 lg:px-4">
 
                 <div className="max-w-full mx-auto mb-10">
                     <form onSubmit={submit} className="space-y-6">

@@ -56,7 +56,7 @@ export default function ToolIndex() {
         <AuthenticatedLayout>
             <Head title="Inventory" />
 
-            <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
+            <div className="lg:max-w-8xl mx-auto px-3 sm:px-3 lg:px-4">
 
                 <div className="max-w-full mx-auto">
 
