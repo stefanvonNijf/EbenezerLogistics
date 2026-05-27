@@ -89,6 +89,15 @@ class EmployeeSeeder extends Seeder
             ['employee_number' => '529', 'name' => 'Richard Gabriel Andrade Ponte',                      'role' => 'technician'],
             ['employee_number' => '530', 'name' => 'Edgar Vila Nova Lixa',                               'role' => 'ironworker'],
             ['employee_number' => '531', 'name' => 'Flávio João Bolinhas Ribeiro',                       'role' => 'ironworker'],
+            ['employee_number' => '532', 'name' => 'Orlando Nunes Fernandes de Albuquerque',             'role' => 'ironworker'],
+            ['employee_number' => '533', 'name' => 'Bruno Miguel Oliveira Pereira',                      'role' => 'ironworker'],
+            ['employee_number' => '534', 'name' => 'Rui Alexandre Anapaz César',                         'role' => 'electrician'],
+            ['employee_number' => '535', 'name' => 'Eduardo Jorge da Silva Belo Clavijo',                 'role' => 'electrician'],
+            ['employee_number' => '536', 'name' => 'Luis Agnelo Pires Correia',                           'role' => 'electrician'],
+            ['employee_number' => '537', 'name' => 'Paulo Fernando Caleiro Rebelo',                       'role' => 'electrician_foreman'],
+            ['employee_number' => '538', 'name' => 'Maikel Denny Kammeron',                               'role' => 'ironworker'],
+            ['employee_number' => '539', 'name' => 'Joaquim João Gravelho de Matos',                      'role' => 'electrician'],
+            ['employee_number' => '540', 'name' => 'Lúcio Flávio De Jesus Mendes',                        'role' => 'electrician'],
 
             // From original seeder — no employee number found in table data
             ['employee_number' => null,  'name' => 'Idloy Domingos',                                     'role' => 'electrician'],

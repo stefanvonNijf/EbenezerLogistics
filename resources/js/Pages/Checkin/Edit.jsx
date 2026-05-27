@@ -2,6 +2,14 @@ import React, { useState, useMemo } from "react";
 import { useForm, Head, Link, usePage } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
+// Maps employee roles that don't directly match a toolbag type.
+// null means "show all toolbags".
+const ROLE_TO_TOOLBAG_TYPE = {
+    electrician_foreman: 'electrician',
+    ironworker_foreman:  'ironworker',
+    technician:          null,
+    supervisor:          null,
+};
 
 export default function Edit() {
     const { checkin, toolbags, cars, documents, selectedDocumentIds } = usePage().props;
@@ -66,9 +74,14 @@ export default function Edit() {
     const [itemCost, setItemCost] = useState("");
     const [docSearch, setDocSearch] = useState("");
 
-    const filteredToolbags = toolbags.filter(
-        (tb) => tb.type === checkin.employee.role?.toLowerCase()
-    );
+    const filteredToolbags = useMemo(() => {
+        const role = checkin.employee.role?.toLowerCase();
+        const toolbagType = role !== undefined && Object.hasOwn(ROLE_TO_TOOLBAG_TYPE, role)
+            ? ROLE_TO_TOOLBAG_TYPE[role]
+            : role;
+        if (toolbagType === null || toolbagType === undefined) return toolbags;  // show all
+        return toolbags.filter(tb => tb.type === toolbagType);
+    }, [checkin.employee.role, toolbags]);
 
     const addItem = () => {
         const name = itemName.trim();

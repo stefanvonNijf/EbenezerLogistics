@@ -7,6 +7,15 @@ const TYPE_CAR     = 'car';
 const TYPE_CUSTOM  = 'custom';
 const TYPE_PPE     = 'ppe';
 
+// Maps employee roles that don't directly match a toolbag type.
+// null means "show all toolbags".
+const ROLE_TO_TOOLBAG_TYPE = {
+    electrician_foreman: 'electrician',
+    ironworker_foreman:  'ironworker',
+    technician:          null,
+    supervisor:          null,
+};
+
 export default function Create() {
     const { employees, toolbags, cars, documents, takenCheckinTypes } = usePage().props;
 
@@ -113,7 +122,12 @@ export default function Create() {
         if (!data.employee_id) return [];
         const employee = employees.find(e => e.id === Number(data.employee_id));
         if (!employee) return [];
-        return toolbags.filter(tb => tb.type === employee.role);
+        const role = employee.role;
+        const toolbagType = Object.hasOwn(ROLE_TO_TOOLBAG_TYPE, role)
+            ? ROLE_TO_TOOLBAG_TYPE[role]
+            : role;
+        if (toolbagType === null) return toolbags;            // show all
+        return toolbags.filter(tb => tb.type === toolbagType);
     }, [data.employee_id, employees, toolbags]);
 
     const addEmail = () => {
