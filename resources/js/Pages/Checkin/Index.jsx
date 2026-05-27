@@ -147,20 +147,6 @@ export default function CheckinIndex() {
             }
         },
         {
-            header: "Notes",
-            render: (row) => (
-                <div className="max-w-xs truncate" title={row.notes}>
-                    {row.notes || "-"}
-                </div>
-            )
-        },
-        {
-            header: "PPE",
-            render: (row) => row.ppe_forms_count > 0
-                ? <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">{row.ppe_forms_count}x issued</span>
-                : <span className="text-gray-400 text-xs">—</span>
-        },
-        {
             header: "",
             render: (row) => (
                 <div className="flex flex-col gap-1 items-start">
@@ -333,7 +319,7 @@ export default function CheckinIndex() {
                 onChange={handleFileChange}
             />
 
-            <div className="lg:max-w-8xl mx-auto px-6 sm:px-6 lg:px-8">
+            <div className="lg:max-w-8xl mx-auto px-3 sm:px-3 lg:px-4">
                 <div className="max-w-11/12 mx-auto">
 
                     <div className="flex flex-wrap items-center gap-3 mb-4">
