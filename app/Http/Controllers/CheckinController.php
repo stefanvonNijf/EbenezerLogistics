@@ -314,9 +314,21 @@ class CheckinController extends Controller
             ->with('success', 'Check-in updated successfully.');
     }
 
-    public function destroy(string $id)
+    public function destroy(Checkin $checkin)
     {
-        //
+        // Free up any assigned toolbag or car before deleting.
+        if ($checkin->toolbag_id) {
+            Toolbag::find($checkin->toolbag_id)?->update(['employee_id' => null]);
+        }
+        if ($checkin->car_id) {
+            Car::find($checkin->car_id)?->update(['employee_id' => null]);
+        }
+
+        $checkin->delete();
+
+        return redirect()
+            ->route('checkins.index')
+            ->with('success', 'Check-in deleted.');
     }
 
     public function pdf(Checkin $checkin)

@@ -4,6 +4,7 @@ import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import Table from "@/Components/Table.jsx";
 import SignatureModal from "@/Components/SignatureModal.jsx";
+import ConfirmDeleteModal from "@/Components/ConfirmDeleteModal.jsx";
 
 const statusConfig = {
     planned_checkin:  { label: 'Planned checkin',  bg: 'bg-yellow-100 text-yellow-800' },
@@ -21,6 +22,14 @@ export default function CheckinIndex() {
     const [uploadTarget, setUploadTarget] = useState(null);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+
+    const handleDelete = () => {
+        if (!deleteTarget) return;
+        router.delete(route('checkins.destroy', deleteTarget.id), {
+            onFinish: () => setDeleteTarget(null),
+        });
+    };
 
     const normalize = (str) =>
         (str ?? "")
@@ -153,14 +162,22 @@ export default function CheckinIndex() {
         },
         {
             header: "",
-            render: (row) => {
-                if (row.contract_exported_at) return null;
-                return (
-                    <Link href={route("checkins.edit", row.id)} className="text-blue-600 hover:underline">
-                        Edit
-                    </Link>
-                );
-            }
+            render: (row) => (
+                <div className="flex flex-col gap-1 items-start">
+                    {!row.contract_exported_at && (
+                        <Link href={route("checkins.edit", row.id)} className="text-blue-600 hover:underline text-sm">
+                            Edit
+                        </Link>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => setDeleteTarget(row)}
+                        className="text-red-600 hover:underline text-sm text-left"
+                    >
+                        Delete
+                    </button>
+                </div>
+            )
         },
         {
             header: "Contract",
@@ -299,6 +316,13 @@ export default function CheckinIndex() {
                     onClose={() => { setModalOpen(false); setSelectedCheckin(null); }}
                 />
             )}
+
+            <ConfirmDeleteModal
+                show={!!deleteTarget}
+                name={deleteTarget ? `check-in for ${deleteTarget.employee?.name ?? ''}` : ''}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={handleDelete}
+            />
 
             {/* Hidden file input for PDF uploads */}
             <input
