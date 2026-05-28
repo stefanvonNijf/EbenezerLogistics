@@ -93,6 +93,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/print-forms/ppe-extras/{checkin}', [PrintFormController::class, 'ppeExtras'])->name('print-forms.ppe-extras');
     Route::post('/print-forms/upload', [PrintFormController::class, 'upload'])->name('print-forms.upload');
     Route::get('/print-forms/documents/{document}/download', [PrintFormController::class, 'download'])->name('print-forms.download');
+    Route::post('/print-forms/templates/upload', [PrintFormController::class, 'uploadTemplate'])->name('print-forms.templates.upload');
+    Route::get('/print-forms/templates/{template}/download', [PrintFormController::class, 'downloadTemplate'])->name('print-forms.templates.download');
 });
 
 Route::middleware(['auth', 'admin'])->group(function () {
@@ -113,6 +115,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/settings/roles/{role}', [SettingsController::class, 'destroyRole'])->name('settings.roles.destroy');
 
     Route::delete('/print-forms/documents/{document}', [PrintFormController::class, 'destroy'])->name('print-forms.destroy');
+    Route::delete('/print-forms/templates/{template}', [PrintFormController::class, 'destroyTemplate'])->name('print-forms.templates.destroy');
     Route::delete('/tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
     Route::delete('/toolbags/{toolbag}', [ToolbagController::class, 'destroy'])->name('toolbags.destroy');
     Route::delete('/checkins/{checkin}', [CheckinController::class, 'destroy'])->name('checkins.destroy');

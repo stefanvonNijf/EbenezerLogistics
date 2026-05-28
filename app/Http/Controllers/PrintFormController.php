@@ -6,6 +6,7 @@ use App\Models\Checkin;
 use App\Models\CheckinPpeForm;
 use App\Models\Employee;
 use App\Models\PrintFormDocument;
+use App\Models\ToolboxTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -25,6 +26,15 @@ class PrintFormController extends Controller
                     'name'        => $doc->name,
                     'uploaded_by' => $doc->uploader?->name,
                     'created_at'  => $doc->created_at->format('d-m-Y'),
+                ]),
+            'toolboxTemplates' => ToolboxTemplate::with('uploader')
+                ->latest()
+                ->get()
+                ->map(fn($t) => [
+                    'id'          => $t->id,
+                    'name'        => $t->name,
+                    'uploaded_by' => $t->uploader?->name,
+                    'created_at'  => $t->created_at->format('d-m-Y'),
                 ]),
         ]);
     }
@@ -60,6 +70,39 @@ class PrintFormController extends Controller
 
         return redirect()->route('print-forms.index')
             ->with('success', 'Document deleted.');
+    }
+
+    public function uploadTemplate(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'pdf'  => 'required|file|mimes:pdf|max:20480',
+        ]);
+
+        $path = $request->file('pdf')->store('toolbox-templates', 's3');
+
+        ToolboxTemplate::create([
+            'name'        => $request->name,
+            'file_path'   => $path,
+            'uploaded_by' => $request->user()->id,
+        ]);
+
+        return redirect()->route('print-forms.index')
+            ->with('success', 'Template uploaded successfully.');
+    }
+
+    public function downloadTemplate(ToolboxTemplate $template)
+    {
+        return redirect(Storage::disk('s3')->url($template->file_path));
+    }
+
+    public function destroyTemplate(ToolboxTemplate $template)
+    {
+        Storage::disk('s3')->delete($template->file_path);
+        $template->delete();
+
+        return redirect()->route('print-forms.index')
+            ->with('success', 'Template deleted.');
     }
 
     public function ppeExtras(Request $request, Checkin $checkin)

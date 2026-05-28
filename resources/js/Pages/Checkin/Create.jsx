@@ -2,10 +2,11 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useForm, usePage, Head, Link } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
-const TYPE_TOOLBAG = 'toolbag';
-const TYPE_CAR     = 'car';
-const TYPE_CUSTOM  = 'custom';
-const TYPE_PPE     = 'ppe';
+const TYPE_TOOLBAG  = 'toolbag';
+const TYPE_CAR      = 'car';
+const TYPE_CUSTOM   = 'custom';
+const TYPE_PPE      = 'ppe';
+const TYPE_TEMPLATE = 'template';
 
 // Maps employee roles that don't directly match a toolbag type.
 // null means "show all toolbags".
@@ -17,7 +18,7 @@ const ROLE_TO_TOOLBAG_TYPE = {
 };
 
 export default function Create() {
-    const { employees, toolbags, cars, documents, takenCheckinTypes } = usePage().props;
+    const { employees, toolbags, cars, documents, toolboxTemplates, takenCheckinTypes } = usePage().props;
 
     const urlParams = new URLSearchParams(window.location.search);
     const preselectedEmployee = urlParams.get('employee_id') || "";
@@ -48,20 +49,22 @@ export default function Create() {
     );
 
     const { data, setData, post, processing, errors } = useForm({
-        employee_id:         preselectedEmployee,
-        toolbag_id:          "",
-        car_id:              "",
-        checkin_mileage:     "",
-        checkin_date:        "",
-        notes:               "",
-        notification_emails: [],
-        is_custom:           false,
-        is_car:              false,
-        is_ppe:              false,
-        custom_items:        [],
-        document_ids:        [],
-        ppe_items:           defaultPpeItems(),
-        pdf:                 null,
+        employee_id:          preselectedEmployee,
+        toolbag_id:           "",
+        car_id:               "",
+        checkin_mileage:      "",
+        checkin_date:         "",
+        notes:                "",
+        notification_emails:  [],
+        is_custom:            false,
+        is_car:               false,
+        is_ppe:               false,
+        is_template:          false,
+        toolbox_template_id:  "",
+        custom_items:         [],
+        document_ids:         [],
+        ppe_items:            defaultPpeItems(),
+        pdf:                  null,
     });
 
     const pdfInputRef = useRef(null);
@@ -104,14 +107,16 @@ export default function Create() {
         setType(newType);
         setData(prev => ({
             ...prev,
-            is_custom:       newType === TYPE_CUSTOM,
-            is_car:          newType === TYPE_CAR,
-            is_ppe:          newType === TYPE_PPE,
-            toolbag_id:      "",
-            car_id:          "",
-            checkin_mileage: "",
-            custom_items:    [],
-            pdf:             null,
+            is_custom:           newType === TYPE_CUSTOM,
+            is_car:              newType === TYPE_CAR,
+            is_ppe:              newType === TYPE_PPE,
+            is_template:         newType === TYPE_TEMPLATE,
+            toolbag_id:          "",
+            car_id:              "",
+            checkin_mileage:     "",
+            toolbox_template_id: "",
+            custom_items:        [],
+            pdf:                 null,
         }));
         if (newType !== TYPE_PPE && pdfInputRef.current) {
             pdfInputRef.current.value = '';
@@ -232,6 +237,7 @@ export default function Create() {
                             {typeBtn('Car', TYPE_CAR)}
                             {typeBtn('Custom items', TYPE_CUSTOM)}
                             {typeBtn('PDF Upload', TYPE_PPE)}
+                            {typeBtn('Template', TYPE_TEMPLATE)}
                         </div>
                     </div>
 
@@ -335,6 +341,27 @@ export default function Create() {
                                     hover:file:bg-gray-200"
                             />
                             {errors.pdf && <p className="text-red-600 text-sm mt-1">{errors.pdf}</p>}
+                        </div>
+                    )}
+
+                    {/* TEMPLATE */}
+                    {type === TYPE_TEMPLATE && (
+                        <div>
+                            <label className="block font-medium">Toolbox template</label>
+                            <select
+                                value={data.toolbox_template_id}
+                                onChange={(e) => setData("toolbox_template_id", e.target.value)}
+                                className="w-full border rounded px-3 py-2"
+                            >
+                                <option value="">-- Select a template --</option>
+                                {(toolboxTemplates ?? []).length === 0 && (
+                                    <option disabled>No templates available — upload one on the Documents page</option>
+                                )}
+                                {(toolboxTemplates ?? []).map(t => (
+                                    <option key={t.id} value={t.id}>{t.name}</option>
+                                ))}
+                            </select>
+                            {errors.toolbox_template_id && <div className="text-red-600 text-sm">{errors.toolbox_template_id}</div>}
                         </div>
                     )}
 

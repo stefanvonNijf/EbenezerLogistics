@@ -11,6 +11,7 @@ use App\Models\Car;
 use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\PrintFormDocument;
+use App\Models\ToolboxTemplate;
 use App\Models\Tool;
 use App\Models\Toolbag;
 use Illuminate\Http\Request;
@@ -36,10 +37,10 @@ class CheckinController extends Controller
     public function create()
     {
         $takenCheckinTypes = Checkin::where('status', 'planned_checkout')
-            ->get(['employee_id', 'toolbag_id', 'car_id', 'custom_items', 'is_ppe'])
+            ->get(['employee_id', 'toolbag_id', 'car_id', 'custom_items', 'is_ppe', 'is_template'])
             ->groupBy('employee_id')
             ->map(fn($checkins) => $checkins->map(fn($c) =>
-                $c->car_id ? 'car' : ($c->toolbag_id ? 'toolbag' : ($c->is_ppe ? 'ppe' : 'custom'))
+                $c->car_id ? 'car' : ($c->toolbag_id ? 'toolbag' : ($c->is_ppe ? 'ppe' : ($c->is_template ? 'template' : 'custom')))
             )->values()->all());
 
         return inertia('Checkin/Create', [
@@ -47,15 +48,17 @@ class CheckinController extends Controller
             'toolbags'          => Toolbag::whereNull('employee_id')->get(),
             'cars'              => Car::whereNull('employee_id')->get(),
             'documents'         => PrintFormDocument::orderBy('name')->get(['id', 'name']),
+            'toolboxTemplates'  => ToolboxTemplate::orderBy('name')->get(['id', 'name']),
             'takenCheckinTypes' => $takenCheckinTypes,
         ]);
     }
 
     public function store(Request $request)
     {
-        $isCar    = (bool) $request->input('is_car', false);
-        $isPpe    = !$isCar && (bool) $request->input('is_ppe', false);
-        $isCustom = !$isCar && !$isPpe && (bool) $request->input('is_custom', false);
+        $isCar      = (bool) $request->input('is_car', false);
+        $isPpe      = !$isCar && (bool) $request->input('is_ppe', false);
+        $isTemplate = !$isCar && !$isPpe && (bool) $request->input('is_template', false);
+        $isCustom   = !$isCar && !$isPpe && !$isTemplate && (bool) $request->input('is_custom', false);
 
         $rules = [
             'checkin_date'          => 'required|date',
@@ -74,6 +77,8 @@ class CheckinController extends Controller
             $rules['checkin_mileage'] = 'nullable|integer|min:0';
         } elseif ($isPpe) {
             $rules['pdf'] = 'required|file|mimes:pdf|max:20480';
+        } elseif ($isTemplate) {
+            $rules['toolbox_template_id'] = 'required|exists:toolbox_templates,id';
         } elseif ($isCustom) {
             $rules['custom_items']                    = 'required|array|min:1';
             $rules['custom_items.*.name']             = 'required|string|max:255';
@@ -96,13 +101,15 @@ class CheckinController extends Controller
             $activeQuery->whereNotNull('car_id');
         } elseif ($isPpe) {
             $activeQuery->where('is_ppe', true);
+        } elseif ($isTemplate) {
+            $activeQuery->where('is_template', true);
         } elseif ($isCustom) {
             $activeQuery->whereNotNull('custom_items');
         } else {
             $activeQuery->whereNotNull('toolbag_id');
         }
         if ($activeQuery->exists()) {
-            $typeLabel = $isCar ? 'car' : ($isPpe ? 'PPE / document' : ($isCustom ? 'custom items' : 'toolbag'));
+            $typeLabel = $isCar ? 'car' : ($isPpe ? 'PPE / document' : ($isTemplate ? 'template' : ($isCustom ? 'custom items' : 'toolbag')));
             return back()
                 ->withErrors(['employee_id' => "This employee already has an active {$typeLabel} check-in. Check them out first."])
                 ->withInput();
@@ -114,7 +121,7 @@ class CheckinController extends Controller
 
         if ($isCar) {
             $car = Car::findOrFail($request->car_id);
-        } elseif (!$isCustom && !$isPpe) {
+        } elseif (!$isCustom && !$isPpe && !$isTemplate) {
             $toolbag = Toolbag::findOrFail($request->toolbag_id);
             if ($employee->role !== $toolbag->type) {
                 return back()
@@ -128,16 +135,18 @@ class CheckinController extends Controller
             ->first();
 
         $checkinData = [
-            'checkin_date'        => $request->checkin_date,
-            'notes'               => $request->notes,
-            'status'              => 'planned_checkout',
-            'notification_emails' => $request->notification_emails ?? [],
-            'is_ppe'              => $isPpe,
-            'toolbag_id'          => (!$isCar && !$isCustom && !$isPpe) ? $request->toolbag_id : null,
-            'custom_items'        => $isCustom ? $request->custom_items : null,
-            'car_id'              => $isCar ? $request->car_id : null,
-            'checkin_mileage'     => $isCar ? $request->checkin_mileage : null,
-            'ppe_items'           => $request->ppe_items ?? null,
+            'checkin_date'         => $request->checkin_date,
+            'notes'                => $request->notes,
+            'status'               => 'planned_checkout',
+            'notification_emails'  => $request->notification_emails ?? [],
+            'is_ppe'               => $isPpe,
+            'is_template'          => $isTemplate,
+            'toolbox_template_id'  => $isTemplate ? $request->toolbox_template_id : null,
+            'toolbag_id'           => (!$isCar && !$isCustom && !$isPpe && !$isTemplate) ? $request->toolbag_id : null,
+            'custom_items'         => $isCustom ? $request->custom_items : null,
+            'car_id'               => $isCar ? $request->car_id : null,
+            'checkin_mileage'      => $isCar ? $request->checkin_mileage : null,
+            'ppe_items'            => $request->ppe_items ?? null,
         ];
 
         if ($planned) {
@@ -339,6 +348,13 @@ class CheckinController extends Controller
             return redirect(Storage::disk('s3')->url($checkin->signed_checkin_pdf_path));
         }
 
+        // Template type: serve the referenced toolbox template PDF.
+        if ($checkin->is_template) {
+            $template = $checkin->toolboxTemplate;
+            abort_unless($template, 404, 'Template not found for this check-in.');
+            return redirect(Storage::disk('s3')->url($template->file_path));
+        }
+
         if ($checkin->contract_exported_at) {
             return redirect()->route('checkins.index')
                 ->with('error', 'The contract for this checkin has already been exported and cannot be exported again.');
@@ -377,6 +393,10 @@ class CheckinController extends Controller
     {
         if ($checkin->is_ppe) {
             return response()->json(['error' => 'PPE / document check-ins do not support sign & export.'], 422);
+        }
+
+        if ($checkin->is_template) {
+            return response()->json(['error' => 'Template check-ins do not support sign & export.'], 422);
         }
 
         if ($checkin->contract_exported_at) {

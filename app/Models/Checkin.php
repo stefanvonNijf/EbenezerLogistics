@@ -29,6 +29,8 @@ class Checkin extends Model
         'checkin_mileage',
         'checkout_mileage',
         'is_ppe',
+        'is_template',
+        'toolbox_template_id',
     ];
 
     protected $casts = [
@@ -38,6 +40,7 @@ class Checkin extends Model
         'custom_items'         => 'array',
         'ppe_items'            => 'array',
         'is_ppe'               => 'boolean',
+        'is_template'          => 'boolean',
     ];
 
     public function employee()
@@ -68,5 +71,10 @@ class Checkin extends Model
     public function replacements()
     {
         return $this->hasMany(CheckinReplacement::class);
+    }
+
+    public function toolboxTemplate()
+    {
+        return $this->belongsTo(ToolboxTemplate::class);
     }
 }

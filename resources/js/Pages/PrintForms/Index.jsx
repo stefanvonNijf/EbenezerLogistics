@@ -3,15 +3,25 @@ import { Head, usePage, useForm, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 
 export default function PrintFormsIndex() {
-    const { documents, auth } = usePage().props;
+    const { documents, toolboxTemplates, auth } = usePage().props;
     const isAdmin = auth.user?.role === "admin";
 
     const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleteTemplateTarget, setDeleteTemplateTarget] = useState(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: "",
         pdf: null,
     });
+
+    const {
+        data: templateData,
+        setData: setTemplateData,
+        post: postTemplate,
+        processing: templateProcessing,
+        errors: templateErrors,
+        reset: resetTemplate,
+    } = useForm({ name: "", pdf: null });
 
     const submitUpload = (e) => {
         e.preventDefault();
@@ -21,9 +31,23 @@ export default function PrintFormsIndex() {
         });
     };
 
+    const submitTemplateUpload = (e) => {
+        e.preventDefault();
+        postTemplate(route("print-forms.templates.upload"), {
+            forceFormData: true,
+            onSuccess: () => resetTemplate(),
+        });
+    };
+
     const confirmDelete = () => {
         router.delete(route("print-forms.destroy", deleteTarget.id), {
             onSuccess: () => setDeleteTarget(null),
+        });
+    };
+
+    const confirmDeleteTemplate = () => {
+        router.delete(route("print-forms.templates.destroy", deleteTemplateTarget.id), {
+            onSuccess: () => setDeleteTemplateTarget(null),
         });
     };
 
@@ -31,104 +55,179 @@ export default function PrintFormsIndex() {
         <AuthenticatedLayout>
             <Head title="Documents" />
 
-            <div className="lg:max-w-6xl mx-auto px-6 sm:px-6 lg:px-8">
-                <h1 className="text-xl font-bold mb-6">Documents</h1>
+            <div className="lg:max-w-6xl mx-auto px-6 sm:px-6 lg:px-8 space-y-8">
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                {/* ── DOCUMENTS ── */}
+                <div>
+                    <h1 className="text-xl font-bold mb-4">Documents</h1>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
-                    {/* LEFT — Upload form */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-semibold mb-1">Upload Document</h2>
-                        <p className="text-sm text-gray-500 mb-4">
-                            Upload a PDF to make it available for download.
-                        </p>
+                        {/* Upload form */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg font-semibold mb-1">Upload Document</h2>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Upload a PDF to make it available for download.
+                            </p>
+                            <form onSubmit={submitUpload} className="space-y-4">
+                                <div>
+                                    <label className="block font-medium text-sm mb-1">Document name</label>
+                                    <input
+                                        type="text"
+                                        value={data.name}
+                                        onChange={(e) => setData("name", e.target.value)}
+                                        className="border rounded px-3 py-2 w-full"
+                                        placeholder="e.g. Safety Manual 2026"
+                                    />
+                                    {errors.name && <p className="text-red-600 text-sm mt-1">{errors.name}</p>}
+                                </div>
+                                <div>
+                                    <label className="block font-medium text-sm mb-1">PDF file</label>
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setData("pdf", e.target.files[0])}
+                                        className="block"
+                                    />
+                                    {errors.pdf && <p className="text-red-600 text-sm mt-1">{errors.pdf}</p>}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-50"
+                                >
+                                    Upload
+                                </button>
+                            </form>
+                        </div>
 
-                        <form onSubmit={submitUpload} className="space-y-4">
-                            <div>
-                                <label className="block font-medium text-sm mb-1">Document name</label>
-                                <input
-                                    type="text"
-                                    value={data.name}
-                                    onChange={(e) => setData("name", e.target.value)}
-                                    className="border rounded px-3 py-2 w-full"
-                                    placeholder="e.g. Safety Manual 2026"
-                                />
-                                {errors.name && (
-                                    <p className="text-red-600 text-sm mt-1">{errors.name}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block font-medium text-sm mb-1">PDF file</label>
-                                <input
-                                    type="file"
-                                    accept="application/pdf"
-                                    onChange={(e) => setData("pdf", e.target.files[0])}
-                                    className="block"
-                                />
-                                {errors.pdf && (
-                                    <p className="text-red-600 text-sm mt-1">{errors.pdf}</p>
-                                )}
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-50"
-                            >
-                                Upload
-                            </button>
-                        </form>
-                    </div>
-
-                    {/* RIGHT — Document list */}
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-lg font-semibold mb-4">Documents</h2>
-
-                        {documents.length === 0 ? (
-                            <p className="text-gray-400 text-sm">No documents uploaded yet.</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {documents.map((doc) => (
-                                    <div
-                                        key={doc.id}
-                                        className="flex items-center justify-between border rounded px-4 py-3"
-                                    >
-                                        <div>
-                                            <p className="font-medium text-gray-800">{doc.name}</p>
-                                            <p className="text-xs text-gray-400">
-                                                {doc.uploaded_by ? `Uploaded by ${doc.uploaded_by} · ` : ""}
-                                                {doc.created_at}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <a
-                                                href={route("print-forms.download", doc.id)}
-                                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                                            >
-                                                Download
-                                            </a>
-                                            {isAdmin && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDeleteTarget(doc)}
-                                                    className="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200"
+                        {/* Document list */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg font-semibold mb-4">Documents</h2>
+                            {documents.length === 0 ? (
+                                <p className="text-gray-400 text-sm">No documents uploaded yet.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {documents.map((doc) => (
+                                        <div key={doc.id} className="flex items-center justify-between border rounded px-4 py-3">
+                                            <div>
+                                                <p className="font-medium text-gray-800">{doc.name}</p>
+                                                <p className="text-xs text-gray-400">
+                                                    {doc.uploaded_by ? `Uploaded by ${doc.uploaded_by} · ` : ""}
+                                                    {doc.created_at}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <a
+                                                    href={route("print-forms.download", doc.id)}
+                                                    className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
                                                 >
-                                                    Delete
-                                                </button>
-                                            )}
+                                                    Download
+                                                </a>
+                                                {isAdmin && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeleteTarget(doc)}
+                                                        className="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
-
                 </div>
+
+                {/* ── TOOLBOX TEMPLATES ── */}
+                <div>
+                    <h1 className="text-xl font-bold mb-4">Toolbox Templates</h1>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+                        {/* Upload form */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg font-semibold mb-1">Upload Template</h2>
+                            <p className="text-sm text-gray-500 mb-4">
+                                Upload a PDF template to use as a toolbox check-in template.
+                            </p>
+                            <form onSubmit={submitTemplateUpload} className="space-y-4">
+                                <div>
+                                    <label className="block font-medium text-sm mb-1">Template name</label>
+                                    <input
+                                        type="text"
+                                        value={templateData.name}
+                                        onChange={(e) => setTemplateData("name", e.target.value)}
+                                        className="border rounded px-3 py-2 w-full"
+                                        placeholder="e.g. Electrician Toolbox V2"
+                                    />
+                                    {templateErrors.name && <p className="text-red-600 text-sm mt-1">{templateErrors.name}</p>}
+                                </div>
+                                <div>
+                                    <label className="block font-medium text-sm mb-1">PDF file</label>
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setTemplateData("pdf", e.target.files[0])}
+                                        className="block"
+                                    />
+                                    {templateErrors.pdf && <p className="text-red-600 text-sm mt-1">{templateErrors.pdf}</p>}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={templateProcessing}
+                                    className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-50"
+                                >
+                                    Upload
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Template list */}
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-lg font-semibold mb-4">Templates</h2>
+                            {toolboxTemplates.length === 0 ? (
+                                <p className="text-gray-400 text-sm">No templates uploaded yet.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {toolboxTemplates.map((t) => (
+                                        <div key={t.id} className="flex items-center justify-between border rounded px-4 py-3">
+                                            <div>
+                                                <p className="font-medium text-gray-800">{t.name}</p>
+                                                <p className="text-xs text-gray-400">
+                                                    {t.uploaded_by ? `Uploaded by ${t.uploaded_by} · ` : ""}
+                                                    {t.created_at}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <a
+                                                    href={route("print-forms.templates.download", t.id)}
+                                                    className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                                                >
+                                                    Download
+                                                </a>
+                                                {isAdmin && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDeleteTemplateTarget(t)}
+                                                        className="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            {/* DELETE CONFIRM MODAL */}
+            {/* DELETE DOCUMENT MODAL */}
             {deleteTarget && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                     <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
@@ -137,20 +236,24 @@ export default function PrintFormsIndex() {
                             <span className="font-medium">{deleteTarget.name}</span> will be permanently deleted.
                         </p>
                         <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setDeleteTarget(null)}
-                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                onClick={confirmDelete}
-                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                            >
-                                Delete
-                            </button>
+                            <button type="button" onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50">Cancel</button>
+                            <button type="button" onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* DELETE TEMPLATE MODAL */}
+            {deleteTemplateTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-2">Delete template?</h3>
+                        <p className="text-gray-700 mb-4">
+                            <span className="font-medium">{deleteTemplateTarget.name}</span> will be permanently deleted.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button type="button" onClick={() => setDeleteTemplateTarget(null)} className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50">Cancel</button>
+                            <button type="button" onClick={confirmDeleteTemplate} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
                         </div>
                     </div>
                 </div>
