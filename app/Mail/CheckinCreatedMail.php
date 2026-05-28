@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Checkin;
 use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -13,8 +14,12 @@ class CheckinCreatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    /**
+     * @param  array<array{name: string, content: string}>  $pdfAttachments
+     */
     public function __construct(
         public Checkin $checkin,
+        public array   $pdfAttachments = [],
     ) {}
 
     public function envelope(): Envelope
@@ -28,6 +33,14 @@ class CheckinCreatedMail extends Mailable
     {
         return new Content(
             markdown: 'emails.checkin-created',
+        );
+    }
+
+    public function attachments(): array
+    {
+        return array_map(
+            fn($a) => Attachment::fromData(fn() => $a['content'], $a['name'])->withMime('application/pdf'),
+            $this->pdfAttachments
         );
     }
 }

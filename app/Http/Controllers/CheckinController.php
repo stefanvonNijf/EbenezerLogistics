@@ -195,16 +195,14 @@ class CheckinController extends Controller
         }
 
         $checkin->load('employee', 'toolbag.tools', 'car', 'documents');
-        $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
-        foreach ($recipients as $email) {
-            Mail::to($email)->send(new CheckinCreatedMail($checkin));
-        }
 
         // Inline sign & export when signatures are submitted with the form (multi-step flow).
         $hasSigs = !$isPpe
             && $request->filled('employee_signature')
             && $request->filled('manager_signature')
             && $request->expectsJson();
+
+        $emailAttachments = [];
 
         if ($hasSigs) {
             $employeeSig = $request->employee_signature;
@@ -221,12 +219,15 @@ class CheckinController extends Controller
 
             try {
                 if ($isTemplate) {
-                    // Generate a signature page, then append it to the template PDF via Ghostscript.
+                    // Generate a signature page and append it to the template PDF via Ghostscript.
                     $checkin->loadMissing('toolboxTemplate');
                     $template = $checkin->toolboxTemplate;
 
                     $sigPageTmp  = sys_get_temp_dir() . '/' . uniqid('sig-page-') . '.pdf';
                     $templateTmp = sys_get_temp_dir() . '/' . uniqid('tpl-') . '.pdf';
+
+                    $templateContent = Storage::disk('s3')->get($template->file_path);
+                    file_put_contents($templateTmp, $templateContent);
 
                     try {
                         Pdf::view('pdf.template-signature-page', [
@@ -238,8 +239,6 @@ class CheckinController extends Controller
                         ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
                           ->save($sigPageTmp);
 
-                        file_put_contents($templateTmp, Storage::disk('s3')->get($template->file_path));
-
                         $cmd = sprintf(
                             'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%s %s %s 2>&1',
                             escapeshellarg($tmpPath),
@@ -249,13 +248,21 @@ class CheckinController extends Controller
                         exec($cmd, $gsOutput, $gsExit);
 
                         if ($gsExit !== 0) {
-                            // Ghostscript unavailable — fall back to signature page alone.
                             copy($sigPageTmp, $tmpPath);
                         }
                     } finally {
                         @unlink($sigPageTmp);
                         @unlink($templateTmp);
                     }
+
+                    $mergedContent = file_get_contents($tmpPath);
+                    Storage::disk('s3')->put($pdfPath, $mergedContent, 'public');
+
+                    $empSlug = str_replace(' ', '-', strtolower($checkin->employee->name));
+                    $emailAttachments = [
+                        ['name' => $template->name . '.pdf',           'content' => $templateContent],
+                        ['name' => "signed-checkin-{$empSlug}.pdf",    'content' => $mergedContent],
+                    ];
                 } elseif ($isCar) {
                     Pdf::view('pdf.car-checkin', [
                         'checkin'           => $checkin,
@@ -265,6 +272,8 @@ class CheckinController extends Controller
                         'managerSignature'  => $managerSig,
                     ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
                       ->save($tmpPath);
+
+                    Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
                 } else {
                     Pdf::view('pdf.checkin', [
                         'checkin'           => $checkin,
@@ -275,14 +284,23 @@ class CheckinController extends Controller
                         'managerSignature'  => $managerSig,
                     ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
                       ->save($tmpPath);
-                }
 
-                Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+                    Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+                }
             } finally {
                 @unlink($tmpPath);
             }
 
             $checkin->update(['signed_checkin_pdf_path' => $pdfPath]);
+        }
+
+        // Email is sent after PDF generation so template attachments are available.
+        $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
+        foreach ($recipients as $email) {
+            Mail::to($email)->send(new CheckinCreatedMail($checkin, $emailAttachments));
+        }
+
+        if ($hasSigs) {
             return response()->json(['url' => route('checkins.signed-pdf', $checkin)]);
         }
 
