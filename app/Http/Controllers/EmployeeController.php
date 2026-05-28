@@ -46,6 +46,7 @@ class EmployeeController extends Controller
             'shoe_size' => 'nullable|string',
             'pants_size' => 'nullable|string',
             'jacket_size' => 'nullable|string',
+            'coverall_size' => 'nullable|string',
         ]);
 
         Employee::create($validated);
@@ -85,6 +86,7 @@ class EmployeeController extends Controller
             'shoe_size' => 'nullable|string',
             'pants_size' => 'nullable|string',
             'jacket_size' => 'nullable|string',
+            'coverall_size' => 'nullable|string',
         ]);
 
         $employee->update($validated);

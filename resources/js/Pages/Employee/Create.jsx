@@ -11,6 +11,7 @@ export default function Create({ toolbagTypes }) {
         shoe_size: "",
         pants_size: "",
         jacket_size: "",
+        coverall_size: "",
     });
 
     const handleSubmit = (e) => {
@@ -103,6 +104,17 @@ export default function Create({ toolbagTypes }) {
                             className="w-full border rounded px-3 py-2"
                             value={data.jacket_size}
                             onChange={(e) => setData("jacket_size", e.target.value)}
+                        />
+                    </div>
+
+                    {/* COVERALL SIZE */}
+                    <div>
+                        <label className="block font-medium">Coverall Size</label>
+                        <input
+                            type="text"
+                            className="w-full border rounded px-3 py-2"
+                            value={data.coverall_size}
+                            onChange={(e) => setData("coverall_size", e.target.value)}
                         />
                     </div>
 
