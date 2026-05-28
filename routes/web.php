@@ -55,7 +55,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/toolbags/{toolbag}/assign', [ToolbagController::class, 'assign'])
         ->name('toolbags.assign');
 
-    Route::resource('checkins', CheckinController::class)->except(['destroy']);
+    Route::resource('checkins', CheckinController::class);
     Route::get('/checkins/{checkin}/pdf', [CheckinController::class, 'pdf'])
         ->name('checkins.pdf');
     Route::post('/checkins/{checkin}/sign-and-export', [CheckinController::class, 'signAndExport'])
@@ -118,7 +118,6 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::delete('/print-forms/templates/{template}', [PrintFormController::class, 'destroyTemplate'])->name('print-forms.templates.destroy');
     Route::delete('/tools/{tool}', [ToolController::class, 'destroy'])->name('tools.destroy');
     Route::delete('/toolbags/{toolbag}', [ToolbagController::class, 'destroy'])->name('toolbags.destroy');
-    Route::delete('/checkins/{checkin}', [CheckinController::class, 'destroy'])->name('checkins.destroy');
     Route::delete('/cars/{car}', [CarController::class, 'destroy'])->name('cars.destroy');
     Route::delete('/cars/photos/{photo}', [CarController::class, 'destroyPhoto'])->name('cars.photos.destroy');
 });
