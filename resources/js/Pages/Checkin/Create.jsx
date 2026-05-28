@@ -28,7 +28,7 @@ export default function Create() {
         { key: 'rain_jacket',  label: 'RAIN JACKET' },
         { key: 'inner_jacket', label: 'INNER JACKET (Lining)' },
         { key: 'rain_pants',   label: 'RAIN PANTS' },
-        { key: 'overalls',     label: 'OVERALLS' },
+        { key: 'overalls',     label: 'COVERALLS' },
         { key: 'boots',        label: 'BOOTS' },
         { key: 'helmet',       label: 'HELMET' },
     ];
@@ -231,7 +231,7 @@ export default function Create() {
                             {typeBtn('Toolbag', TYPE_TOOLBAG)}
                             {typeBtn('Car', TYPE_CAR)}
                             {typeBtn('Custom items', TYPE_CUSTOM)}
-                            {typeBtn('PPE / Document', TYPE_PPE)}
+                            {typeBtn('PDF Upload', TYPE_PPE)}
                         </div>
                     </div>
 
