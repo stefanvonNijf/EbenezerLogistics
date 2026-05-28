@@ -494,7 +494,7 @@ export default function Create() {
                                         id="ppe-section-toggle"
                                         checked={ppeSectionEnabled}
                                         onChange={() => setPpeSectionEnabled(v => !v)}
-                                        className="rounded border-gray-300"
+                                        className="w-5 h-5 rounded border-gray-300 cursor-pointer"
                                     />
                                     <label htmlFor="ppe-section-toggle" className="font-medium cursor-pointer">PPE</label>
                                 </div>
