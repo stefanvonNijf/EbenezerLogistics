@@ -207,12 +207,20 @@ export default function Create() {
     // PPE type: single step submit via Inertia (has file upload)
     const handlePpeSubmit = (e) => {
         e.preventDefault();
+        if (data.notification_emails.length === 0) {
+            setServerErrors({ notification_emails: ['At least one notification email is required.'] });
+            return;
+        }
         form.transform(d => ({ ...d, ppe_items: getFilteredPpeItems() })).post(route("checkins.store"));
     };
 
     // Non-PPE step 1 → step 2
     const handleNextStep = (e) => {
         e.preventDefault();
+        if (data.notification_emails.length === 0) {
+            setServerErrors({ notification_emails: ['At least one notification email is required.'] });
+            return;
+        }
         setServerErrors({});
         setStep(2);
     };
@@ -573,8 +581,8 @@ export default function Create() {
 
                         {/* NOTIFICATION EMAILS */}
                         <div>
-                            <label className="block font-medium mb-1">Notify by email</label>
-                            <p className="text-sm text-gray-500 mb-2">Add email addresses that will receive a notification when this check-in is saved.</p>
+                            <label className="block font-medium mb-1">Notify by email <span className="text-red-500">*</span></label>
+                            <p className="text-sm text-gray-500 mb-2">Add at least one email address that will receive a notification when this check-in is saved.</p>
                             <div className="flex gap-2">
                                 <input type="text" value={emailInput} onChange={(e) => { setEmailInput(e.target.value); setEmailError(""); }} onKeyDown={handleEmailKeyDown} placeholder="name@example.com" className="flex-1 border rounded px-3 py-2 text-sm" />
                                 <button type="button" onClick={addEmail} className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm">Add</button>

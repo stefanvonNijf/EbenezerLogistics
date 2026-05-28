@@ -64,7 +64,7 @@ class CheckinController extends Controller
             'checkin_date'          => 'required|date',
             'notes'                 => 'nullable|string',
             'employee_id'           => 'required|exists:employees,id',
-            'notification_emails'   => 'nullable|array',
+            'notification_emails'   => 'required|array|min:1',
             'notification_emails.*' => 'email',
             'ppe_items'             => 'nullable|array',
             'ppe_items.*.quantity'  => 'nullable|integer|min:1',
