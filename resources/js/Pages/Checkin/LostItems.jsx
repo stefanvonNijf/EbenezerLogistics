@@ -43,6 +43,9 @@ export default function LostItems({ checkin }) {
 
     // ── Extra PPE ──
     const [selectedPpe, setSelectedPpe]     = useState({});
+    const [ppeStep, setPpeStep]             = useState('select');
+    const [ppeEmpSig, setPpeEmpSig]         = useState(null);
+    const [ppeMgrSig, setPpeMgrSig]         = useState(null);
     const [generatingPpe, setGeneratingPpe] = useState(false);
 
     const togglePpe = (key) =>
@@ -58,8 +61,13 @@ export default function LostItems({ checkin }) {
         if (Object.keys(selectedPpe).length === 0) return;
         setGeneratingPpe(true);
         try {
-            const res = await axios.post(route('print-forms.ppe-extras', checkin.id), { ppe_items: selectedPpe }, { responseType: 'blob' });
+            const res = await axios.post(
+                route('print-forms.ppe-extras', checkin.id),
+                { ppe_items: selectedPpe, employee_signature: ppeEmpSig, manager_signature: ppeMgrSig },
+                { responseType: 'blob' }
+            );
             window.open(URL.createObjectURL(res.data), '_blank');
+            router.visit(route('checkins.index'));
         } catch { alert('Failed to generate PPE form.'); }
         finally { setGeneratingPpe(false); }
     };
@@ -148,6 +156,60 @@ export default function LostItems({ checkin }) {
                             {extraSubmitting ? 'Processing…' : 'Confirm & send email'}
                         </button>
                         <button type="button" onClick={() => setExtraStep('add')}
+                            className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                        >
+                            Back
+                        </button>
+                    </div>
+                </div>
+            </AuthenticatedLayout>
+        );
+    }
+
+    // ── Sign step: Extra PPE ──
+    if (tab === 'extra-ppe' && ppeStep === 'sign') {
+        return (
+            <AuthenticatedLayout>
+                <Head title="Extra PPE — Sign" />
+                <div className="lg:max-w-4xl mx-auto px-6">
+                    <h1 className="text-xl font-bold mb-1">Extra PPE — {checkin.employee?.name}</h1>
+                    <p className="text-gray-500 mb-6">Please have both parties sign below to confirm the PPE items.</p>
+
+                    <div className="bg-white rounded-lg shadow p-6 mb-6">
+                        <h2 className="text-sm font-semibold text-gray-700 uppercase mb-3">PPE items</h2>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-xs font-semibold text-gray-500 uppercase border-b">
+                                    <th className="text-left py-2">Item</th>
+                                    <th className="text-left py-2">Qty</th>
+                                    <th className="text-left py-2">Size</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {PPE_ITEMS.filter(({ key }) => selectedPpe[key]).map(({ key, label }) => (
+                                    <tr key={key} className="border-b">
+                                        <td className="py-2 font-medium text-gray-800">{label}</td>
+                                        <td className="py-2 text-gray-600">{selectedPpe[key].quantity}</td>
+                                        <td className="py-2 text-gray-600">{selectedPpe[key].size || '—'}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="bg-white rounded-lg shadow p-6 space-y-6">
+                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setPpeEmpSig} />
+                        <SignaturePad label="Signature person in charge" onChange={setPpeMgrSig} />
+                    </div>
+
+                    <div className="flex gap-3 mt-6">
+                        <button type="button" onClick={generatePpeForm}
+                            disabled={!ppeEmpSig || !ppeMgrSig || generatingPpe}
+                            className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                            {generatingPpe ? 'Generating…' : 'Confirm & generate PDF'}
+                        </button>
+                        <button type="button" onClick={() => setPpeStep('select')}
                             className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-50"
                         >
                             Back
@@ -321,10 +383,10 @@ export default function LostItems({ checkin }) {
                         </div>
 
                         <div className="flex gap-3">
-                            <button type="button" onClick={generatePpeForm}
-                                disabled={Object.keys(selectedPpe).length === 0 || generatingPpe}
-                                className="px-6 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed">
-                                {generatingPpe ? 'Generating…' : 'Generate PPE Form'}
+                            <button type="button" onClick={() => setPpeStep('sign')}
+                                disabled={Object.keys(selectedPpe).length === 0}
+                                className="px-6 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed">
+                                Continue to signing
                             </button>
                             <Link href={route('checkins.index')} className="px-6 py-2 text-gray-600 border rounded hover:bg-gray-50">
                                 Cancel

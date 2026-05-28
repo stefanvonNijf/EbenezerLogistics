@@ -111,6 +111,8 @@ class PrintFormController extends Controller
             'ppe_items'                      => 'nullable|array',
             'ppe_items.*.quantity'           => 'nullable|integer|min:1',
             'ppe_items.*.size'               => 'nullable|string|max:50',
+            'employee_signature'             => 'nullable|string',
+            'manager_signature'              => 'nullable|string',
         ]);
 
         $checkin->load('employee');
@@ -127,6 +129,8 @@ class PrintFormController extends Controller
             'notes'                 => '',
             'ppe'                   => $request->input('ppe_items', []),
             'selectedOnly'          => true,
+            'employeeSignature'     => $request->input('employee_signature'),
+            'managerSignature'      => $request->input('manager_signature'),
         ])
             ->withBrowsershot(function (Browsershot $browsershot) {
                 $browsershot->noSandbox()->setChromePath('/usr/bin/google-chrome');
