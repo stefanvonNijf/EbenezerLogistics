@@ -316,6 +316,33 @@ class CheckinController extends Controller
         ]);
     }
 
+    public function resendMail(Request $request, Checkin $checkin)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $checkin->load('employee', 'toolbag.tools', 'car');
+
+        if ($checkin->status === 'checked_out' && $checkin->signed_checkout_pdf_path) {
+            $pdfContent     = Storage::disk('s3')->get($checkin->signed_checkout_pdf_path);
+            $missingToolIds = $checkin->missing_tools ?? [];
+            $totalCost      = Tool::whereIn('id', $missingToolIds)->sum('replacement_cost');
+
+            Mail::to($request->email)->send(new CheckoutCompletedMail($checkin, (float) $totalCost, $pdfContent));
+        } else {
+            $pdfAttachments = [];
+
+            if ($checkin->signed_checkin_pdf_path) {
+                $content  = Storage::disk('s3')->get($checkin->signed_checkin_pdf_path);
+                $empSlug  = str_replace(' ', '-', strtolower($checkin->employee->name));
+                $pdfAttachments[] = ['name' => "signed-checkin-{$empSlug}.pdf", 'content' => $content];
+            }
+
+            Mail::to($request->email)->send(new CheckinCreatedMail($checkin, $pdfAttachments));
+        }
+
+        return back()->with('success', 'Email resent successfully.');
+    }
+
     public function replacementPdf(CheckinReplacement $replacement)
     {
         abort_unless($replacement->pdf_path, 404, 'PDF not found.');

@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
         ->name('toolbags.assign');
 
     Route::resource('checkins', CheckinController::class);
+    Route::post('/checkins/{checkin}/resend-mail', [CheckinController::class, 'resendMail'])->name('checkins.resend-mail');
     Route::get('/checkins/{checkin}/pdf', [CheckinController::class, 'pdf'])
         ->name('checkins.pdf');
     Route::post('/checkins/{checkin}/sign-and-export', [CheckinController::class, 'signAndExport'])

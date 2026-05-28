@@ -1,6 +1,8 @@
 import React, { useRef, useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import Modal from "@/Components/Modal";
+import SecondaryButton from "@/Components/SecondaryButton";
 
 const statusConfig = {
     planned_checkin:  { label: 'Planned checkin',  bg: 'bg-yellow-100 text-yellow-800' },
@@ -14,6 +16,19 @@ export default function CheckinShow({ checkin }) {
     const [uploadType, setUploadType] = useState(null);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
+
+    const [resendOpen, setResendOpen] = useState(false);
+    const [resendEmail, setResendEmail] = useState('');
+    const [resending, setResending] = useState(false);
+
+    const handleResend = (e) => {
+        e.preventDefault();
+        setResending(true);
+        router.post(route('checkins.resend-mail', checkin.id), { email: resendEmail }, {
+            onSuccess: () => { setResendOpen(false); setResendEmail(''); },
+            onFinish:  () => setResending(false),
+        });
+    };
 
     const triggerUpload = (type) => {
         setUploadType(type);
@@ -62,7 +77,16 @@ export default function CheckinShow({ checkin }) {
                     </Link>
                 </div>
 
-                <h1 className="text-xl font-bold mb-6">Check-in — {checkin.employee?.name}</h1>
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-xl font-bold">Check-in — {checkin.employee?.name}</h1>
+                    <button
+                        type="button"
+                        onClick={() => setResendOpen(true)}
+                        className="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
+                    >
+                        Resend Mail
+                    </button>
+                </div>
 
                 {/* Details */}
                 <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -243,6 +267,35 @@ export default function CheckinShow({ checkin }) {
                     </div>
                 )}
             </div>
+            <Modal show={resendOpen} onClose={() => setResendOpen(false)} maxWidth="sm">
+                <form onSubmit={handleResend} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Resend Mail</h2>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email address
+                    </label>
+                    <input
+                        type="email"
+                        required
+                        value={resendEmail}
+                        onChange={(e) => setResendEmail(e.target.value)}
+                        className="w-full border-gray-300 rounded shadow-sm text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="recipient@example.com"
+                        autoFocus
+                    />
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton type="button" onClick={() => setResendOpen(false)}>
+                            Cancel
+                        </SecondaryButton>
+                        <button
+                            type="submit"
+                            disabled={resending}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50"
+                        >
+                            {resending ? 'Sending…' : 'Send'}
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </AuthenticatedLayout>
     );
 }
