@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     git curl zip unzip \
     libpng-dev libonig-dev libxml2-dev libzip-dev \
     nginx nodejs npm gnupg wget ca-certificates \
+    ghostscript \
     && rm -rf /var/lib/apt/lists/*
 
 # Google Chrome installeren
