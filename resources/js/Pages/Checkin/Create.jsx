@@ -50,7 +50,7 @@ export default function Create() {
         PPE_ITEMS.map(({ key }) => [key, { quantity: 1, size: employeeSizeForPpe(employee, key), notes: '' }])
     );
 
-    const { data, setData, post, processing, errors } = useForm({
+    const form = useForm({
         employee_id:          preselectedEmployee,
         toolbag_id:           "",
         car_id:               "",
@@ -68,6 +68,7 @@ export default function Create() {
         ppe_items:            defaultPpeItems(),
         pdf:                  null,
     });
+    const { data, setData, processing, errors } = form;
 
     // Multi-step state
     const [step, setStep] = useState(1);
@@ -85,6 +86,18 @@ export default function Create() {
 
     const setPpe = (key, field, value) =>
         setData('ppe_items', { ...data.ppe_items, [key]: { ...data.ppe_items[key], [field]: value } });
+
+    const [ppeSectionEnabled, setPpeSectionEnabled] = useState(false);
+    const [ppeChecked, setPpeChecked] = useState(
+        Object.fromEntries(PPE_ITEMS.map(({ key }) => [key, false]))
+    );
+
+    const getFilteredPpeItems = () => {
+        if (!ppeSectionEnabled) return {};
+        return Object.fromEntries(
+            PPE_ITEMS.filter(({ key }) => ppeChecked[key]).map(({ key }) => [key, data.ppe_items[key]])
+        );
+    };
 
     const [type, setType] = useState(TYPE_TOOLBAG);
 
@@ -194,7 +207,7 @@ export default function Create() {
     // PPE type: single step submit via Inertia (has file upload)
     const handlePpeSubmit = (e) => {
         e.preventDefault();
-        post(route("checkins.store"));
+        form.transform(d => ({ ...d, ppe_items: getFilteredPpeItems() })).post(route("checkins.store"));
     };
 
     // Non-PPE step 1 → step 2
@@ -224,7 +237,7 @@ export default function Create() {
                 checkin_mileage:      data.checkin_mileage || null,
                 toolbox_template_id:  data.toolbox_template_id || null,
                 custom_items:         data.custom_items,
-                ppe_items:            data.ppe_items,
+                ppe_items:            getFilteredPpeItems(),
                 notification_emails:  data.notification_emails,
                 document_ids:         data.document_ids,
                 employee_signature:   employeeSig,
@@ -270,7 +283,7 @@ export default function Create() {
         );
     };
 
-    const showPpe = type === TYPE_TOOLBAG || type === TYPE_CUSTOM || type === TYPE_PPE;
+    const showPpe = type !== TYPE_CAR;
 
     // Merge Inertia form errors with axios server errors
     const getError = (field) => errors[field] || serverErrors[field]?.[0] || null;
@@ -472,56 +485,82 @@ export default function Create() {
                             {getError('checkin_date') && <div className="text-red-600 text-sm">{getError('checkin_date')}</div>}
                         </div>
 
-                        {/* PPE ITEMS — toolbag, custom and PPE tabs */}
+                        {/* PPE ITEMS */}
                         {showPpe && (
                             <div>
-                                <label className="block font-medium mb-2">PPE</label>
-                                <div className="border rounded overflow-hidden">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <input
+                                        type="checkbox"
+                                        id="ppe-section-toggle"
+                                        checked={ppeSectionEnabled}
+                                        onChange={() => setPpeSectionEnabled(v => !v)}
+                                        className="rounded border-gray-300"
+                                    />
+                                    <label htmlFor="ppe-section-toggle" className="font-medium cursor-pointer">PPE</label>
+                                </div>
+                                {ppeSectionEnabled && <div className="border rounded overflow-hidden">
                                     <table className="w-full text-sm">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="text-left px-3 py-2 font-medium text-gray-600 w-1/3">Item</th>
+                                                <th className="px-3 py-2 w-8"></th>
+                                                <th className="text-left px-3 py-2 font-medium text-gray-600">Item</th>
                                                 <th className="text-left px-3 py-2 font-medium text-gray-600 w-16">Qty</th>
                                                 <th className="text-left px-3 py-2 font-medium text-gray-600 w-24">Size</th>
                                                 <th className="text-left px-3 py-2 font-medium text-gray-600">Notes</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
-                                            {PPE_ITEMS.map(({ key, label }) => (
-                                                <tr key={key}>
-                                                    <td className="px-3 py-2 text-gray-700">{label}</td>
-                                                    <td className="px-3 py-2">
-                                                        <input
-                                                            type="number"
-                                                            min="1"
-                                                            value={data.ppe_items[key].quantity}
-                                                            onChange={(e) => setPpe(key, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
-                                                            className="w-14 border rounded px-2 py-1 text-center"
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <input
-                                                            type="text"
-                                                            value={data.ppe_items[key].size}
-                                                            onChange={(e) => setPpe(key, 'size', e.target.value)}
-                                                            placeholder="—"
-                                                            className="w-20 border rounded px-2 py-1"
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <input
-                                                            type="text"
-                                                            value={data.ppe_items[key].notes}
-                                                            onChange={(e) => setPpe(key, 'notes', e.target.value)}
-                                                            placeholder="—"
-                                                            className="w-full border rounded px-2 py-1"
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {PPE_ITEMS.map(({ key, label }) => {
+                                                const isChecked = ppeChecked[key];
+                                                return (
+                                                    <tr key={key} className={!isChecked ? 'bg-gray-50' : ''}>
+                                                        <td className="px-3 py-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isChecked}
+                                                                onChange={() => setPpeChecked(prev => ({ ...prev, [key]: !prev[key] }))}
+                                                                className="rounded border-gray-300"
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2 text-gray-700">{label}</td>
+                                                        <td className="px-3 py-2">
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                required={isChecked}
+                                                                disabled={!isChecked}
+                                                                value={data.ppe_items[key].quantity}
+                                                                onChange={(e) => setPpe(key, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value))}
+                                                                className="w-14 border rounded px-2 py-1 text-center disabled:bg-gray-100 disabled:text-gray-400"
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <input
+                                                                type="text"
+                                                                required={isChecked}
+                                                                disabled={!isChecked}
+                                                                value={data.ppe_items[key].size}
+                                                                onChange={(e) => setPpe(key, 'size', e.target.value)}
+                                                                placeholder="—"
+                                                                className="w-20 border rounded px-2 py-1 disabled:bg-gray-100 disabled:text-gray-400"
+                                                            />
+                                                        </td>
+                                                        <td className="px-3 py-2">
+                                                            <input
+                                                                type="text"
+                                                                disabled={!isChecked}
+                                                                value={data.ppe_items[key].notes}
+                                                                onChange={(e) => setPpe(key, 'notes', e.target.value)}
+                                                                placeholder="—"
+                                                                className="w-full border rounded px-2 py-1 disabled:bg-gray-100 disabled:text-gray-400"
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
-                                </div>
+                                </div>}
                             </div>
                         )}
 
