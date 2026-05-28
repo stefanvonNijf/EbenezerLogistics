@@ -70,6 +70,8 @@ class CheckinController extends Controller
             'ppe_items.*.quantity'  => 'nullable|integer|min:1',
             'ppe_items.*.size'      => 'nullable|string|max:50',
             'ppe_items.*.notes'     => 'nullable|string|max:255',
+            'employee_signature'    => 'nullable|string',
+            'manager_signature'     => 'nullable|string',
         ];
 
         if ($isCar) {
@@ -196,6 +198,61 @@ class CheckinController extends Controller
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
         foreach ($recipients as $email) {
             Mail::to($email)->send(new CheckinCreatedMail($checkin));
+        }
+
+        // Inline sign & export when signatures are submitted with the form (multi-step flow).
+        $hasSigs = !$isPpe
+            && $request->filled('employee_signature')
+            && $request->filled('manager_signature')
+            && $request->expectsJson();
+
+        if ($hasSigs) {
+            $employeeSig = $request->employee_signature;
+            $managerSig  = $request->manager_signature;
+
+            $checkin->update([
+                'contract_exported_at'       => now(),
+                'employee_checkin_signature' => $employeeSig,
+                'manager_checkin_signature'  => $managerSig,
+            ]);
+
+            if (!$isTemplate) {
+                $pdfPath = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
+                $tmpPath = sys_get_temp_dir() . '/' . uniqid('checkin-pdf') . '.pdf';
+
+                try {
+                    if ($isCar) {
+                        Pdf::view('pdf.car-checkin', [
+                            'checkin'           => $checkin,
+                            'employee'          => $checkin->employee,
+                            'car'               => $checkin->car,
+                            'employeeSignature' => $employeeSig,
+                            'managerSignature'  => $managerSig,
+                        ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                          ->save($tmpPath);
+                    } else {
+                        Pdf::view('pdf.checkin', [
+                            'checkin'           => $checkin,
+                            'employee'          => $checkin->employee,
+                            'toolbag'           => $checkin->toolbag,
+                            'tools'             => $checkin->toolbag ? $checkin->toolbag->tools : collect(),
+                            'employeeSignature' => $employeeSig,
+                            'managerSignature'  => $managerSig,
+                        ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                          ->save($tmpPath);
+                    }
+
+                    Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+                } finally {
+                    @unlink($tmpPath);
+                }
+
+                $checkin->update(['signed_checkin_pdf_path' => $pdfPath]);
+                return response()->json(['url' => route('checkins.signed-pdf', $checkin)]);
+            }
+
+            // Template type: the template PDF is the document; serve it directly.
+            return response()->json(['url' => route('checkins.pdf', $checkin)]);
         }
 
         return redirect()
