@@ -168,25 +168,6 @@ export default function CheckinIndex() {
         {
             header: "Contract",
             render: (row) => {
-                // Template type: contract_exported_at is set after signing on create; link to the template PDF.
-                if (row.is_template && row.contract_exported_at) {
-                    return (
-                        <div className="flex flex-col gap-1 items-start">
-                            <span className="inline-block w-28 py-1 bg-gray-100 text-gray-500 rounded text-xs text-center border border-gray-300">
-                                Exported
-                            </span>
-                            <a
-                                href={route('checkins.pdf', row.id)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs text-blue-600 hover:underline"
-                            >
-                                View template
-                            </a>
-                        </div>
-                    );
-                }
-
                 if (row.signed_checkin_pdf_path) {
                     return (
                         <div className="flex flex-col gap-1 items-start">

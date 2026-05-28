@@ -216,43 +216,74 @@ class CheckinController extends Controller
                 'manager_checkin_signature'  => $managerSig,
             ]);
 
-            if (!$isTemplate) {
-                $pdfPath = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
-                $tmpPath = sys_get_temp_dir() . '/' . uniqid('checkin-pdf') . '.pdf';
+            $pdfPath = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
+            $tmpPath = sys_get_temp_dir() . '/' . uniqid('checkin-pdf') . '.pdf';
 
-                try {
-                    if ($isCar) {
-                        Pdf::view('pdf.car-checkin', [
+            try {
+                if ($isTemplate) {
+                    // Generate a signature page, then append it to the template PDF via Ghostscript.
+                    $checkin->loadMissing('toolboxTemplate');
+                    $template = $checkin->toolboxTemplate;
+
+                    $sigPageTmp  = sys_get_temp_dir() . '/' . uniqid('sig-page-') . '.pdf';
+                    $templateTmp = sys_get_temp_dir() . '/' . uniqid('tpl-') . '.pdf';
+
+                    try {
+                        Pdf::view('pdf.template-signature-page', [
                             'checkin'           => $checkin,
                             'employee'          => $checkin->employee,
-                            'car'               => $checkin->car,
+                            'template'          => $template,
                             'employeeSignature' => $employeeSig,
                             'managerSignature'  => $managerSig,
                         ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-                          ->save($tmpPath);
-                    } else {
-                        Pdf::view('pdf.checkin', [
-                            'checkin'           => $checkin,
-                            'employee'          => $checkin->employee,
-                            'toolbag'           => $checkin->toolbag,
-                            'tools'             => $checkin->toolbag ? $checkin->toolbag->tools : collect(),
-                            'employeeSignature' => $employeeSig,
-                            'managerSignature'  => $managerSig,
-                        ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
-                          ->save($tmpPath);
+                          ->save($sigPageTmp);
+
+                        file_put_contents($templateTmp, Storage::disk('s3')->get($template->file_path));
+
+                        $cmd = sprintf(
+                            'gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile=%s %s %s 2>&1',
+                            escapeshellarg($tmpPath),
+                            escapeshellarg($templateTmp),
+                            escapeshellarg($sigPageTmp)
+                        );
+                        exec($cmd, $gsOutput, $gsExit);
+
+                        if ($gsExit !== 0) {
+                            // Ghostscript unavailable — fall back to signature page alone.
+                            copy($sigPageTmp, $tmpPath);
+                        }
+                    } finally {
+                        @unlink($sigPageTmp);
+                        @unlink($templateTmp);
                     }
-
-                    Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
-                } finally {
-                    @unlink($tmpPath);
+                } elseif ($isCar) {
+                    Pdf::view('pdf.car-checkin', [
+                        'checkin'           => $checkin,
+                        'employee'          => $checkin->employee,
+                        'car'               => $checkin->car,
+                        'employeeSignature' => $employeeSig,
+                        'managerSignature'  => $managerSig,
+                    ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                      ->save($tmpPath);
+                } else {
+                    Pdf::view('pdf.checkin', [
+                        'checkin'           => $checkin,
+                        'employee'          => $checkin->employee,
+                        'toolbag'           => $checkin->toolbag,
+                        'tools'             => $checkin->toolbag ? $checkin->toolbag->tools : collect(),
+                        'employeeSignature' => $employeeSig,
+                        'managerSignature'  => $managerSig,
+                    ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
+                      ->save($tmpPath);
                 }
 
-                $checkin->update(['signed_checkin_pdf_path' => $pdfPath]);
-                return response()->json(['url' => route('checkins.signed-pdf', $checkin)]);
+                Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+            } finally {
+                @unlink($tmpPath);
             }
 
-            // Template type: the template PDF is the document; serve it directly.
-            return response()->json(['url' => route('checkins.pdf', $checkin)]);
+            $checkin->update(['signed_checkin_pdf_path' => $pdfPath]);
+            return response()->json(['url' => route('checkins.signed-pdf', $checkin)]);
         }
 
         return redirect()
