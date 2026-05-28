@@ -260,8 +260,7 @@ class CheckinController extends Controller
 
                     $empSlug = str_replace(' ', '-', strtolower($checkin->employee->name));
                     $emailAttachments = [
-                        ['name' => $template->name . '.pdf',           'content' => $templateContent],
-                        ['name' => "signed-checkin-{$empSlug}.pdf",    'content' => $mergedContent],
+                        ['name' => "signed-checkin-{$empSlug}.pdf", 'content' => $mergedContent],
                     ];
                 } elseif ($isCar) {
                     Pdf::view('pdf.car-checkin', [
@@ -804,13 +803,16 @@ class CheckinController extends Controller
         ]);
 
         $recipients = $this->buildRecipients($checkin->notification_emails ?? []);
+        $emailSent  = false;
         if ($recipients && $pdfContent) {
             foreach ($recipients as $email) {
                 Mail::to($email)->send(new LostItemsReplacementMail($checkin, $tools, $customItems, $pdfContent));
             }
+            $emailSent = true;
         }
 
-        return redirect()->route('checkins.index')->with('success', 'Replacement recorded and email sent.');
+        $message = $emailSent ? 'Replacement recorded and email sent.' : 'Replacement recorded. No notification emails are set on this check-in.';
+        return redirect()->route('checkins.index')->with('success', $message);
     }
 
     private function buildRecipients(array $typedEmails): array
