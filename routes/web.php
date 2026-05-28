@@ -24,7 +24,7 @@ Route::get('/health', function () {
 
 Route::get('/dashboard', function () {
     $plannedCheckins = \App\Models\Checkin::with('employee')
-        ->whereIn('status', ['planned_checkin', 'planned_checkout'])
+        ->where('status', 'planned_checkin')
         ->latest()
         ->get();
 
