@@ -24,7 +24,13 @@ Route::get('/health', function () {
 
 Route::get('/dashboard', function () {
     $plannedCheckins = \App\Models\Checkin::with('employee')
-        ->where('status', 'planned_checkin')
+        ->where(function ($q) {
+            $q->where('status', 'planned_checkin')
+              ->orWhere(function ($q2) {
+                  $q2->where('status', 'planned_checkout')
+                     ->whereNotNull('planned_checkout_date');
+              });
+        })
         ->latest()
         ->get();
 
