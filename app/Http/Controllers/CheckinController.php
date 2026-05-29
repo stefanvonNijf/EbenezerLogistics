@@ -278,7 +278,10 @@ class CheckinController extends Controller
                     ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
                       ->save($tmpPath);
 
-                    Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+                    $pdfData = file_get_contents($tmpPath);
+                    Storage::disk('s3')->put($pdfPath, $pdfData, 'public');
+                    $empSlug          = str_replace(' ', '-', strtolower($checkin->employee->name));
+                    $emailAttachments = [['name' => "signed-checkin-{$empSlug}.pdf", 'content' => $pdfData]];
                 } else {
                     Pdf::view('pdf.checkin', [
                         'checkin'           => $checkin,
@@ -290,7 +293,10 @@ class CheckinController extends Controller
                     ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
                       ->save($tmpPath);
 
-                    Storage::disk('s3')->put($pdfPath, file_get_contents($tmpPath), 'public');
+                    $pdfData = file_get_contents($tmpPath);
+                    Storage::disk('s3')->put($pdfPath, $pdfData, 'public');
+                    $empSlug          = str_replace(' ', '-', strtolower($checkin->employee->name));
+                    $emailAttachments = [['name' => "signed-checkin-{$empSlug}.pdf", 'content' => $pdfData]];
                 }
             } finally {
                 @unlink($tmpPath);
