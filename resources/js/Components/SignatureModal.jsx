@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import SignaturePad from "@/Components/SignaturePad.jsx";
 
 export default function SignatureModal({ open, employeeName, onConfirm, onClose }) {
     const [employeeSig, setEmployeeSig] = useState(null);
     const [managerSig, setManagerSig] = useState(null);
+    const managerSigRef = useRef(null);
 
     if (!open) return null;
 
@@ -20,8 +21,10 @@ export default function SignatureModal({ open, employeeName, onConfirm, onClose 
                     <SignaturePad
                         label={`Signature ${employeeName}`}
                         onChange={setEmployeeSig}
+                        onNext={() => managerSigRef.current?.openFullscreen()}
                     />
                     <SignaturePad
+                        ref={managerSigRef}
                         label="Signature person in charge"
                         onChange={setManagerSig}
                     />

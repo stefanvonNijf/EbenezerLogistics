@@ -72,6 +72,8 @@ export default function Create() {
     const { data, setData, processing, errors } = form;
 
     // Multi-step state
+    const managerSigRef = useRef(null);
+
     const [step, setStep] = useState(1);
     const [employeeSig, setEmployeeSig] = useState(null);
     const [managerSig, setManagerSig]   = useState(null);
@@ -752,8 +754,10 @@ export default function Create() {
                         <SignaturePad
                             label={`Signature — ${selectedEmployee?.name ?? 'employee'}`}
                             onChange={setEmployeeSig}
+                            onNext={() => managerSigRef.current?.openFullscreen()}
                         />
                         <SignaturePad
+                            ref={managerSigRef}
                             label="Signature — person in charge"
                             onChange={setManagerSig}
                         />
