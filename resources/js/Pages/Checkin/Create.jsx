@@ -135,14 +135,14 @@ export default function Create() {
     const [itemCost, setItemCost]     = useState("");
     const [docSearch, setDocSearch]   = useState("");
 
-    const filteredEmployeesForCombo = useMemo(() =>
-        employeeQuery === ''
+    const filteredEmployeesForCombo = useMemo(() => {
+        const list = employeeQuery === ''
             ? employees
             : employees.filter(e =>
                 `${e.name} ${e.role}`.toLowerCase().includes(employeeQuery.toLowerCase())
-            ),
-        [employees, employeeQuery]
-    );
+            );
+        return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    }, [employees, employeeQuery]);
 
     const switchType = (newType) => {
         setType(newType);
