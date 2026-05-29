@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
@@ -19,10 +19,6 @@ export default function LostItems({ checkin }) {
     const tools = checkin.toolbag?.tools ?? [];
 
     const [tab, setTab] = useState('extra-items');
-
-    const extraMgrRef = useRef(null);
-    const ppeMgrRef   = useRef(null);
-    const lostMgrRef  = useRef(null);
 
     // ── Extra Items ──
     const [extraItems, setExtraItems]       = useState([]);
@@ -148,8 +144,8 @@ export default function LostItems({ checkin }) {
                     </div>
 
                     <div className="bg-white rounded-lg shadow p-6 space-y-6">
-                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setExtraEmpSig} onNext={() => extraMgrRef.current?.openFullscreen()} />
-                        <SignaturePad ref={extraMgrRef} label="Signature person in charge" onChange={setExtraMgrSig} />
+                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setExtraEmpSig} />
+                        <SignaturePad label="Signature person in charge" onChange={setExtraMgrSig} />
                     </div>
 
                     <div className="flex gap-3 mt-6">
@@ -202,8 +198,8 @@ export default function LostItems({ checkin }) {
                     </div>
 
                     <div className="bg-white rounded-lg shadow p-6 space-y-6">
-                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setPpeEmpSig} onNext={() => ppeMgrRef.current?.openFullscreen()} />
-                        <SignaturePad ref={ppeMgrRef} label="Signature person in charge" onChange={setPpeMgrSig} />
+                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setPpeEmpSig} />
+                        <SignaturePad label="Signature person in charge" onChange={setPpeMgrSig} />
                     </div>
 
                     <div className="flex gap-3 mt-6">
@@ -267,8 +263,8 @@ export default function LostItems({ checkin }) {
                     </div>
 
                     <div className="bg-white rounded-lg shadow p-6 space-y-6">
-                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setLostEmpSig} onNext={() => lostMgrRef.current?.openFullscreen()} />
-                        <SignaturePad ref={lostMgrRef} label="Signature person in charge" onChange={setLostMgrSig} />
+                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setLostEmpSig} />
+                        <SignaturePad label="Signature person in charge" onChange={setLostMgrSig} />
                     </div>
 
                     <div className="flex gap-3 mt-6">

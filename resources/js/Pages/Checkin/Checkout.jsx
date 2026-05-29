@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Head, Link, router } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SignaturePad from "@/Components/SignaturePad.jsx";
@@ -16,7 +16,6 @@ export default function Checkout({ checkin }) {
     const [checkoutMileage, setCheckoutMileage] = useState("");
     const [employeeSig, setEmployeeSig] = useState(null);
     const [managerSig, setManagerSig] = useState(null);
-    const managerSigRef = useRef(null);
 
     const toggle = (toolId) =>
         setPresentIds((prev) => prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]);
@@ -73,8 +72,8 @@ export default function Checkout({ checkin }) {
                                 />
                             </div>
                         )}
-                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setEmployeeSig} onNext={() => managerSigRef.current?.openFullscreen()} />
-                        <SignaturePad ref={managerSigRef} label="Signature person in charge" onChange={setManagerSig} />
+                        <SignaturePad label={`Signature ${checkin.employee?.name}`} onChange={setEmployeeSig} />
+                        <SignaturePad label="Signature person in charge" onChange={setManagerSig} />
                     </div>
 
                     <div className="flex gap-3 mt-6">
