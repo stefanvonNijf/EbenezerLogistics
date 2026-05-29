@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Mail\CheckinPlannedMail;
+use App\Mail\CheckoutPlannedMail;
 use App\Models\Checkin;
 use App\Models\Employee;
 use App\Models\Role;
@@ -151,6 +152,10 @@ class EmployeeController extends Controller
                 'planned_checkout_date' => $validated['planned_checkout_date'],
                 'notes' => $validated['notes'] ?? $checkin->notes,
             ]);
+
+            foreach (config('mail.notification_emails', []) as $email) {
+                Mail::to($email)->send(new CheckoutPlannedMail($employee, $checkin));
+            }
         }
 
         return redirect()
