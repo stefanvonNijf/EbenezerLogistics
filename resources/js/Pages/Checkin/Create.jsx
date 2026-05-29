@@ -90,6 +90,12 @@ export default function Create() {
         setData('ppe_items', { ...data.ppe_items, [key]: { ...data.ppe_items[key], [field]: value } });
 
     const [ppeSectionEnabled, setPpeSectionEnabled] = useState(false);
+    const [extraItemsEnabled, setExtraItemsEnabled] = useState(false);
+
+    const toggleExtraItems = () => {
+        if (extraItemsEnabled) setData('custom_items', []);
+        setExtraItemsEnabled(v => !v);
+    };
     const [ppeChecked, setPpeChecked] = useState(
         Object.fromEntries(PPE_ITEMS.map(({ key }) => [key, false]))
     );
@@ -164,6 +170,7 @@ export default function Create() {
         if (newType !== TYPE_PPE && pdfInputRef.current) {
             pdfInputRef.current.value = '';
         }
+        setExtraItemsEnabled(false);
     };
 
     const filteredToolbags = useMemo(() => {
@@ -252,6 +259,10 @@ export default function Create() {
         fd.append('is_template', '0');
         if (data.pdf) fd.append('pdf', data.pdf);
         emails.forEach((email, i) => fd.append(`notification_emails[${i}]`, email));
+        data.custom_items.forEach((item, i) => {
+            fd.append(`custom_items[${i}][name]`, item.name);
+            if (item.replacement_cost != null) fd.append(`custom_items[${i}][replacement_cost]`, item.replacement_cost);
+        });
         const ppe = getFilteredPpeItems();
         Object.entries(ppe).forEach(([key, val]) => {
             fd.append(`ppe_items[${key}][quantity]`, val.quantity ?? 1);
@@ -649,6 +660,45 @@ export default function Create() {
                                         </tbody>
                                     </table>
                                 </div>}
+                            </div>
+                        )}
+
+                        {/* EXTRA ITEMS — toggle for all types except Custom (which has its own section) */}
+                        {type !== TYPE_CUSTOM && (
+                            <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <input
+                                        type="checkbox"
+                                        id="extra-items-toggle"
+                                        checked={extraItemsEnabled}
+                                        onChange={toggleExtraItems}
+                                        className="w-5 h-5 rounded border-gray-300 cursor-pointer"
+                                    />
+                                    <label htmlFor="extra-items-toggle" className="font-medium cursor-pointer">Extra items</label>
+                                </div>
+                                {extraItemsEnabled && (
+                                    <div>
+                                        <div className="flex gap-2">
+                                            <input type="text" value={itemName} onChange={(e) => setItemName(e.target.value)} onKeyDown={handleItemKeyDown} placeholder="Item name" className="flex-1 border rounded px-3 py-2 text-sm" />
+                                            <input type="number" value={itemCost} onChange={(e) => setItemCost(e.target.value)} onKeyDown={handleItemKeyDown} placeholder="Cost (€)" min="0" step="0.01" className="w-28 border rounded px-3 py-2 text-sm" />
+                                            <button type="button" onClick={addItem} className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm">Add</button>
+                                        </div>
+                                        {getError('custom_items') && <p className="text-red-600 text-sm mt-1">{getError('custom_items')}</p>}
+                                        {data.custom_items.length > 0 && (
+                                            <ul className="mt-3 space-y-1">
+                                                {data.custom_items.map((item, i) => (
+                                                    <li key={i} className="flex items-center justify-between bg-gray-50 border rounded px-3 py-2 text-sm">
+                                                        <span>{item.name}</span>
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="text-gray-500">{item.replacement_cost != null ? `€ ${parseFloat(item.replacement_cost).toFixed(2)}` : "—"}</span>
+                                                            <button type="button" onClick={() => removeItem(i)} className="text-gray-400 hover:text-red-500 font-bold">&times;</button>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 

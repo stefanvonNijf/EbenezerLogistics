@@ -86,7 +86,17 @@ class CheckinController extends Controller
             $rules['custom_items.*.name']             = 'required|string|max:255';
             $rules['custom_items.*.replacement_cost'] = 'nullable|numeric|min:0';
         } else {
-            $rules['toolbag_id'] = 'required|exists:toolbags,id';
+            $rules['toolbag_id']                      = 'required|exists:toolbags,id';
+            $rules['custom_items']                    = 'nullable|array';
+            $rules['custom_items.*.name']             = 'required|string|max:255';
+            $rules['custom_items.*.replacement_cost'] = 'nullable|numeric|min:0';
+        }
+
+        // Extra custom items are allowed on car, template, and PPE types too.
+        if ($isCar || $isPpe || $isTemplate) {
+            $rules['custom_items']                    = 'nullable|array';
+            $rules['custom_items.*.name']             = 'required|string|max:255';
+            $rules['custom_items.*.replacement_cost'] = 'nullable|numeric|min:0';
         }
 
         // Document library attachments are available for all types except PPE/document.
@@ -145,7 +155,7 @@ class CheckinController extends Controller
             'is_template'          => $isTemplate,
             'toolbox_template_id'  => $isTemplate ? $request->toolbox_template_id : null,
             'toolbag_id'           => (!$isCar && !$isCustom && !$isPpe && !$isTemplate) ? $request->toolbag_id : null,
-            'custom_items'         => $isCustom ? $request->custom_items : null,
+            'custom_items'         => $request->custom_items ?: null,
             'car_id'               => $isCar ? $request->car_id : null,
             'checkin_mileage'      => $isCar ? $request->checkin_mileage : null,
             'ppe_items'            => $request->ppe_items ?? null,
