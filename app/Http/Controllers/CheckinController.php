@@ -78,7 +78,7 @@ class CheckinController extends Controller
             $rules['car_id']          = 'required|exists:cars,id';
             $rules['checkin_mileage'] = 'nullable|integer|min:0';
         } elseif ($isPpe) {
-            $rules['pdf'] = 'required|file|mimes:pdf|max:20480';
+            $rules['pdf'] = 'required|file|mimes:pdf|max:51200';
         } elseif ($isTemplate) {
             $rules['toolbox_template_id'] = 'required|exists:toolbox_templates,id';
         } elseif ($isCustom) {
