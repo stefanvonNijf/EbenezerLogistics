@@ -6,6 +6,7 @@ import SignaturePad from "@/Components/SignaturePad.jsx";
 export default function Checkout({ checkin }) {
     const isCar    = !!checkin.car;
     const isCustom = !isCar && !checkin.toolbag && Array.isArray(checkin.custom_items) && checkin.custom_items.length > 0;
+    const isPdf    = !isCar && !checkin.toolbag && !!checkin.signed_checkin_pdf_path;
     const tools    = checkin.toolbag?.tools ?? [];
 
     const [step, setStep] = useState('review');
@@ -17,11 +18,30 @@ export default function Checkout({ checkin }) {
     const [employeeSig, setEmployeeSig] = useState(null);
     const [managerSig, setManagerSig] = useState(null);
 
+    // Missing items for PDF checkins
+    const [hasMissingItems, setHasMissingItems] = useState(false);
+    const [missingItems, setMissingItems] = useState([]);
+    const [newItemName, setNewItemName] = useState("");
+    const [newItemCost, setNewItemCost] = useState("");
+
     const toggle = (toolId) =>
         setPresentIds((prev) => prev.includes(toolId) ? prev.filter((id) => id !== toolId) : [...prev, toolId]);
 
     const toggleItem = (index) =>
         setReturnedItems((prev) => prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]);
+
+    const addMissingItem = () => {
+        const name = newItemName.trim();
+        if (!name) return;
+        setMissingItems((prev) => [...prev, { name, replacement_cost: newItemCost !== "" ? newItemCost : null }]);
+        setNewItemName("");
+        setNewItemCost("");
+    };
+
+    const removeMissingItem = (index) =>
+        setMissingItems((prev) => prev.filter((_, i) => i !== index));
+
+    const missingItemsTotalCost = missingItems.reduce((sum, i) => sum + (parseFloat(i.replacement_cost) || 0), 0);
 
     const missingTools = tools.filter((t) => !presentIds.includes(t.id));
     const totalCost    = missingTools.reduce((sum, t) => sum + (parseFloat(t.replacement_cost) || 0), 0);
@@ -39,6 +59,9 @@ export default function Checkout({ checkin }) {
             payload.checkout_mileage = checkoutMileage || null;
         } else {
             payload.missing_tool_ids = missingTools.map((t) => t.id);
+            if (isPdf && hasMissingItems && missingItems.length > 0) {
+                payload.checkout_missing_items = missingItems;
+            }
         }
         router.post(route("checkins.checkout.process", checkin.id), payload, {
             onSuccess: (page) => {
@@ -102,7 +125,7 @@ export default function Checkout({ checkin }) {
                 <p className="text-gray-500 mb-6">
                     {isCar
                         ? `Car: ${checkin.car.brand} — ${checkin.car.license_plate}`
-                        : isCustom ? "Custom check-in" : `Toolbag: ${checkin.toolbag?.name}`}
+                        : isCustom ? "Custom check-in" : isPdf ? "Document check-in" : `Toolbag: ${checkin.toolbag?.name}`}
                 </p>
 
                 <div className="bg-white rounded-lg shadow p-6">
@@ -123,6 +146,102 @@ export default function Checkout({ checkin }) {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+                    ) : isPdf ? (
+                        <div className="space-y-6">
+                            <div>
+                                <p className="text-sm text-gray-600 mb-3">This check-in has an uploaded document.</p>
+                                <a
+                                    href={route("checkins.signed-pdf", checkin.id)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 text-gray-700 rounded hover:bg-gray-200 text-sm font-medium"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                    View check-in PDF
+                                </a>
+                            </div>
+
+                            <div className="border-t pt-5">
+                                <label className="flex items-center gap-3 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={hasMissingItems}
+                                        onChange={(e) => setHasMissingItems(e.target.checked)}
+                                        className="w-4 h-4 accent-blue-600"
+                                    />
+                                    <span className="font-medium text-gray-800">Missing items</span>
+                                </label>
+
+                                {hasMissingItems && (
+                                    <div className="mt-4 space-y-3">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Item name"
+                                                value={newItemName}
+                                                onChange={(e) => setNewItemName(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && addMissingItem()}
+                                                className="flex-1 border rounded px-3 py-2 text-sm"
+                                            />
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                placeholder="Cost (€)"
+                                                value={newItemCost}
+                                                onChange={(e) => setNewItemCost(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && addMissingItem()}
+                                                className="w-28 border rounded px-3 py-2 text-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={addMissingItem}
+                                                disabled={!newItemName.trim()}
+                                                className="px-4 py-2 bg-blue-700 text-white rounded text-sm hover:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                Add
+                                            </button>
+                                        </div>
+
+                                        {missingItems.length > 0 && (
+                                            <div className="space-y-2">
+                                                {missingItems.map((item, i) => (
+                                                    <div key={i} className="flex items-center justify-between border border-red-200 bg-red-50 rounded px-4 py-3">
+                                                        <span className="font-medium text-red-800">{item.name}</span>
+                                                        <div className="flex items-center gap-4">
+                                                            <span className="text-sm font-semibold text-red-600">
+                                                                {item.replacement_cost != null ? `€ ${parseFloat(item.replacement_cost).toFixed(2)}` : "—"}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => removeMissingItem(i)}
+                                                                className="text-red-400 hover:text-red-600"
+                                                                aria-label="Remove"
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                </svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                <div className="flex justify-end pt-1">
+                                                    <span className="text-sm font-bold text-red-600">
+                                                        Total: € {missingItemsTotalCost.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {missingItems.length === 0 && (
+                                            <p className="text-sm text-gray-400 italic">No missing items added yet.</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : isCustom ? (
                         <>

@@ -88,11 +88,15 @@
     @endif
 </table>
 
-@if($missingTools->isEmpty())
+@php $hasAnyMissing = $missingTools->isNotEmpty() || !empty($checkoutMissingItems ?? []); @endphp
+
+@if(!$hasAnyMissing)
     <p style="font-size: 14px; font-weight: bold; color: #16a34a;">
-        &#10003; All tools have been returned. No missing items.
+        &#10003; All items have been returned. No missing items.
     </p>
 @else
+
+@if($missingTools->isNotEmpty())
     <h2>Missing tools</h2>
 
     <table>
@@ -116,13 +120,41 @@
             </tr>
         @endforeach
         </tbody>
+    </table>
+@endif
+
+@if(!empty($checkoutMissingItems ?? []))
+    <h2>Missing items</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Item</th>
+            <th class="text-right">Replacement cost</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach ($checkoutMissingItems as $item)
+            <tr>
+                <td>{{ $item['name'] }}</td>
+                <td class="text-right">
+                    {{ isset($item['replacement_cost']) && $item['replacement_cost'] !== null ? '€ ' . number_format((float)$item['replacement_cost'], 2) : '-' }}
+                </td>
+            </tr>
+        @endforeach
+        </tbody>
+    </table>
+@endif
+
+    <table>
         <tfoot>
         <tr class="total-row">
-            <td colspan="3" class="text-right">Total replacement cost:</td>
+            <td class="text-right">Total replacement cost:</td>
             <td class="text-right">€ {{ number_format($totalCost, 2) }}</td>
         </tr>
         </tfoot>
     </table>
+
 @endif
 
 <div class="signature">

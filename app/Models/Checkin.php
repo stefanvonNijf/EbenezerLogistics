@@ -14,6 +14,7 @@ class Checkin extends Model
         'status',
         'contract_exported_at',
         'missing_tools',
+        'checkout_missing_items',
         'notification_emails',
         'employee_id',
         'toolbag_id',
@@ -35,8 +36,9 @@ class Checkin extends Model
 
     protected $casts = [
         'contract_exported_at' => 'datetime',
-        'missing_tools'        => 'array',
-        'notification_emails'  => 'array',
+        'missing_tools'           => 'array',
+        'checkout_missing_items'  => 'array',
+        'notification_emails'     => 'array',
         'custom_items'         => 'array',
         'ppe_items'            => 'array',
         'is_ppe'               => 'boolean',

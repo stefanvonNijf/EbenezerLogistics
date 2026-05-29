@@ -668,8 +668,11 @@ class CheckinController extends Controller
         if ($isCar) {
             $rules['checkout_mileage'] = 'nullable|integer|min:0';
         } else {
-            $rules['missing_tool_ids']   = 'nullable|array';
-            $rules['missing_tool_ids.*'] = 'integer|exists:tools,id';
+            $rules['missing_tool_ids']                       = 'nullable|array';
+            $rules['missing_tool_ids.*']                     = 'integer|exists:tools,id';
+            $rules['checkout_missing_items']                 = 'nullable|array';
+            $rules['checkout_missing_items.*.name']          = 'required_with:checkout_missing_items.*|string|max:255';
+            $rules['checkout_missing_items.*.replacement_cost'] = 'nullable|numeric|min:0';
         }
 
         $request->validate($rules);
@@ -684,7 +687,8 @@ class CheckinController extends Controller
         if ($isCar) {
             $updateData['checkout_mileage'] = $request->checkout_mileage;
         } else {
-            $updateData['missing_tools'] = $request->missing_tool_ids ?? [];
+            $updateData['missing_tools']          = $request->missing_tool_ids ?? [];
+            $updateData['checkout_missing_items'] = $request->checkout_missing_items ?? [];
         }
 
         $checkin->update($updateData);
@@ -705,9 +709,11 @@ class CheckinController extends Controller
 
         $checkin->load('employee', 'toolbag.tools', 'car');
 
-        $missingToolIds = $checkin->missing_tools ?? [];
-        $missingTools   = !$isCar ? Tool::whereIn('id', $missingToolIds)->get() : collect();
-        $totalCost      = $missingTools->sum('replacement_cost');
+        $missingToolIds      = $checkin->missing_tools ?? [];
+        $missingTools        = !$isCar ? Tool::whereIn('id', $missingToolIds)->get() : collect();
+        $checkoutMissingItems = $checkin->checkout_missing_items ?? [];
+        $totalCost           = $missingTools->sum('replacement_cost')
+                               + collect($checkoutMissingItems)->sum(fn($i) => (float) ($i['replacement_cost'] ?? 0));
 
         $pdfPath    = "checkins/signed-checkins/{$checkin->id}-checkout.pdf";
         $tmpPath    = sys_get_temp_dir() . '/' . uniqid('checkout-pdf') . '.pdf';
@@ -725,12 +731,13 @@ class CheckinController extends Controller
                   ->save($tmpPath);
             } else {
                 Pdf::view('pdf.checkout', [
-                    'checkin'           => $checkin,
-                    'employee'          => $checkin->employee,
-                    'missingTools'      => $missingTools,
-                    'totalCost'         => $totalCost,
-                    'employeeSignature' => $request->employee_signature,
-                    'managerSignature'  => $request->manager_signature,
+                    'checkin'              => $checkin,
+                    'employee'             => $checkin->employee,
+                    'missingTools'         => $missingTools,
+                    'checkoutMissingItems' => $checkoutMissingItems,
+                    'totalCost'            => $totalCost,
+                    'employeeSignature'    => $request->employee_signature,
+                    'managerSignature'     => $request->manager_signature,
                 ])->withBrowsershot(fn (Browsershot $b) => $b->noSandbox()->setChromePath('/usr/bin/google-chrome'))
                   ->save($tmpPath);
             }

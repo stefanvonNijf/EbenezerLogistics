@@ -17,11 +17,15 @@ A checkout has been completed.
 @php
     $missingToolIds = $checkin->missing_tools ?? [];
     $missingTools = $checkin->toolbag?->tools->filter(fn($t) => in_array($t->id, $missingToolIds))->values() ?? collect();
+    $checkoutMissingItems = $checkin->checkout_missing_items ?? [];
+    $hasAnyMissing = $missingTools->isNotEmpty() || !empty($checkoutMissingItems);
 @endphp
 
-@if($missingTools->isEmpty())
-**All tools have been returned. No missing items.**
+@if(!$hasAnyMissing)
+**All items have been returned. No missing items.**
 @else
+
+@if($missingTools->isNotEmpty())
 ## Missing tools
 
 <x-mail::table>
@@ -30,8 +34,23 @@ A checkout has been completed.
 @foreach($missingTools as $tool)
 | {{ $tool->brand ?? '-' }} | {{ $tool->name }} | {{ $tool->type ?? '-' }} | {{ $tool->replacement_cost ? '€ ' . number_format($tool->replacement_cost, 2) : '-' }} |
 @endforeach
-| | | **Total** | **€ {{ number_format($totalMissingCost, 2) }}** |
 </x-mail::table>
+@endif
+
+@if(!empty($checkoutMissingItems))
+## Missing items
+
+<x-mail::table>
+| Item | Replacement cost |
+|:--|--:|
+@foreach($checkoutMissingItems as $item)
+| {{ $item['name'] }} | {{ isset($item['replacement_cost']) && $item['replacement_cost'] !== null ? '€ ' . number_format((float)$item['replacement_cost'], 2) : '-' }} |
+@endforeach
+</x-mail::table>
+@endif
+
+**Total replacement cost: € {{ number_format($totalMissingCost, 2) }}**
+
 @endif
 
 Thanks,
