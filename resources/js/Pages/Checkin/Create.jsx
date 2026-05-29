@@ -135,12 +135,14 @@ export default function Create() {
     const [itemCost, setItemCost]     = useState("");
     const [docSearch, setDocSearch]   = useState("");
 
+    const normalizeStr = (str) =>
+        (str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
     const filteredEmployeesForCombo = useMemo(() => {
-        const list = employeeQuery === ''
+        const q = normalizeStr(employeeQuery);
+        const list = q === ''
             ? employees
-            : employees.filter(e =>
-                `${e.name} ${e.role}`.toLowerCase().includes(employeeQuery.toLowerCase())
-            );
+            : employees.filter(e => normalizeStr(`${e.name} ${e.role}`).includes(q));
         return [...list].sort((a, b) => a.name.localeCompare(b.name));
     }, [employees, employeeQuery]);
 
