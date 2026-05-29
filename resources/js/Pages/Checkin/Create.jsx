@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useForm, usePage, Head, Link, router } from "@inertiajs/react";
+import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/react';
 import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SignaturePad from "@/Components/SignaturePad";
@@ -127,11 +128,21 @@ export default function Create() {
         });
     }, [data.employee_id]);
 
+    const [employeeQuery, setEmployeeQuery] = useState("");
     const [emailInput, setEmailInput] = useState("");
     const [emailError, setEmailError] = useState("");
     const [itemName, setItemName]     = useState("");
     const [itemCost, setItemCost]     = useState("");
     const [docSearch, setDocSearch]   = useState("");
+
+    const filteredEmployeesForCombo = useMemo(() =>
+        employeeQuery === ''
+            ? employees
+            : employees.filter(e =>
+                `${e.name} ${e.role}`.toLowerCase().includes(employeeQuery.toLowerCase())
+            ),
+        [employees, employeeQuery]
+    );
 
     const switchType = (newType) => {
         setType(newType);
@@ -382,18 +393,38 @@ export default function Create() {
                         {/* EMPLOYEE */}
                         <div>
                             <label className="block font-medium">Employee</label>
-                            <select
-                                value={data.employee_id}
-                                onChange={(e) => setData("employee_id", e.target.value)}
-                                className="w-full border rounded px-3 py-2"
+                            <Combobox
+                                value={selectedEmployee ?? null}
+                                onChange={(emp) => setData("employee_id", emp ? String(emp.id) : "")}
+                                onClose={() => setEmployeeQuery('')}
                             >
-                                <option value="">-- Select employee --</option>
-                                {employees.map(emp => (
-                                    <option key={emp.id} value={emp.id}>
-                                        {emp.name} ({emp.role})
-                                    </option>
-                                ))}
-                            </select>
+                                <div className="relative">
+                                    <ComboboxInput
+                                        className="w-full border rounded px-3 py-2 pr-8"
+                                        displayValue={(emp) => emp ? `${emp.name} (${emp.role})` : ''}
+                                        onChange={(e) => setEmployeeQuery(e.target.value)}
+                                        placeholder="Search employees…"
+                                    />
+                                    <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+                                        ▾
+                                    </ComboboxButton>
+                                    <ComboboxOptions className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg max-h-60 overflow-auto text-sm">
+                                        {filteredEmployeesForCombo.length === 0 ? (
+                                            <div className="px-3 py-2 text-gray-400">No employees found.</div>
+                                        ) : filteredEmployeesForCombo.map(emp => (
+                                            <ComboboxOption
+                                                key={emp.id}
+                                                value={emp}
+                                                className={({ focus }) =>
+                                                    `px-3 py-2 cursor-pointer ${focus ? 'bg-blue-600 text-white' : 'text-gray-700'}`
+                                                }
+                                            >
+                                                {emp.name} ({emp.role})
+                                            </ComboboxOption>
+                                        ))}
+                                    </ComboboxOptions>
+                                </div>
+                            </Combobox>
                             {getError('employee_id') && <div className="text-red-600 text-sm">{getError('employee_id')}</div>}
                         </div>
 
