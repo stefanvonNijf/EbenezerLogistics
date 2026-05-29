@@ -764,7 +764,8 @@ class CheckinController extends Controller
         $checkin->load(['employee', 'toolbag.tools']);
 
         return Inertia::render('Checkin/LostItems', [
-            'checkin' => $checkin,
+            'checkin'        => $checkin,
+            'inventoryTools' => Tool::orderBy('name')->get(['id', 'name', 'brand', 'replacement_cost']),
         ]);
     }
 

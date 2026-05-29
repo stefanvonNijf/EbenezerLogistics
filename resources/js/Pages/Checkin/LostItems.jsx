@@ -1,8 +1,52 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Head, Link, router } from "@inertiajs/react";
+import { Combobox, ComboboxInput, ComboboxButton, ComboboxOptions, ComboboxOption } from '@headlessui/react';
 import axios from "axios";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import SignaturePad from "@/Components/SignaturePad.jsx";
+
+const normalizeStr = (str) =>
+    (str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+function InventoryCombobox({ inventoryTools, onSelect }) {
+    const [query, setQuery] = useState('');
+
+    const filtered = useMemo(() => {
+        const q = normalizeStr(query);
+        if (!q) return inventoryTools;
+        return inventoryTools.filter(t => normalizeStr(`${t.name} ${t.brand ?? ''}`).includes(q));
+    }, [inventoryTools, query]);
+
+    return (
+        <Combobox onChange={(tool) => { if (tool) { onSelect(tool); setQuery(''); } }}>
+            <div className="relative mb-3">
+                <ComboboxInput
+                    className="w-full border rounded px-3 py-2 pr-8 text-sm"
+                    displayValue={() => query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search inventory to add…"
+                />
+                <ComboboxButton className="absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">▾</ComboboxButton>
+                <ComboboxOptions className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded shadow-lg max-h-52 overflow-auto text-sm">
+                    {filtered.length === 0 ? (
+                        <div className="px-3 py-2 text-gray-400">No tools found.</div>
+                    ) : filtered.map(tool => (
+                        <ComboboxOption
+                            key={tool.id}
+                            value={tool}
+                            className={({ focus }) => `flex justify-between gap-3 px-3 py-2 cursor-pointer ${focus ? 'bg-blue-600 text-white' : 'text-gray-700'}`}
+                        >
+                            <span>{tool.name}{tool.brand ? ` — ${tool.brand}` : ''}</span>
+                            <span className="text-xs shrink-0 mt-0.5 opacity-70">
+                                {tool.replacement_cost ? `€ ${parseFloat(tool.replacement_cost).toFixed(2)}` : '—'}
+                            </span>
+                        </ComboboxOption>
+                    ))}
+                </ComboboxOptions>
+            </div>
+        </Combobox>
+    );
+}
 
 const PPE_ITEMS = [
     { key: 'goggles',      label: 'Goggles' },
@@ -15,7 +59,7 @@ const PPE_ITEMS = [
     { key: 'helmet',       label: 'Helmet' },
 ];
 
-export default function LostItems({ checkin }) {
+export default function LostItems({ checkin, inventoryTools }) {
     const tools = checkin.toolbag?.tools ?? [];
 
     const [tab, setTab] = useState('extra-items');
@@ -324,9 +368,13 @@ export default function LostItems({ checkin }) {
                                     ))}
                                 </div>
                             )}
+                            <InventoryCombobox
+                                inventoryTools={inventoryTools}
+                                onSelect={(tool) => setExtraItems(p => [...p, { name: tool.name, price: tool.replacement_cost ?? '' }])}
+                            />
                             <button type="button" onClick={addExtraItem}
                                 className="px-4 py-2 text-sm border border-dashed border-gray-300 text-gray-600 rounded hover:bg-gray-50 w-full">
-                                + Add item
+                                + Add item manually
                             </button>
                         </div>
 
@@ -460,9 +508,13 @@ export default function LostItems({ checkin }) {
                                     ))}
                                 </div>
                             )}
+                            <InventoryCombobox
+                                inventoryTools={inventoryTools}
+                                onSelect={(tool) => setLostCustomItems(p => [...p, { name: tool.name, price: tool.replacement_cost ?? '' }])}
+                            />
                             <button type="button" onClick={addLostItem}
                                 className="px-4 py-2 text-sm border border-dashed border-gray-300 text-gray-600 rounded hover:bg-gray-50 w-full">
-                                + Add custom item
+                                + Add item manually
                             </button>
                         </div>
 
