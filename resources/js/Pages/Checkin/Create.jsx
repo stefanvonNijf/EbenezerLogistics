@@ -75,6 +75,7 @@ export default function Create() {
     const [employeeSig, setEmployeeSig] = useState(null);
     const [managerSig, setManagerSig]   = useState(null);
     const [signing, setSigning]         = useState(false);
+    const [ppeSubmitting, setPpeSubmitting] = useState(false);
     const [serverErrors, setServerErrors] = useState({});
 
     const pdfInputRef = useRef(null);
@@ -204,20 +205,66 @@ export default function Create() {
         [documents, docSearch]
     );
 
-    // PPE type: single step submit via Inertia (has file upload)
-    const handlePpeSubmit = (e) => {
+    // Auto-add any email still in the input field, returns the resolved list
+    const resolvePendingEmails = () => {
+        const trimmed = emailInput.trim().toLowerCase();
+        if (!trimmed) return data.notification_emails;
+        const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+        if (!valid || data.notification_emails.includes(trimmed)) return data.notification_emails;
+        const updated = [...data.notification_emails, trimmed];
+        setData('notification_emails', updated);
+        setEmailInput('');
+        return updated;
+    };
+
+    // PPE type: single step submit via axios + FormData (avoids Inertia file-upload edge cases)
+    const handlePpeSubmit = async (e) => {
         e.preventDefault();
-        if (data.notification_emails.length === 0) {
+        const emails = resolvePendingEmails();
+        if (emails.length === 0) {
             setServerErrors({ notification_emails: ['At least one notification email is required.'] });
             return;
         }
-        form.transform(d => ({ ...d, ppe_items: getFilteredPpeItems() })).post(route("checkins.store"));
+
+        setPpeSubmitting(true);
+        setServerErrors({});
+
+        const fd = new FormData();
+        fd.append('employee_id', data.employee_id);
+        fd.append('checkin_date', data.checkin_date);
+        fd.append('notes', data.notes || '');
+        fd.append('is_ppe', '1');
+        fd.append('is_car', '0');
+        fd.append('is_custom', '0');
+        fd.append('is_template', '0');
+        if (data.pdf) fd.append('pdf', data.pdf);
+        emails.forEach((email, i) => fd.append(`notification_emails[${i}]`, email));
+        const ppe = getFilteredPpeItems();
+        Object.entries(ppe).forEach(([key, val]) => {
+            fd.append(`ppe_items[${key}][quantity]`, val.quantity ?? 1);
+            fd.append(`ppe_items[${key}][size]`, val.size ?? '');
+            fd.append(`ppe_items[${key}][notes]`, val.notes ?? '');
+        });
+
+        try {
+            await axios.post(route('checkins.store'), fd);
+            router.visit(route('checkins.index'));
+        } catch (err) {
+            if (err.response?.status === 422) {
+                setServerErrors(err.response.data.errors || {});
+            } else {
+                alert('Something went wrong. Please try again.');
+            }
+        } finally {
+            setPpeSubmitting(false);
+        }
     };
 
     // Non-PPE step 1 → step 2
     const handleNextStep = (e) => {
         e.preventDefault();
-        if (data.notification_emails.length === 0) {
+        const emails = resolvePendingEmails();
+        if (emails.length === 0) {
             setServerErrors({ notification_emails: ['At least one notification email is required.'] });
             return;
         }
@@ -649,10 +696,12 @@ export default function Create() {
                             <Link href={route("checkins.index")} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</Link>
                             <button
                                 type="submit"
-                                disabled={processing}
+                                disabled={type === TYPE_PPE ? ppeSubmitting : processing}
                                 className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 disabled:opacity-50"
                             >
-                                {type === TYPE_PPE ? 'Save Check-in' : 'Next: Signing →'}
+                                {type === TYPE_PPE
+                                    ? (ppeSubmitting ? 'Saving…' : 'Save Check-in')
+                                    : 'Next: Signing →'}
                             </button>
                         </div>
 
