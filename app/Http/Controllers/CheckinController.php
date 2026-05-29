@@ -160,6 +160,8 @@ class CheckinController extends Controller
             ]));
         }
 
+        $emailAttachments = [];
+
         // For PPE type, store the uploaded PDF immediately as the signed check-in PDF.
         if ($isPpe && $request->hasFile('pdf')) {
             $pdfPath    = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
@@ -207,8 +209,6 @@ class CheckinController extends Controller
             && $request->filled('employee_signature')
             && $request->filled('manager_signature')
             && $request->expectsJson();
-
-        $emailAttachments = [];
 
         if ($hasSigs) {
             $employeeSig = $request->employee_signature;
