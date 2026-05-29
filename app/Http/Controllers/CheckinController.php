@@ -162,7 +162,8 @@ class CheckinController extends Controller
 
         // For PPE type, store the uploaded PDF immediately as the signed check-in PDF.
         if ($isPpe && $request->hasFile('pdf')) {
-            $pdfPath = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
+            $pdfPath    = "checkins/signed-checkins/{$checkin->id}-checkin.pdf";
+            $pdfContent = file_get_contents($request->file('pdf')->getRealPath());
             Storage::disk('s3')->putFileAs(
                 'checkins/signed-checkins',
                 $request->file('pdf'),
@@ -173,6 +174,11 @@ class CheckinController extends Controller
                 'signed_checkin_pdf_path' => $pdfPath,
                 'contract_exported_at'    => now(),
             ]);
+
+            $empSlug          = str_replace(' ', '-', strtolower($checkin->employee->name));
+            $emailAttachments = [
+                ['name' => "signed-checkin-{$empSlug}.pdf", 'content' => $pdfContent],
+            ];
         }
 
         if ($toolbag) {
