@@ -24,6 +24,8 @@ export default function EmployeeIndex() {
     const [deleting, setDeleting] = useState(null);
     const [planModal, setPlanModal] = useState(null);
     const [planCheckoutModal, setPlanCheckoutModal] = useState(null);
+    const [cancelCheckinModal, setCancelCheckinModal] = useState(null);
+    const [cancelCheckoutModal, setCancelCheckoutModal] = useState(null);
 
     const planForm = useForm({ checkin_date: '', notes: '' });
     const planCheckoutForm = useForm({ planned_checkout_date: '', notes: '' });
@@ -60,6 +62,18 @@ export default function EmployeeIndex() {
                 setPlanModal(null);
                 planForm.reset();
             },
+        });
+    };
+
+    const handleCancelCheckin = () => {
+        router.delete(route('employees.cancelPlanCheckin', cancelCheckinModal.id), {
+            onSuccess: () => setCancelCheckinModal(null),
+        });
+    };
+
+    const handleCancelCheckout = () => {
+        router.delete(route('employees.cancelPlanCheckout', cancelCheckoutModal.id), {
+            onSuccess: () => setCancelCheckoutModal(null),
         });
     };
 
@@ -126,6 +140,16 @@ export default function EmployeeIndex() {
                             </Link>
                         )}
 
+                        {/* Cancel planned checkin: admin only */}
+                        {isAdmin && status === 'planned_checkin' && (
+                            <button
+                                onClick={() => setCancelCheckinModal(row)}
+                                className="w-28 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm text-center"
+                            >
+                                Cancel plan
+                            </button>
+                        )}
+
                         {/* Plan checkout: admin only, when checked in */}
                         {isAdmin && status === 'planned_checkout' && !row.latest_checkin?.planned_checkout_date && (
                             <button
@@ -133,6 +157,16 @@ export default function EmployeeIndex() {
                                 className="w-28 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm text-center"
                             >
                                 Plan checkout
+                            </button>
+                        )}
+
+                        {/* Cancel planned checkout: admin only, when checkout date is set */}
+                        {isAdmin && status === 'planned_checkout' && row.latest_checkin?.planned_checkout_date && (
+                            <button
+                                onClick={() => setCancelCheckoutModal(row)}
+                                className="w-28 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm text-center"
+                            >
+                                Cancel plan
                             </button>
                         )}
 
@@ -297,6 +331,62 @@ export default function EmployeeIndex() {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* CANCEL PLANNED CHECKIN MODAL */}
+            {cancelCheckinModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-2">Cancel planned checkin?</h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            This will remove the planned checkin for <strong>{cancelCheckinModal.name}</strong>. Are you sure?
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setCancelCheckinModal(null)}
+                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                            >
+                                Back
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCancelCheckin}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                Cancel plan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* CANCEL PLANNED CHECKOUT MODAL */}
+            {cancelCheckoutModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+                        <h3 className="text-lg font-semibold mb-2">Cancel planned checkout?</h3>
+                        <p className="text-sm text-gray-600 mb-6">
+                            This will remove the planned checkout date for <strong>{cancelCheckoutModal.name}</strong>. The employee stays checked in. Are you sure?
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setCancelCheckoutModal(null)}
+                                className="px-4 py-2 text-gray-600 border rounded hover:bg-gray-50"
+                            >
+                                Back
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCancelCheckout}
+                                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                            >
+                                Cancel plan
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

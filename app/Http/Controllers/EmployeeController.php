@@ -162,4 +162,43 @@ class EmployeeController extends Controller
             ->route('employees.index')
             ->with('success', 'Checkout planned successfully.');
     }
+
+    /**
+     * Cancel a planned checkin for an employee (admin only).
+     */
+    public function cancelPlanCheckin(Employee $employee)
+    {
+        $checkin = Checkin::where('employee_id', $employee->id)
+            ->where('status', 'planned_checkin')
+            ->latest()
+            ->first();
+
+        if ($checkin) {
+            $checkin->delete();
+        }
+
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Planned checkin cancelled.');
+    }
+
+    /**
+     * Cancel a planned checkout date for an employee (admin only).
+     */
+    public function cancelPlanCheckout(Employee $employee)
+    {
+        $checkin = Checkin::where('employee_id', $employee->id)
+            ->where('status', 'planned_checkout')
+            ->whereNotNull('planned_checkout_date')
+            ->latest()
+            ->first();
+
+        if ($checkin) {
+            $checkin->update(['planned_checkout_date' => null]);
+        }
+
+        return redirect()
+            ->route('employees.index')
+            ->with('success', 'Planned checkout cancelled.');
+    }
 }

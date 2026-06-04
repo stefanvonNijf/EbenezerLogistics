@@ -110,6 +110,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
         ->name('employees.planCheckin');
     Route::post('/employees/{employee}/plan-checkout', [EmployeeController::class, 'planCheckout'])
         ->name('employees.planCheckout');
+    Route::delete('/employees/{employee}/cancel-plan-checkin', [EmployeeController::class, 'cancelPlanCheckin'])
+        ->name('employees.cancelPlanCheckin');
+    Route::delete('/employees/{employee}/cancel-plan-checkout', [EmployeeController::class, 'cancelPlanCheckout'])
+        ->name('employees.cancelPlanCheckout');
     Route::resource('users', UserManagementController::class);
 
     // Settings (categories & roles)
